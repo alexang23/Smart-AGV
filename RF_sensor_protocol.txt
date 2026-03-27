@@ -1,0 +1,42 @@
+# Serial Port Setting
+Baudrate :  38400
+Bit size : 8
+Parity : None
+Stop Bit : 1
+
+# Message Format
+| Function              | Head  | Command | Separater | Setting Data                | Checksum | Tail |
+| :-------------------- | :---- | :------ | :-------- | :-------------------------- | :------- | :--- |
+| Set Config            | 0x3C  | 1 byte  | 0x3D      | N bytes (based on command)  | 2 bytes  | 0x3E |
+| Set Config Response   | 0x5B  | 1 byte  | 0x3D      | N bytes (based on command)  | 2 bytes  | 0x5D |
+| Read Config           | 0x3C  | 1 byte  | None      | None                        | 2 bytes  | 0x3E |
+| Read Config Response  | 0x5B  | 1 byte  | 0x3D      | N bytes (based on command)  | 2 bytes  | 0x5D |
+
+## Checksum
+Convert last byte of sum result (Command(1 byte) + Separater(1 byte if exist) + Setting Data(1st byte + 2nd byte + 3rd byte + ... + Nth byte if exist)) to ASCII
+if last byte of sum result is 0x42, checksum is 0x3432
+
+## Set Communication Medium Config : 0: IR, 1: 2.4G, 2: 5G
+Write    : 3C 4D 3D 32 4243 3E  # 2 ASCII is 0x32
+Response : 5B 4D 3D 32 4243 5D    
+
+## Read Communication Medium Config
+Write    : 5B 4D 3444 5D          
+Response : 5B 4D 3D 32 4243 5D    
+
+## Set Channel Config
+Write    : 3C 43 3D 31 32 38 3142 3E  # 128 ASCII is 0x31 0x32 0x38
+Response : 5B 43 3D 31 32 38 3142 5D
+
+## Set ID Config
+Write    : 3C 41 3D 30 30 30 31 32 30 4131 3E                 # 000120 ASCII is 0x30 0x30 0x30 0x31 0x32 0x30
+Response : 5B 41 3D 35 36 39 41 2D 30 30 30 31 32 30 4233 5D  # 569A-000120 ASCII is 0x35 0x36 0x39 0x41 0x2D 0x30 0x30 0x30 0x31 0x32 0x30 
+
+## Set Port Config
+Write    : 3C 4E 3D 32 4244 3E  # 2 ASCII is 0x32
+Response : 5B 4E 3D 32 4244 5D
+
+## Read RF Setting
+Write    : 3C 59 3539 3E                  
+Response : 5B 59 3D 39 46 3135 5D  # 9F ASCII is 0x39 0x46 (RF SET OK)
+Response : 5B 59 3D 30 46 3043 5D  # 0F ASCII is 0x30 0x46 (RF SET Fail)

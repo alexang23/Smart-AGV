@@ -1,0 +1,233 @@
+ANALYSIS:
+=========
+- Communication appears to be between an E84 AGV and an E84 Equipment
+- 55 AA header for WRITE commands
+- AA 55 header for READ responses
+
+PROTOCOL STRUCTURE:
+==================
+WRITE Format: 55 AA [2 bytes CMD] [2 bytes PARAM] [CHECKSUM]
+READ Format:  AA 55 [2 bytes CMD] [2 bytes DATA] [STATUS] [CHECKSUM]
+
+Command Categories:
+PC-->E84
+- 0x00XX-series: Read E84 sensor/state/config
+- 0x80XX-series: Set E84 sensor/state/config
+E84-->PC
+- 0x0070-series: E84 sensor change event
+- 0x0071-series: E84 state change event
+- 0x0080-series: E84 alarm event
+
+E84 Alarm
+==========
+AA 55 00 80 00 00 00 E84 Off-line
+AA 55 00 80 40 00 00 CF # TA1 timeout
+AA 55 00 80 40 01 00 CF # TA2 timeout
+AA 55 00 80 40 02 00 CF # TA3 timeout
+AA 55 00 80 40 03 00 CF # TA4 timeout
+AA 55 00 80 40 04 00 CF # Link timeout
+AA 55 00 80 50 00 00 CF # TP3 timeout
+
+DATA COMMUNICATIONS LOG:
+========================
+
+WRITE -> READ Transactions:
+---------------------------
+
+# Initial
+
+1:18:47.364 PM | WRITE: 55 AA 00 00 00 00 FF      Firmware version
+1:18:47.383 PM | READ:  AA 55 00 00 7C 01 00 7C
+
+1:18:47.442 PM | WRITE: 55 AA 00 20 00 00 1F      ????
+1:18:47.458 PM | READ:  AA 55 00 20 05 09 00 2D
+
+1:18:47.506 PM | WRITE: 55 AA 80 40 00 02 C1 	  設定 TA1
+1:18:47.520 PM | READ:  AA 55 80 40 00 02 00 C1
+
+1:18:47.563 PM | WRITE: 55 AA 80 41 00 1E DE 	  設定 TA2
+1:18:47.594 PM | READ:  AA 55 80 41 00 1E 00 DE
+
+1:18:47.613 PM | WRITE: 55 AA 80 42 00 3C FD 	  設定 TA3
+1:18:47.628 PM | READ:  AA 55 80 42 00 3C 00 FD
+
+1:18:47.672 PM | WRITE: 55 AA 80 43 00 3C FE 	  設定 TA4
+1:18:47.688 PM | READ:  AA 55 80 43 00 3C 00 FE
+
+1:18:47.725 PM | WRITE: 55 AA 80 44 00 02 C5 	  設定 TA5
+1:18:47.741 PM | READ:  AA 55 80 44 00 02 00 C5
+
+1:18:47.782 PM | WRITE: 55 AA 80 45 00 02 C6 	  設定 TA6
+1:18:47.798 PM | READ:  AA 55 80 45 00 02 00 C6
+
+1:18:47.868 PM | WRITE: 55 AA 80 4E 00 02 CF 	  設定 TA7
+1:18:47.884 PM | READ:  AA 55 80 4E 00 02 00 CF
+
+1:18:47.946 PM | WRITE: 55 AA 80 4F 00 02 D0 	  設定 TA8
+1:18:47.964 PM | READ:  AA 55 80 4F 00 02 00 D0
+
+1:18:48.023 PM | WRITE: 55 AA 80 50 00 02 D1 	  設定 TA9
+1:18:48.040 PM | READ:  AA 55 80 50 00 02 00 D1
+
+1:18:48.095 PM | WRITE: 55 AA 80 51 00 02 D2 	  設定 TA10
+1:18:48.109 PM | READ:  AA 55 80 51 00 02 00 D2
+
+1:18:48.151 PM | WRITE: 55 AA 80 52 00 28 F9 	  設定 TA11
+1:18:48.173 PM | READ:  AA 55 80 52 00 28 00 F9
+
+1:18:48.226 PM | WRITE: 55 AA 80 53 00 02 D4 	  設定 TA12
+1:18:48.244 PM | READ:  AA 55 80 53 00 02 00 D4
+
+1:18:48.300 PM | WRITE: 55 AA 80 54 00 28 FB 	  設定 TA13
+1:18:48.316 PM | READ:  AA 55 80 54 00 28 00 FB
+
+1:18:48.372 PM | WRITE: 55 AA 80 55 00 20 F4 	  設定 TA14
+1:18:48.389 PM | READ:  AA 55 80 55 00 20 00 F4
+
+1:18:48.457 PM | WRITE: 55 AA 80 56 00 28 FD 	  設定 TA15
+1:18:48.472 PM | READ:  AA 55 80 56 00 28 00 FD
+
+1:18:48.515 PM | WRITE: 55 AA 80 57 00 20 F6 	  設定 TA16
+1:18:48.531 PM | READ:  AA 55 80 57 00 20 00 F6
+
+1:18:48.594 PM | WRITE: 55 AA 80 67 00 64 4A      ????
+1:18:48.610 PM | READ:  AA 55 80 67 00 64 00 4A
+
+1:18:48.654 PM | WRITE: 55 AA 80 13 00 01 93 	  解碼 70 命令 資料 55AA 開啟 其他數值 關閉
+1:18:48.673 PM | READ:  AA 55 80 13 00 00 00 92
+
+1:18:48.725 PM | WRITE: 55 AA 80 4D 01 2C F9 	  設定 DB25 INPUT 延遲 TIMEOUT 時間
+1:18:48.742 PM | READ:  AA 55 80 4D 01 2C 03 FC
+
+1:18:48.795 PM | WRITE: 55 AA 80 22 00 00 A1 	  0:標準 1:Alarm Bypass
+1:18:48.812 PM | READ:  AA 55 80 22 00 00 00 A1
+
+=================================================================
+
+# Load Process
+
+1:19:06.788 PM | WRITE: 55 AA 80 01 00 01 81          DB25 Port Open
+1:19:06.798 PM | READ:  AA 55 80 01 00 01 00 81
+
+1:19:15.105 PM | WRITE: 55 AA 80 12 00 04 95          Write E84 SELECT ON [0]: GO, [1]: MODE, [2]: SELECT, [3]: POWER  
+1:19:15.116 PM | READ:  AA 55 80 12 00 0C 00 9D
+
+               | READ:  AA 55 00 70 00 1F 00 8E       HOAVBL OFF
+               | READ:  AA 55 00 70 00 21 00 90       ES OFF
+
+1:19:15.502 PM | WRITE: 55 AA 80 12 00 00 91          Write E84 SELECT OFF [0]: GO, [1]: MODE, [2]: SELECT, [3]: POWER  
+1:19:15.521 PM | READ:  AA 55 80 12 00 08 00 99
+
+1:19:15.670 PM | READ:  AA 55 00 70 00 1E 00 8D       HOAVBL ON
+               | READ:  AA 55 00 70 00 20 00 8F       ES ON
+
+                 WRITE: 55 AA 80 08 00 00 87 	      Continue Signal
+                 READ:  AA 55 80 08 00 00 00 87 
+
+                 WRITE: 55 AA 80 06 00 00 85 	      Select CS0
+                 READ:  AA 55 80 06 00 00 00 85
+
+1:19:23.174 PM | WRITE: 55 AA 80 03 00 00 82          LOAD
+1:19:23.185 PM | READ:  AA 55 80 03 00 00 00 82
+
+1:19:23.218 PM | READ:  AA 55 00 70 00 04 00 73       CS_0 ON
+               | READ:  AA 55 00 70 00 02 00 71       VALID_ON 
+
+1:19:23.282 PM | READ:  AA 55 00 70 00 12 00 81       L_REQ_ON 
+               | READ:  AA 55 00 70 00 0A 00 79       TR_REQ_ON
+
+1:19:23.368 PM | READ:  AA 55 00 70 00 18 00 87       READY_ON
+
+1:19:23.398 PM | READ:  AA 55 00 71 00 02 00 72       可伸出手臂放貨
+               | READ:  AA 55 00 70 00 0C 00 7B       BUSY_ON
+
+1:19:26.413 PM | READ:  AA 55 00 70 00 13 00 82       L_REQ_OFF
+               | READ:  AA 55 00 71 00 03 00 73       設備已接收貨（手臂回收的時機）
+
+1:19:30.483 PM | WRITE: 55 AA 80 04 00 01 84          ARM Back Complete
+
+1:19:30.524 PM | READ:  AA 55 00 70 00 0D 00 7C       BUSY_OFF	
+               | READ:  AA 55 00 70 00 0B 00 7A       TR_REQ_OFF
+
+1:19:30.556 PM | READ:  AA 55 00 70 00 0E 00 7D       COMPT_ON
+
+1:19:30.602 PM | READ:  AA 55 00 70 00 19 00 88       READY_OFF
+
+1:19:30.636 PM | READ:  AA 55 00 70 00 03 00 72       VALID_OFF
+               | READ:  AA 55 00 70 00 0F 00 7E       COMPT_OFF
+
+1:19:30.674 PM | READ:  AA 55 00 70 00 05 00 74       CS_0 OFF
+
+1:19:52.467 PM | WRITE: 55 AA 80 02 00 00 81          Alarm Reset
+1:19:52.493 PM | READ:  AA 55 80 02 00 00 00 81
+
+               | READ:  AA 55 00 70 00 01 00 70       GO OFF
+               | READ:  AA 55 00 70 00 1F 00 8E       HOAVBL OFF
+1:19:52.522 PM | READ:  AA 55 00 70 00 21 00 90       ES OFF
+
+========================================================================================================================================
+
+# Unload Process
+
+1:20:03.094 PM | WRITE: 55 AA 80 01 00 01 81          DB25 Port Open
+1:20:03.122 PM | READ:  AA 55 00 71 00 01 00 71       設備 Auto Online
+               | READ:  AA 55 80 01 00 01 00 81       Response of DB25 Port Open
+
+1:20:07.228 PM | WRITE: 55 AA 80 12 00 04 95          Write E84 SELECT ON [0]: GO, [1]: MODE, [2]: SELECT, [3]: POWER  
+1:20:07.242 PM | READ:  AA 55 80 12 00 0C 00 9D
+
+1:20:07.628 PM | WRITE: 55 AA 80 12 00 00 91          Write E84 SELECT OFF [0]: GO, [1]: MODE, [2]: SELECT, [3]: POWER  
+1:20:07.649 PM | READ:  AA 55 80 12 00 08 00 99
+
+1:20:07.808 PM | READ:  AA 55 00 70 00 00 00 6F       GO ON
+               | READ:  AA 55 00 70 00 1E 00 8D       HOAVBL ON
+               | READ:  AA 55 00 70 00 20 00 8F       ES ON
+
+                 WRITE: 55 AA 80 08 00 00 87 	      Continue Signal
+                 READ:  AA 55 80 08 00 00 00 87
+
+1:20:16.784 PM | WRITE: 55 AA 80 03 00 01 83          UnLoad
+1:20:16.801 PM | READ:  AA 55 80 03 00 01 00 83
+
+1:20:16.829 PM | READ:  AA 55 00 70 00 04 00 73       CS_0 ON
+
+1:20:16.830 PM | READ:  AA 55 00 70 00 02 00 71       VALID_ON
+
+1:20:16.909 PM | READ:  AA 55 00 70 00 14 00 83       U_REQ_ON 
+
+1:20:16.910 PM | READ:  AA 55 00 70 00 0A 00 79       TR_REQ_ON
+
+1:20:16.999 PM | READ:  AA 55 00 70 00 18 00 87       READY_ON
+
+1:20:17.036 PM | READ:  AA 55 00 71 10 02 00 82       可伸出手臂取貨
+               | READ:  AA 55 00 70 00 0C 00 7B       BUSY_ON	
+
+1:20:20.148 PM | READ:  AA 55 00 70 00 15 00 84       U_REQ_OFF
+               | READ:  55 00 71 10 03 00 83          設備已取貨
+
+1:20:23.641 PM | WRITE: 55 AA 80 04 00 01 84 	      ARM Back Complete
+1:20:23.653 PM | READ:  AA 55 80 04 00 00 00 83
+
+1:20:23.685 PM | READ:  AA 55 00 70 00 0D 00 7C       BUSY_OFF		
+               | READ:  AA 55 00 70 00 0B 00 7A       TR_REQ_OFF 
+
+1:20:23.726 PM | READ:  AA 55 00 70 00 0E 00 7D       COMPT_ON
+
+1:20:23.764 PM | READ:  AA 55 00 70 00 19 00 88       READY_OFF
+
+1:20:23.801 PM | READ:  AA 55 00 70 00 03 00 72       VALID_OFF	
+               | READ:  AA 55 00 70 00 0F 00 7E       COMPT_OFF
+
+1:20:23.842 PM | READ:  AA 55 00 70 00 05 00 74       CS_0 OFF
+
+1:20:28.081 PM | WRITE: 55 AA 80 02 00 00 81          Alarm Reset
+1:20:28.085 PM | READ:  AA 55 80 02 00 00 00 81
+
+               | READ:  AA 55 00 70 00 01 00 70       GO OFF
+               | READ:  AA 55 00 70 00 1F 00 8E       HOAVBL OFF
+1:20:28.128 PM | READ:  AA 55 00 70 00 21 00 90       ES OFF
+
+               | READ:  AA 55 00 70 00 01 00 70       GO OFF
+               | READ:  AA 55 00 70 00 1F 00 8E       HOAVBL OFF
+               | READ:  AA 55 00 70 00 21 00 90       ES OFF
+

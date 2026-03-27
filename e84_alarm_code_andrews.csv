@@ -1,0 +1,1266 @@
+AlarmID,AlarmText,Enable
+0,"0x0000 0x05 : Unload, CS0, Ready->GO ON : ES OFF",1
+1,"0x0001 0x00 : Unload, CS0, Ready->GO ON : Clamp ON",0
+2,"0x0002 0x00 : Unload, CS0, Ready->GO ON : EQ ERROR",0
+3,"0x0003 0x00 : Unload, CS0, Ready->GO ON : Light Curtain ERROR",0
+4,"0x0004 0x00 : Unload, CS0, Ready->GO ON : PS OFF",0
+5,"0x0005 0x00 : Unload, CS0, Ready->GO ON : PL OFF",0
+6,"0x0006 0x00 : Unload, CS0, Ready->GO ON : PS PL not set",0
+7,"0x0007 0x00 : Unload, CS0, GO ON->CS_0 ON : AM_AVBL OFF",0
+8,"0x0008 0x00 : Unload, CS0, GO ON->CS_0 ON : TR_REQ OFF",0
+9,"0x0009 0x00 : Unload, CS0, GO ON->CS_0 ON : BUSY OFF",0
+10,"0x000A 0x00 : Unload, CS0, GO ON->CS_0 ON : COMPT OFF",0
+11,"0x000B 0x00 : Unload, CS0, GO ON->CS_0 ON : CONT OFF",0
+12,"0x000C 0x05 : Unload, CS0, GO ON->CS_0 ON : ES OFF",1
+13,"0x000D 0x00 : Unload, CS0, GO ON->CS_0 ON : Clamp ON",0
+14,"0x000E 0x00 : Unload, CS0, GO ON->CS_0 ON : EQ_ER ON",0
+15,"0x000F 0x00 : Unload, CS0, GO ON->CS_0 ON : Light Curtain ON",0
+16,"0x0010 0x00 : Unload, CS0, GO ON->CS_0 ON : PS OFF",0
+17,"0x0011 0x00 : Unload, CS0, GO ON->CS_0 ON : PL OFF",0
+18,"0x0012 0x00 : Unload, CS0, GO ON->CS_0 ON : VALID OFF",0
+19,0x0013 0x00 : Reserved : Reserved,0
+20,"0x0014 0x00 : Unload, CS0, CS_0 ON->VALID ON : OHT PIO Off-line",0
+21,"0x0015 0x00 : Unload, CS0, CS_0 ON->VALID ON : CS_0 OFF",0
+22,"0x0016 0x00 : Unload, CS0, CS_0 ON->VALID ON : Signal Error",0
+23,"0x0017 0x00 : Unload, CS0, CS_0 ON->VALID ON : AM_AVBL OFF",0
+24,"0x0018 0x00 : Unload, CS0, CS_0 ON->VALID ON : TR_REQ OFF",0
+25,"0x0019 0x00 : Unload, CS0, CS_0 ON->VALID ON : BUSY OFF",0
+26,"0x001A 0x00 : Unload, CS0, CS_0 ON->VALID ON : COMPT OFF",0
+27,"0x001B 0x00 : Unload, CS0, CS_0 ON->VALID ON : CONT OFF",0
+28,"0x001C 0x05 : Unload, CS0, CS_0 ON->VALID ON : ES OFF",1
+29,"0x001D 0x00 : Unload, CS0, CS_0 ON->VALID ON : Clamp ON",0
+30,"0x001E 0x00 : Unload, CS0, CS_0 ON->VALID ON : EQ_ER ON",0
+31,"0x001F 0x00 : Unload, CS0, CS_0 ON->VALID ON : Light Curtain ON",0
+32,"0x0020 0x00 : Unload, CS0, CS_0 ON->VALID ON : PS ON",0
+33,"0x0021 0x00 : Unload, CS0, CS_0 ON->VALID ON : PL ON",0
+34,0x0022 0x00 : Reserved : Reserved,0
+35,0x0023 0x00 : Reserved : Reserved,0
+36,"0x0024 0x00 : Unload, CS0, VALID ON->U_REQ ON : OHT PIO Off-line",0
+37,"0x0025 0x00 : Unload, CS0, VALID ON->U_REQ ON : CS_0 OFF",0
+38,"0x0026 0x00 : Unload, CS0, VALID ON->U_REQ ON : VALID OFF",0
+39,"0x0027 0x00 : Unload, CS0, VALID ON->U_REQ ON : CS_1 OFF",0
+40,"0x0028 0x00 : Unload, CS0, VALID ON->U_REQ ON : AM_AVBL OFF",0
+41,"0x0029 0x00 : Unload, CS0, VALID ON->U_REQ ON : TR_REQ OFF",0
+42,"0x002A 0x00 : Unload, CS0, VALID ON->U_REQ ON : BUSY OFF",0
+43,"0x002B 0x00 : Unload, CS0, VALID ON->U_REQ ON : COMPT OFF",0
+44,"0x002C 0x00 : Unload, CS0, VALID ON->U_REQ ON : CONT OFF",0
+45,"0x002D 0x05 : Unload, CS0, VALID ON->U_REQ ON : ES OFF",1
+46,"0x002E 0x00 : Unload, CS0, VALID ON->U_REQ ON : Clamp ON",0
+47,"0x002F 0x00 : Unload, CS0, VALID ON->U_REQ ON : EQ_ER ON",0
+48,"0x0030 0x00 : Unload, CS0, VALID ON->U_REQ ON : Light Curtain ON",0
+49,"0x0031 0x00 : Unload, CS0, VALID ON->U_REQ ON : PS ON",0
+50,"0x0032 0x00 : Unload, CS0, VALID ON->U_REQ ON : PL ON",0
+51,0x0033 0x00 : Reserved : Reserved,0
+52,0x0034 0x00 : Reserved : Reserved,0
+53,"0x0035 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : VALID OFF",0
+54,"0x0036 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : VALID OFF",0
+55,"0x0037 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : CS_0 OFF",0
+56,"0x0038 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : CS_1 OFF",0
+57,"0x0039 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : AM_AVBL OFF",0
+58,"0x003A 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : BUSY OFF",0
+59,"0x003B 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : COMPT OFF",0
+60,"0x003C 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : CONT OFF",0
+61,"0x003D 0x05 : Unload, CS0, U_REQ ON->TR_REQ ON : ES OFF",1
+62,"0x003E 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : Clamp ON",0
+63,"0x003F 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : EQ_ER ON",0
+64,"0x0040 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : Light Curtain ON",0
+65,"0x0041 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : PS OFF",0
+66,"0x0042 0x00 : Unload, CS0, U_REQ ON->TR_REQ ON : PL OFF",0
+67,0x0043 0x00 : Reserved : Reserved,0
+68,0x0044 0x00 : Reserved : Reserved,0
+69,"0x0045 0x00 : Unload, CS0, TR_REQ ON->READY ON : OHT PIO Off-line",0
+70,"0x0046 0x00 : Unload, CS0, TR_REQ ON->READY ON : CS_0 OFF",0
+71,"0x0047 0x00 : Unload, CS0, TR_REQ ON->READY ON : VALID OFF",0
+72,"0x0048 0x00 : Unload, CS0, TR_REQ ON->READY ON : CS_1 OFF",0
+73,"0x0049 0x00 : Unload, CS0, TR_REQ ON->READY ON : AM_AVBL OFF",0
+74,"0x004A 0x00 : Unload, CS0, TR_REQ ON->READY ON : TR_REQ OFF",0
+75,"0x004B 0x00 : Unload, CS0, TR_REQ ON->READY ON : BUSY OFF",0
+76,"0x004C 0x00 : Unload, CS0, TR_REQ ON->READY ON : COMPT OFF",0
+77,"0x004D 0x00 : Unload, CS0, TR_REQ ON->READY ON : CONT OFF",0
+78,"0x004E 0x05 : Unload, CS0, TR_REQ ON->READY ON : ES OFF",1
+79,"0x004F 0x00 : Unload, CS0, TR_REQ ON->READY ON : Clamp ON",0
+80,"0x0050 0x00 : Unload, CS0, TR_REQ ON->READY ON : EQ_ER ON",0
+81,"0x0051 0x00 : Unload, CS0, TR_REQ ON->READY ON : Light Curtain ON",0
+82,"0x0052 0x00 : Unload, CS0, TR_REQ ON->READY ON : PS ON",0
+83,"0x0053 0x00 : Unload, CS0, TR_REQ ON->READY ON : PL ON",0
+84,0x0054 0x00 : Reserved : Reserved,0
+85,0x0055 0x00 : Reserved : Reserved,0
+86,"0x0056 0x00 : Unload, CS0, READY ON->BUSY ON : OHT PIO Off-line",0
+87,"0x0057 0x00 : Unload, CS0, READY ON->BUSY ON : CS_0 OFF",0
+88,"0x0058 0x00 : Unload, CS0, READY ON->BUSY ON : VALID OFF",0
+89,"0x0059 0x00 : Unload, CS0, READY ON->BUSY ON : CS_1 OFF",0
+90,"0x005A 0x00 : Unload, CS0, READY ON->BUSY ON : AM_AVBL OFF",0
+91,"0x005B 0x00 : Unload, CS0, READY ON->BUSY ON : TR_REQ OFF",0
+92,"0x005C 0x00 : Unload, CS0, READY ON->BUSY ON : COMPT OFF",0
+93,"0x005D 0x00 : Unload, CS0, READY ON->BUSY ON : CONT OFF",0
+94,"0x005E 0x05 : Unload, CS0, READY ON->BUSY ON : ES OFF",1
+95,"0x005F 0x00 : Unload, CS0, READY ON->BUSY ON : Clamp ON",0
+96,"0x0060 0x00 : Unload, CS0, READY ON->BUSY ON : EQ_ER ON",0
+97,"0x0061 0x00 : Unload, CS0, READY ON->BUSY ON : Light Curtain ON",0
+98,"0x0062 0x00 : Unload, CS0, READY ON->BUSY ON : PS OFF",0
+99,"0x0063 0x00 : Unload, CS0, READY ON->BUSY ON : PL OFF",0
+100,0x0064 0x00 : Reserved : Reserved,0
+101,0x0065 0x00 : Reserved : Reserved,0
+102,"0x0066 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : OHT PIO Off-line",1
+103,"0x0067 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : CS_0 OFF",1
+104,"0x0068 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : VALID OFF",1
+105,"0x0069 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : CS_1 OFF",1
+106,"0x006A 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : AM_AVBL OFF",1
+107,"0x006B 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : TR_REQ OFF",1
+108,"0x006C 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : BUSY OFF",1
+109,"0x006D 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : COMPT OFF",1
+110,"0x006E 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : ES OFF",1
+111,"0x006F 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : Clamp ON",1
+112,"0x0070 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : EQ_ER ON",1
+113,"0x0071 0x05 : Unload, CS0, BUSY ON->PS & PL OFF : Light Curtain ON",1
+114,0x0072 0x00 : Reserved : Reserved,0
+115,0x0073 0x00 : Reserved : Reserved,0
+116,"0x0074 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : OHT PIO Off-line",1
+117,"0x0075 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : CS_0 OFF",1
+118,"0x0076 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : VALID OFF",1
+119,"0x0077 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : CS_1 OFF",1
+120,"0x0078 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : AM_AVBL OFF",1
+121,"0x0079 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : TR_REQ OFF",1
+122,"0x007A 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : BUSY OFF",1
+123,"0x007B 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : COMPT OFF",1
+124,"0x007C 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : ES OFF",1
+125,"0x007D 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : Clamp ON",1
+126,"0x007E 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : EQ_ER ON",1
+127,"0x007F 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : Light Curtain ON",1
+128,"0x0080 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : PS OFF",1
+129,"0x0081 0x05 : Unload, CS0, PS & PL OFF->U_REQ OFF : PL OFF",1
+130,0x0082 0x00 : Reserved : Reserved,0
+131,0x0083 0x00 : Reserved : Reserved,0
+132,"0x0084 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+133,"0x0085 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : CS_0 OFF",1
+134,"0x0086 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : VALID OFF",1
+135,"0x0087 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : CS_1 OFF",1
+136,"0x0088 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+137,"0x0089 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : TR_REQ OFF",1
+138,"0x008A 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : COMPT OFF",1
+139,"0x008B 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : ES OFF",1
+140,"0x008C 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : Clamp ON",1
+141,"0x008D 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : EQ_ER ON",1
+142,"0x008E 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : Light Curtain ON",1
+143,"0x008F 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : PS ON",1
+144,"0x0090 0x05 : Unload, CS0, U_REQ OFF->BUSY OFF : PL ON",1
+145,0x0091 0x00 : Reserved : Reserved,0
+146,0x0092 0x00 : Reserved : Reserved,0
+147,"0x0093 0x00 : Unload, CS0, BUSY OFF->COMPT ON : OHT PIO Off-line",0
+148,"0x0094 0x00 : Unload, CS0, BUSY OFF->COMPT ON : CS_0 OFF",0
+149,"0x0095 0x00 : Unload, CS0, BUSY OFF->COMPT ON : VALID OFF",0
+150,"0x0096 0x00 : Unload, CS0, BUSY OFF->COMPT ON : CS_1 OFF",0
+151,"0x0097 0x00 : Unload, CS0, BUSY OFF->COMPT ON : AM_AVBL OFF",0
+152,"0x0098 0x00 : Unload, CS0, BUSY OFF->COMPT ON : TR_REQ OFF",0
+153,"0x0099 0x00 : Unload, CS0, BUSY OFF->COMPT ON : BUSY OFF",0
+154,"0x009A 0x05 : Unload, CS0, BUSY OFF->COMPT ON : ES OFF",1
+155,"0x009B 0x00 : Unload, CS0, BUSY OFF->COMPT ON : Clamp ON",0
+156,"0x009C 0x00 : Unload, CS0, BUSY OFF->COMPT ON : EQ_ER ON",0
+157,"0x009D 0x00 : Unload, CS0, BUSY OFF->COMPT ON : Light Curtain ON",0
+158,"0x009E 0x00 : Unload, CS0, BUSY OFF->COMPT ON : PS OFF",0
+159,"0x009F 0x00 : Unload, CS0, BUSY OFF->COMPT ON : PL OFF",0
+160,0x00A0 0x00 : Reserved : Reserved,0
+161,0x00A1 0x00 : Reserved : Reserved,0
+162,"0x00A2 0x00 : Unload, CS0, COMPT ON->READY OFF : OHT PIO Off-line",0
+163,"0x00A3 0x00 : Unload, CS0, COMPT ON->READY OFF : CS_0 OFF",0
+164,"0x00A4 0x00 : Unload, CS0, COMPT ON->READY OFF : VALID OFF",0
+165,"0x00A5 0x00 : Unload, CS0, COMPT ON->READY OFF : CS_1 OFF",0
+166,"0x00A6 0x00 : Unload, CS0, COMPT ON->READY OFF : AM_AVBL OFF",0
+167,"0x00A7 0x00 : Unload, CS0, COMPT ON->READY OFF : TR_REQ OFF",0
+168,"0x00A8 0x00 : Unload, CS0, COMPT ON->READY OFF : BUSY OFF",0
+169,"0x00A9 0x00 : Unload, CS0, COMPT ON->READY OFF : COMPT OFF",0
+170,"0x00AA 0x05 : Unload, CS0, COMPT ON->READY OFF : ES OFF",1
+171,"0x00AB 0x00 : Unload, CS0, COMPT ON->READY OFF : Clamp ON",0
+172,"0x00AC 0x00 : Unload, CS0, COMPT ON->READY OFF : EQ_ER ON",0
+173,"0x00AD 0x00 : Unload, CS0, COMPT ON->READY OFF : Light Curtain ON",0
+174,"0x00AE 0x00 : Unload, CS0, COMPT ON->READY OFF : PS OFF",0
+175,"0x00AF 0x00 : Unload, CS0, COMPT ON->READY OFF : PL OFF",0
+176,0x00B0 0x00 : Reserved : Reserved,0
+177,0x00B1 0x00 : Reserved : Reserved,0
+178,"0x00B2 0x00 : Unload, CS0, READY OFF->CS_0 OFF : OHT PIO Off-line",0
+179,0x00B3 0x00 : Reserved : Reserved,0
+180,"0x00B4 0x00 : Unload, CS0, READY OFF->CS_0 OFF : AM_AVBL OFF",0
+181,"0x00B5 0x00 : Unload, CS0, READY OFF->CS_0 OFF : TR_REQ OFF",0
+182,"0x00B6 0x00 : Unload, CS0, READY OFF->CS_0 OFF : BUSY OFF",0
+183,"0x00B7 0x05 : Unload, CS0, READY OFF->CS_0 OFF : ES OFF",1
+184,"0x00B8 0x00 : Unload, CS0, READY OFF->CS_0 OFF : Clamp ON",0
+185,"0x00B9 0x00 : Unload, CS0, READY OFF->CS_0 OFF : EQ_ER ON",0
+186,"0x00BA 0x00 : Unload, CS0, READY OFF->CS_0 OFF : Light Curtain ON",0
+187,"0x00BB 0x00 : Unload, CS0, READY OFF->CS_0 OFF : PS ON",0
+188,"0x00BC 0x00 : Unload, CS0, READY OFF->CS_0 OFF : PL ON",0
+189,0x00BD 0x00 : Reserved : Reserved,0
+190,0x00BE 0x00 : Reserved : Reserved,0
+191,0x00BF 0x00 : Reserved : Reserved,0
+4096,"0x1000 0x05 : Load, CS0, Ready->GO ON : ES OFF",1
+4097,"0x1001 0x00 : Load, CS0, Ready->GO ON : Clamp ON",0
+4098,"0x1002 0x00 : Load, CS0, Ready->GO ON : EQ ERROR",0
+4099,"0x1003 0x00 : Load, CS0, Ready->GO ON : Light Curtain ERROR",0
+4100,"0x1004 0x00 : Load, CS0, Ready->GO ON : PS ON",0
+4101,"0x1005 0x00 : Load, CS0, Ready->GO ON : PL ON",0
+4102,"0x1006 0x00 : Load, CS0, GO ON->CS_0 ON : VALID OFF",0
+4103,"0x1007 0x00 : Load, CS0, GO ON->CS_0 ON : AM_AVBL OFF",0
+4104,"0x1008 0x00 : Load, CS0, GO ON->CS_0 ON : TR_REQ OFF",0
+4105,"0x1009 0x00 : Load, CS0, GO ON->CS_0 ON : BUSY OFF",0
+4106,"0x100A 0x00 : Load, CS0, GO ON->CS_0 ON : COMPT OFF",0
+4107,"0x100B 0x00 : Load, CS0, GO ON->CS_0 ON : CONT OFF",0
+4108,"0x100C 0x05 : Load, CS0, GO ON->CS_0 ON : ES OFF",1
+4109,"0x100D 0x00 : Load, CS0, GO ON->CS_0 ON : Clamp ON",0
+4110,"0x100E 0x00 : Load, CS0, GO ON->CS_0 ON : EQ_ER ON",0
+4111,"0x100F 0x00 : Load, CS0, GO ON->CS_0 ON : Light Curtain ON",0
+4112,"0x1010 0x00 : Load, CS0, GO ON->CS_0 ON : PS ON",0
+4113,"0x1011 0x00 : Load, CS0, GO ON->CS_0 ON : PL ON",0
+4114,0x1012 0x00 : Reserved : Reserved,0
+4115,0x1013 0x00 : Reserved : Reserved,0
+4116,"0x1014 0x00 : Load, CS0, CS_0 ON->VALID ON : OHT PIO Off-line",0
+4117,"0x1015 0x00 : Load, CS0, CS_0 ON->VALID ON : CS_0 OFF",0
+4118,"0x1016 0x00 : Load, CS0, CS_0 ON->VALID ON : CS_1 OFF",0
+4119,"0x1017 0x00 : Load, CS0, CS_0 ON->VALID ON : AM_AVBL OFF",0
+4120,"0x1018 0x00 : Load, CS0, CS_0 ON->VALID ON : TR_REQ OFF",0
+4121,"0x1019 0x00 : Load, CS0, CS_0 ON->VALID ON : BUSY OFF",0
+4122,"0x101A 0x00 : Load, CS0, CS_0 ON->VALID ON : COMPT OFF",0
+4123,"0x101B 0x00 : Load, CS0, CS_0 ON->VALID ON : CONT OFF",0
+4124,"0x101C 0x05 : Load, CS0, CS_0 ON->VALID ON : ES OFF",1
+4125,"0x101D 0x00 : Load, CS0, CS_0 ON->VALID ON : Clamp ON",0
+4126,"0x101E 0x00 : Load, CS0, CS_0 ON->VALID ON : EQ_ER ON",0
+4127,"0x101F 0x00 : Load, CS0, CS_0 ON->VALID ON : Light Curtain ON",0
+4128,"0x1020 0x00 : Load, CS0, CS_0 ON->VALID ON : PS ON",0
+4129,"0x1021 0x00 : Load, CS0, CS_0 ON->VALID ON : PL ON",0
+4130,0x1022 0x00 : Reserved : Reserved,0
+4131,0x1023 0x00 : Reserved : Reserved,0
+4132,0x1024 0x00 : Reserved : Reserved,0
+4133,"0x1025 0x00 : Load, CS0, VALID ON->L_REQ ON : CS_0 OFF",0
+4134,"0x1026 0x00 : Load, CS0, VALID ON->L_REQ ON : VALID OFF",0
+4135,0x1027 0x00 : Reserved : Reserved,0
+4136,"0x1028 0x00 : Load, CS0, VALID ON->L_REQ ON : AM_AVBL OFF",0
+4137,"0x1029 0x00 : Load, CS0, VALID ON->L_REQ ON : TR_REQ OFF",0
+4138,"0x102A 0x00 : Load, CS0, VALID ON->L_REQ ON : BUSY OFF",0
+4139,"0x102B 0x00 : Load, CS0, VALID ON->L_REQ ON : COMPT OFF",0
+4140,"0x102C 0x00 : Load, CS0, VALID ON->L_REQ ON : CONT OFF",0
+4141,"0x102D 0x00 : Load, CS0, VALID ON->L_REQ ON : ES OFF",0
+4142,"0x102E 0x00 : Load, CS0, VALID ON->L_REQ ON : Clamp ON",0
+4143,"0x102F 0x00 : Load, CS0, VALID ON->L_REQ ON : EQ_ER ON",0
+4144,"0x1030 0x00 : Load, CS0, VALID ON->L_REQ ON : Light Curtain ON",0
+4145,"0x1031 0x00 : Load, CS0, VALID ON->L_REQ ON : PS ON",0
+4146,"0x1032 0x00 : Load, CS0, VALID ON->L_REQ ON : PL ON",0
+4147,0x1033 0x00 : Reserved : Reserved,0
+4148,0x1034 0x00 : Reserved : Reserved,0
+4149,"0x1035 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : OHT PIO Off-line",0
+4150,"0x1036 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : CS_0 OFF",0
+4151,"0x1037 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : VALID OFF",0
+4152,"0x1038 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : CS_1 OFF",0
+4153,"0x1039 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : AM_AVBL OFF",0
+4154,"0x103A 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : BUSY OFF",0
+4155,"0x103B 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : COMPT OFF",0
+4156,"0x103C 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : CONT OFF",0
+4157,"0x103D 0x05 : Load, CS0, L_REQ ON->TR_REQ ON : ES OFF",1
+4158,"0x103E 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : Clamp ON",0
+4159,"0x103F 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : EQ_ER ON",0
+4160,"0x1040 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : Light Curtain ON",0
+4161,"0x1041 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : PS ON",0
+4162,"0x1042 0x00 : Load, CS0, L_REQ ON->TR_REQ ON : PL ON",0
+4163,0x1043 0x00 : Reserved : Reserved,0
+4164,0x1044 0x00 : Reserved : Reserved,0
+4165,"0x1045 0x00 : Load, CS0, TR_REQ ON->READY ON : OHT PIO Off-line",0
+4166,"0x1046 0x00 : Load, CS0, TR_REQ ON->READY ON : CS_0 OFF",0
+4167,"0x1047 0x00 : Load, CS0, TR_REQ ON->READY ON : VALID OFF",0
+4168,"0x1048 0x00 : Load, CS0, TR_REQ ON->READY ON : CS_1 OFF",0
+4169,"0x1049 0x00 : Load, CS0, TR_REQ ON->READY ON : AM_AVBL OFF",0
+4170,"0x104A 0x00 : Load, CS0, TR_REQ ON->READY ON : TR_REQ OFF",0
+4171,"0x104B 0x00 : Load, CS0, TR_REQ ON->READY ON : BUSY OFF",0
+4172,"0x104C 0x00 : Load, CS0, TR_REQ ON->READY ON : COMPT OFF",0
+4173,"0x104D 0x00 : Load, CS0, TR_REQ ON->READY ON : CONT OFF",0
+4174,"0x104E 0x05 : Load, CS0, TR_REQ ON->READY ON : ES OFF",1
+4175,"0x104F 0x00 : Load, CS0, TR_REQ ON->READY ON : Clamp ON",0
+4176,"0x1050 0x00 : Load, CS0, TR_REQ ON->READY ON : EQ_ER ON",0
+4177,"0x1051 0x00 : Load, CS0, TR_REQ ON->READY ON : Light Curtain ON",0
+4178,"0x1052 0x00 : Load, CS0, TR_REQ ON->READY ON : PS ON",0
+4179,"0x1053 0x00 : Load, CS0, TR_REQ ON->READY ON : PL ON",0
+4180,0x1054 0x00 : Reserved : Reserved,0
+4181,0x1055 0x00 : Reserved : Reserved,0
+4182,"0x1056 0x00 : Load, CS0, READY ON->BUSY ON : OHT PIO Off-line",0
+4183,"0x1057 0x00 : Load, CS0, READY ON->BUSY ON : CS_0 OFF",0
+4184,"0x1058 0x00 : Load, CS0, READY ON->BUSY ON : VALID OFF",0
+4185,"0x1059 0x00 : Load, CS0, READY ON->BUSY ON : CS_1 OFF",0
+4186,"0x105A 0x00 : Load, CS0, READY ON->BUSY ON : AM_AVBL OFF",0
+4187,"0x105B 0x00 : Load, CS0, READY ON->BUSY ON : TR_REQ OFF",0
+4188,"0x105C 0x00 : Load, CS0, READY ON->BUSY ON : COMPT OFF",0
+4189,"0x105D 0x00 : Load, CS0, READY ON->BUSY ON : CONT OFF",0
+4190,"0x105E 0x05 : Load, CS0, READY ON->BUSY ON : ES OFF",1
+4191,"0x105F 0x00 : Load, CS0, READY ON->BUSY ON : Clamp ON",0
+4192,"0x1060 0x00 : Load, CS0, READY ON->BUSY ON : EQ_ER ON",0
+4193,"0x1061 0x00 : Load, CS0, READY ON->BUSY ON : Light Curtain ON",0
+4194,"0x1062 0x00 : Load, CS0, READY ON->BUSY ON : PS ON",0
+4195,"0x1063 0x00 : Load, CS0, READY ON->BUSY ON : PL ON",0
+4196,0x1064 0x00 : Reserved : Reserved,0
+4197,0x1065 0x00 : Reserved : Reserved,0
+4198,"0x1066 0x05 : Load, CS0, BUSY ON->PS & PL ON : OHT PIO Off-line",1
+4199,"0x1067 0x05 : Load, CS0, BUSY ON->PS & PL ON : CS_0 OFF",1
+4200,"0x1068 0x05 : Load, CS0, BUSY ON->PS & PL ON : VALID OFF",1
+4201,"0x1069 0x05 : Load, CS0, BUSY ON->PS & PL ON : CS_1 OFF",1
+4202,"0x106A 0x05 : Load, CS0, BUSY ON->PS & PL ON : AM_AVBL OFF",1
+4203,"0x106B 0x05 : Load, CS0, BUSY ON->PS & PL ON : TR_REQ OFF",1
+4204,"0x106C 0x05 : Load, CS0, BUSY ON->PS & PL ON : BUSY OFF",1
+4205,"0x106D 0x05 : Load, CS0, BUSY ON->PS & PL ON : COMPT OFF",1
+4206,"0x106E 0x05 : Load, CS0, BUSY ON->PS & PL ON : ES OFF",1
+4207,"0x106F 0x05 : Load, CS0, BUSY ON->PS & PL ON : Clamp ON",1
+4208,"0x1070 0x05 : Load, CS0, BUSY ON->PS & PL ON : EQ_ER ON",1
+4209,"0x1071 0x05 : Load, CS0, BUSY ON->PS & PL ON : Light Curtain ON",1
+4210,0x1072 0x00 : Reserved : Reserved,0
+4211,0x1073 0x00 : Reserved : Reserved,0
+4212,"0x1074 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : OHT PIO Off-line",1
+4213,"0x1075 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : CS_0 OFF",1
+4214,"0x1076 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : VALID OFF",1
+4215,"0x1077 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : CS_1 OFF",1
+4216,"0x1078 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : AM_AVBL OFF",1
+4217,"0x1079 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : TR_REQ OFF",1
+4218,"0x107A 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : BUSY OFF",1
+4219,"0x107B 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : COMPT OFF",1
+4220,"0x107C 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : ES OFF",1
+4221,"0x107D 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : Clamp ON",1
+4222,"0x107E 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : EQ_ER ON",1
+4223,"0x107F 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : Light Curtain ON",1
+4224,"0x1080 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : PS OFF",1
+4225,"0x1081 0x05 : Load, CS0, PS & PL ON->L_REQ OFF : PL OFF",1
+4226,0x1082 0x00 : Reserved : Reserved,0
+4227,0x1083 0x00 : Reserved : Reserved,0
+4228,"0x1084 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+4229,"0x1085 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : CS_0 OFF",1
+4230,"0x1086 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : VALID OFF",1
+4231,"0x1087 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : CS_1 OFF",1
+4232,"0x1088 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+4233,"0x1089 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : TR_REQ OFF",1
+4234,"0x108A 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : COMPT OFF",1
+4235,"0x108B 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : ES OFF",1
+4236,"0x108C 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : Clamp ON",1
+4237,"0x108D 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : EQ_ER ON",1
+4238,"0x108E 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : Light Curtain ON",1
+4239,"0x108F 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : PS OFF",1
+4240,"0x1090 0x05 : Load, CS0, L_REQ OFF->BUSY OFF : PL OFF",1
+4241,0x1091 0x00 : Reserved : Reserved,0
+4242,0x1092 0x00 : Reserved : Reserved,0
+4243,"0x1093 0x00 : Load, CS0, BUSY OFF->COMPT ON : OHT PIO Off-line",0
+4244,"0x1094 0x00 : Load, CS0, BUSY OFF->COMPT ON : CS_0 OFF",0
+4245,"0x1095 0x00 : Load, CS0, BUSY OFF->COMPT ON : VALID OFF",0
+4246,"0x1096 0x00 : Load, CS0, BUSY OFF->COMPT ON : CS_1 OFF",0
+4247,"0x1097 0x00 : Load, CS0, BUSY OFF->COMPT ON : AM_AVBL OFF",0
+4248,"0x1098 0x00 : Load, CS0, BUSY OFF->COMPT ON : TR_REQ OFF",0
+4249,"0x1099 0x00 : Load, CS0, BUSY OFF->COMPT ON : BUSY OFF",0
+4250,"0x109A 0x00 : Load, CS0, BUSY OFF->COMPT ON : ES OFF",0
+4251,"0x109B 0x00 : Load, CS0, BUSY OFF->COMPT ON : Clamp ON",0
+4252,"0x109C 0x00 : Load, CS0, BUSY OFF->COMPT ON : EQ_ER ON",0
+4253,"0x109D 0x00 : Load, CS0, BUSY OFF->COMPT ON : Light Curtain ON",0
+4254,"0x109E 0x00 : Load, CS0, BUSY OFF->COMPT ON : PS OFF",0
+4255,"0x109F 0x00 : Load, CS0, BUSY OFF->COMPT ON : PL OFF",0
+4256,0x10A0 0x00 : Reserved : Reserved,0
+4257,0x10A1 0x00 : Reserved : Reserved,0
+4258,"0x10A2 0x00 : Load, CS0, COMPT ON->READY OFF : OHT PIO Off-line",0
+4259,"0x10A3 0x00 : Load, CS0, COMPT ON->READY OFF : CS_0 OFF",0
+4260,"0x10A4 0x00 : Load, CS0, COMPT ON->READY OFF : VALID OFF",0
+4261,"0x10A5 0x00 : Load, CS0, COMPT ON->READY OFF : CS_1 OFF",0
+4262,"0x10A6 0x00 : Load, CS0, COMPT ON->READY OFF : AM_AVBL OFF",0
+4263,"0x10A7 0x00 : Load, CS0, COMPT ON->READY OFF : TR_REQ OFF",0
+4264,"0x10A8 0x00 : Load, CS0, COMPT ON->READY OFF : BUSY OFF",0
+4265,"0x10A9 0x00 : Load, CS0, COMPT ON->READY OFF : COMPT OFF",0
+4266,"0x10AA 0x00 : Load, CS0, COMPT ON->READY OFF : ES OFF",0
+4267,"0x10AB 0x00 : Load, CS0, COMPT ON->READY OFF : Clamp ON",0
+4268,"0x10AC 0x00 : Load, CS0, COMPT ON->READY OFF : EQ_ER ON",0
+4269,"0x10AD 0x00 : Load, CS0, COMPT ON->READY OFF : Light Curtain ON",0
+4270,"0x10AE 0x00 : Load, CS0, COMPT ON->READY OFF : PS OFF",0
+4271,"0x10AF 0x00 : Load, CS0, COMPT ON->READY OFF : PL OFF",0
+4272,0x10B0 0x00 : Reserved : Reserved,0
+4273,0x10B1 0x00 : Reserved : Reserved,0
+4274,"0x10B2 0x00 : Load, CS0, READY OFF->CS_0 OFF : OHT PIO Off-line",0
+4275,0x10B3 0x00 : Reserved : Reserved,0
+4276,"0x10B4 0x00 : Load, CS0, READY OFF->CS_0 OFF : AM_AVBL OFF",0
+4277,"0x10B5 0x00 : Load, CS0, READY OFF->CS_0 OFF : CS_0 OFF",0
+4278,"0x10B6 0x00 : Load, CS0, READY OFF->CS_0 OFF : BUSY OFF",0
+4279,"0x10B7 0x05 : Load, CS0, READY OFF->CS_0 OFF : ES OFF",1
+4280,"0x10B8 0x00 : Load, CS0, READY OFF->CS_0 OFF : Clamp ON",0
+4281,"0x10B9 0x00 : Load, CS0, READY OFF->CS_0 OFF : EQ_ER ON",0
+4282,"0x10BA 0x00 : Load, CS0, READY OFF->CS_0 OFF : Light Curtain ON",0
+4283,"0x10BB 0x00 : Load, CS0, READY OFF->CS_0 OFF : PS OFF",0
+4284,"0x10BC 0x00 : Load, CS0, READY OFF->CS_0 OFF : PL OFF",0
+4285,0x10BD 0x00 : Reserved : Reserved,0
+4286,0x10BE 0x00 : Reserved : Reserved,0
+4287,0x10BF 0x00 : Reserved : Reserved,0
+8192,"0x2000 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : OHT PIO Off-line",0
+8193,"0x2001 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : CS_0 OFF",0
+8194,"0x2002 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : VALID OFF",0
+8195,"0x2003 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : CS_1 OFF",0
+8196,"0x2004 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : AM_AVBL OFF",0
+8197,"0x2005 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : TR_REQ OFF",0
+8198,"0x2006 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : BUSY OFF",0
+8199,"0x2007 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : COMPT OFF",0
+8200,0x2008 0x00 : Reserved : Reserved,0
+8201,"0x2009 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : ES OFF",1
+8202,"0x200A 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : ????",0
+8203,"0x200B 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : EQ_ER ON",0
+8204,"0x200C 0x00 : Unload to Load, CS0, BUSY & CONT ON->PS & PL OFF : Light Curtain ON",0
+8205,0x200D 0x00 : Reserved : Reserved,0
+8206,0x200E 0x00 : Reserved : Reserved,0
+8207,"0x200F 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : OHT PIO Off-line",1
+8208,"0x2010 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : CS_0 OFF",1
+8209,"0x2011 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : VALID OFF",1
+8210,"0x2012 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : CS_1 OFF",1
+8211,"0x2013 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : AM_AVBL OFF",1
+8212,"0x2014 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : TR_REQ OFF",1
+8213,"0x2015 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : BUSY OFF",1
+8214,"0x2016 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : COMPT OFF",1
+8215,"0x2017 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : CONT OFF",1
+8216,"0x2018 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : ES OFF",1
+8217,"0x2019 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : Clamp ON",1
+8218,"0x201A 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : EQ_ER ON",1
+8219,"0x201B 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : Light Curtain ON",1
+8220,"0x201C 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : PS ON",1
+8221,"0x201D 0x05 : Unload to Load, CS0, PS & PL OFF->U_REQ OFF : PL ON",1
+8222,0x201E 0x00 : Reserved : Reserved,0
+8223,0x201F 0x00 : Reserved : Reserved,0
+8224,"0x2020 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+8225,"0x2021 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : CS_0 OFF",1
+8226,"0x2022 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : VALID OFF",1
+8227,"0x2023 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : CS_1 OFF",1
+8228,"0x2024 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+8229,0x2025 0x05 : Reserved : Reserved,1
+8230,0x2026 0x05 : Reserved : Reserved,1
+8231,0x2027 0x05 : Reserved : Reserved,1
+8232,"0x2028 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : ES OFF",1
+8233,"0x2029 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : Clamp ON",1
+8234,"0x202A 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : EQ_ER ON",1
+8235,"0x202B 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : Light Curtain ON",1
+8236,"0x202C 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : PS ON",1
+8237,"0x202D 0x05 : Unload to Load, CS0, U_REQ OFF->BUSY OFF : PL ON",1
+8238,0x202E 0x00 : Reserved : Reserved,0
+8239,0x202F 0x00 : Reserved : Reserved,0
+8240,"0x2030 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : OHT PIO Off-line",0
+8241,"0x2031 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : CS_0 OFF",0
+8242,"0x2032 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : VALID OFF",0
+8243,"0x2033 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : CS_1 OFF",0
+8244,"0x2034 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : AM_AVBL OFF",0
+8245,"0x2035 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : TR_REQ OFF",0
+8246,"0x2036 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : CONT OFF",0
+8247,"0x2037 0x05 : Unload to Load, CS0, BUSY OFF->COMPT ON : ES OFF",1
+8248,"0x2038 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : Clamp ON",0
+8249,"0x2039 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : EQ_ER ON",0
+8250,"0x203A 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : Light Curtain ON",0
+8251,"0x203B 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : PS ON",0
+8252,"0x203C 0x00 : Unload to Load, CS0, BUSY OFF->COMPT ON : PL ON",0
+8253,0x203D 0x00 : Reserved : Reserved,0
+8254,0x203E 0x00 : Reserved : Reserved,0
+8255,"0x203F 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : OHT PIO Off-line",0
+8256,"0x2040 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : CS_0 OFF",0
+8257,"0x2041 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : VALID OFF",0
+8258,"0x2042 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : CS_1 OFF",0
+8259,"0x2043 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : AM_AVBL OFF",0
+8260,"0x2044 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : TR_REQ OFF",0
+8261,"0x2045 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : BUSY OFF",0
+8262,"0x2046 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : COMPT OFF",0
+8263,"0x2047 0x05 : Unload to Load, CS0, COMPT ON->READY OFF : ES OFF",1
+8264,"0x2048 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : Clamp ON",0
+8265,"0x2049 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : EQ_ER ON",0
+8266,"0x204A 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : Light Curtain ON",0
+8267,"0x204B 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : PS ON",0
+8268,"0x204C 0x00 : Unload to Load, CS0, COMPT ON->READY OFF : PL ON",0
+8269,0x204D 0x00 : Reserved : Reserved,0
+8270,0x204E 0x00 : Reserved : Reserved,0
+8271,"0x204F 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : OHT PIO Off-line",0
+8272,"0x2050 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : CS_1 OFF",0
+8273,"0x2051 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : AM_AVBL OFF",0
+8274,"0x2052 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : TR_REQ OFF",0
+8275,"0x2053 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : BUSY OFF",0
+8276,"0x2054 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : CONT OFF",0
+8277,"0x2055 0x05 : Unload to Load, CS0, READY OFF->CS_0 OFF : ES OFF",1
+8278,"0x2056 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : Clamp ON",0
+8279,"0x2057 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : EQ_ER ON",0
+8280,"0x2058 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : Light Curtain ON",0
+8281,"0x2059 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : PS ON",0
+8282,"0x205A 0x00 : Unload to Load, CS0, READY OFF->CS_0 OFF : PL ON",0
+8283,0x205B 0x00 : Reserved : Reserved,0
+8284,0x205C 0x00 : Reserved : Reserved,0
+8285,0x205D 0x00 : Reserved : Reserved,0
+8286,0x205E 0x00 : Reserved : Reserved,0
+8287,"0x205F 0x00 : Unload to Load, CS0, Ready->CS_0 ON : AM_AVBL OFF",0
+8288,"0x2060 0x00 : Unload to Load, CS0, Ready->CS_0 ON : TR_REQ OFF",0
+8289,"0x2061 0x00 : Unload to Load, CS0, Ready->CS_0 ON : BUSY OFF",0
+8290,"0x2062 0x00 : Unload to Load, CS0, Ready->CS_0 ON : COMPT OFF",0
+8291,"0x2063 0x00 : Unload to Load, CS0, Ready->CS_0 ON : CONT OFF",0
+8292,"0x2064 0x05 : Unload to Load, CS0, Ready->CS_0 ON : ES OFF",1
+8293,"0x2065 0x00 : Unload to Load, CS0, Ready->CS_0 ON : Clamp ON",0
+8294,"0x2066 0x00 : Unload to Load, CS0, Ready->CS_0 ON : EQ_ER ON",0
+8295,"0x2067 0x00 : Unload to Load, CS0, Ready->CS_0 ON : Light Curtain ON",0
+8296,"0x2068 0x00 : Unload to Load, CS0, Ready->CS_0 ON : PS ON",0
+8297,"0x2069 0x00 : Unload to Load, CS0, Ready->CS_0 ON : PL ON",0
+8298,0x206A 0x00 : Reserved : Reserved,0
+8299,0x206B 0x00 : Reserved : Reserved,0
+8300,"0x206C 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : OHT PIO Off-line",0
+8301,"0x206D 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : CS_0 OFF",0
+8302,"0x206E 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : CS_1 OFF",0
+8303,"0x206F 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : AM_AVBL OFF",0
+8304,"0x2070 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : TR_REQ OFF",0
+8305,"0x2071 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : BUSY OFF",0
+8306,"0x2072 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : COMPT OFF",0
+8307,"0x2073 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : CONT OFF",0
+8308,"0x2074 0x05 : Unload to Load, CS0, CS_0 ON->VALID ON : ES OFF",1
+8309,"0x2075 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : Clamp ON",0
+8310,"0x2076 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : EQ_ER ON",0
+8311,"0x2077 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : Light Curtain ON",0
+8312,"0x2078 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : PS ON",0
+8313,"0x2079 0x00 : Unload to Load, CS0, CS_0 ON->VALID ON : PL ON",0
+8314,0x207A 0x00 : Reserved : Reserved,0
+8315,0x207B 0x00 : Reserved : Reserved,0
+8316,"0x207C 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : OHT PIO Off-line",0
+8317,"0x207D 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : CS_0 OFF",0
+8318,"0x207E 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : VALID OFF",0
+8319,"0x207F 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : CS_1 ON",0
+8320,"0x2080 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : AM_AVBL OFF",0
+8321,"0x2081 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : TR_REQ OFF",0
+8322,"0x2082 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : BUSY OFF",0
+8323,"0x2083 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : COMPT OFF",0
+8324,"0x2084 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : CONT OFF",0
+8325,"0x2085 0x05 : Unload to Load, CS0, VALID ON->L_REQ ON : ES OFF",1
+8326,"0x2086 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : Clamp ON",0
+8327,"0x2087 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : EQ_ER ON",0
+8328,"0x2088 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : Light Curtain ON",0
+8329,"0x2089 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : PS ON",0
+8330,"0x208A 0x00 : Unload to Load, CS0, VALID ON->L_REQ ON : PL ON",0
+8331,0x208B 0x00 : Reserved : Reserved,0
+8332,0x208C 0x00 : Reserved : Reserved,0
+8333,"0x208D 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : OHT PIO Off-line",0
+8334,"0x208E 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : CS_0 OFF",0
+8335,"0x208F 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : VALID OFF",0
+8336,"0x2090 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : CS_1 OFF",0
+8337,"0x2091 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : AM_AVBL OFF",0
+8338,"0x2092 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : BUSY OFF",0
+8339,"0x2093 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : COMPT OFF",0
+8340,"0x2094 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : CONT OFF",0
+8341,"0x2095 0x05 : Unload to Load, CS0, L_REQ ON->READY ON : ES OFF",1
+8342,"0x2096 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : Clamp ON",0
+8343,"0x2097 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : EQ_ER ON",0
+8344,"0x2098 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : Light Curtain ON",0
+8345,"0x2099 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : PS ON",0
+8346,"0x209A 0x00 : Unload to Load, CS0, L_REQ ON->READY ON : PL ON",0
+8347,0x209B 0x00 : Reserved : Reserved,0
+8348,0x209C 0x00 : Reserved : Reserved,0
+8349,"0x209D 0x00 : Unload to Load, CS0, READY ON->BUSY ON : OHT PIO Off-line",0
+8350,"0x209E 0x00 : Unload to Load, CS0, READY ON->BUSY ON : CS_0 OFF",0
+8351,"0x209F 0x00 : Unload to Load, CS0, READY ON->BUSY ON : VALID OFF",0
+8352,"0x20A0 0x00 : Unload to Load, CS0, READY ON->BUSY ON : CS_1 OFF",0
+8353,"0x20A1 0x00 : Unload to Load, CS0, READY ON->BUSY ON : AM_AVBL OFF",0
+8354,"0x20A2 0x00 : Unload to Load, CS0, READY ON->BUSY ON : TR_REQ OFF",0
+8355,"0x20A3 0x00 : Unload to Load, CS0, READY ON->BUSY ON : COMPT OFF",0
+8356,"0x20A4 0x00 : Unload to Load, CS0, READY ON->BUSY ON : COMPT OFF",0
+8357,"0x20A5 0x05 : Unload to Load, CS0, READY ON->BUSY ON : ES OFF",1
+8358,"0x20A6 0x00 : Unload to Load, CS0, READY ON->BUSY ON : Clamp ON",0
+8359,"0x20A7 0x00 : Unload to Load, CS0, READY ON->BUSY ON : EQ_ER ON",0
+8360,"0x20A8 0x00 : Unload to Load, CS0, READY ON->BUSY ON : Light Curtain ON",0
+8361,"0x20A9 0x00 : Unload to Load, CS0, READY ON->BUSY ON : PS ON",0
+8362,"0x20AA 0x00 : Unload to Load, CS0, READY ON->BUSY ON : PL ON",0
+8363,0x20AB 0x00 : Reserved : Reserved,0
+8364,0x20AC 0x00 : Reserved : Reserved,0
+8365,"0x20AD 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : OHT PIO Off-line",1
+8366,"0x20AE 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : CS_0 OFF",1
+8367,"0x20AF 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : VALID OFF",1
+8364,"0x20AC 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : CS_0 OFF",1
+8368,"0x20B0 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : CS_1 OFF",1
+8369,"0x20B1 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : AM_AVBL OFF",1
+8370,"0x20B2 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : TR_REQ OFF",1
+8371,"0x20B3 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : BUSY OFF",1
+8372,"0x20B4 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : COMPT OFF",1
+8373,0x20B5 0x05 : Reserved : Reserved,1
+8374,"0x20B6 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : ES OFF",1
+8375,"0x20B7 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : Clamp ON",1
+8376,"0x20B8 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : EQ_ER ON",1
+8377,"0x20B9 0x05 : Unload to Load, CS0, BUSY & CONT ON->PS & PL ON : Light Curtain ON",1
+8378,0x20BA 0x05 : Reserved : Reserved,1
+8379,0x20BB 0x05 : Reserved : Reserved,1
+8380,"0x20BC 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+8381,"0x20BD 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : CS_0 OFF",1
+8382,"0x20BE 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : VALID OFF",1
+8383,"0x20BF 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : CS_1 OFF",1
+8384,"0x20C0 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+8385,"0x20C1 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : TR_REQ OFF",1
+8386,"0x20C2 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : BUSY OFF",1
+8387,"0x20C3 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : COMPT OFF",1
+8388,"0x20C4 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : ES OFF",1
+8389,"0x20C5 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : Clamp ON",1
+8390,"0x20C6 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : EQ_ER ON",1
+8391,"0x20C7 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : Light Curtain ON",1
+8392,"0x20C8 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : PS OFF",1
+8393,"0x20C9 0x05 : Unload to Load, CS0, L_REQ OFF->BUSY OFF : PL OFF",1
+8394,0x20CA 0x00 : Reserved : Reserved,0
+8395,"0x20CB 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : OHT PIO Off-line",0
+8396,0x20CC 0x00 : Reserved : Reserved,0
+8397,"0x20CD 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : VALID OFF",0
+8398,"0x20CE 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : AM_AVBL OFF",0
+8399,"0x20CF 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : TR_REQ OFF",0
+8400,"0x20D0 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : BUSY OFF",0
+8401,"0x20D1 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : CONT OFF",0
+8402,"0x20D2 0x05 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : ES OFF",1
+8403,"0x20D3 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : Clamp ON",0
+8404,"0x20D4 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : EQ_ER ON",0
+8405,"0x20D5 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : Light Curtain ON",0
+8406,"0x20D6 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : PS OFF",0
+8407,"0x20D7 0x00 : Unload to Load, CS0, BUSY OFF->CS_0 OFF : PL OFF",0
+8408,0x20D8 0x00 : Reserved : Reserved,0
+8409,0x20D9 0x00 : Reserved : Reserved,0
+8410,0x20DA 0x00 : Reserved : Reserved,0
+8411,0x20DB 0x00 : Reserved : Reserved,0
+8412,0x20DC 0x00 : Reserved : Reserved,0
+8413,0x20DD 0x00 : Reserved : Reserved,0
+8414,0x20DE 0x00 : Reserved : Reserved,0
+8415,0x20DF 0x00 : Reserved : Reserved,0
+12288,"0x3000 0x15 : Unload, CS1, Ready->GO ON : ES OFF",1
+12289,"0x3001 0x10 : Unload, CS1, Ready->GO ON : Clamp ON",0
+12290,"0x3002 0x10 : Unload, CS1, Ready->GO ON : EQ ERROR",0
+12291,"0x3003 0x10 : Unload, CS1, Ready->GO ON : Light Curtain ERROR",0
+12292,"0x3004 0x10 : Unload, CS1, Ready->GO ON : PS ON",0
+12293,"0x3005 0x10 : Unload, CS1, Ready->GO ON : PL ON",0
+12294,"0x3006 0x10 : Unload, CS1, Ready->GO ON : PS PL not set",0
+12295,"0x3007 0x10 : Unload, CS1, GO ON->CS_1 ON : AM_AVBL OFF",0
+12296,"0x3008 0x10 : Unload, CS1, GO ON->CS_1 ON : TR_REQ OFF",0
+12297,"0x3009 0x10 : Unload, CS1, GO ON->CS_1 ON : BUSY OFF",0
+12298,"0x300A 0x10 : Unload, CS1, GO ON->CS_1 ON : COMPT OFF",0
+12299,"0x300B 0x10 : Unload, CS1, GO ON->CS_1 ON : CONT OFF",0
+12300,"0x300C 0x10 : Unload, CS1, GO ON->CS_1 ON : ES OFF",0
+12301,"0x300D 0x10 : Unload, CS1, GO ON->CS_1 ON : Clamp ON",0
+12302,"0x300E 0x10 : Unload, CS1, GO ON->CS_1 ON : EQ_ER ON",0
+12303,"0x300F 0x10 : Unload, CS1, GO ON->CS_1 ON : Light Curtain ON",0
+12304,"0x3010 0x10 : Unload, CS1, GO ON->CS_1 ON : PS OFF",0
+12305,"0x3011 0x10 : Unload, CS1, GO ON->CS_1 ON : PL OFF",0
+12307,"0x3013 0x10 : Unload, CS1, GO ON->CS_1 ON : VALID ON",0
+12308,0x3014 0x10 : Reserved : Reserved,0
+12309,"0x3015 0x10 : Unload, CS1, CS_1 ON->VALID ON : OHT PIO Off-line",0
+12310,"0x3016 0x10 : Unload, CS1, CS_1 ON->VALID ON : CS_1 OFF",0
+12311,"0x3017 0x10 : Unload, CS1, CS_1 ON->VALID ON : AM_AVBL OFF",0
+12312,"0x3018 0x10 : Unload, CS1, CS_1 ON->VALID ON : TR_REQ OFF",0
+12313,"0x3019 0x10 : Unload, CS1, CS_1 ON->VALID ON : BUSY OFF",0
+12314,"0x301A 0x10 : Unload, CS1, CS_1 ON->VALID ON : COMPT OFF",0
+12315,"0x301B 0x10 : Unload, CS1, CS_1 ON->VALID ON : CONT OFF",0
+12316,"0x301C 0x15 : Unload, CS1, CS_1 ON->VALID ON : ES OFF",1
+12317,"0x301D 0x10 : Unload, CS1, CS_1 ON->VALID ON : Clamp ON",0
+12318,"0x301E 0x10 : Unload, CS1, CS_1 ON->VALID ON : EQ_ER ON",0
+12319,"0x301F 0x10 : Unload, CS1, CS_1 ON->VALID ON : Light Curtain ON",0
+12320,"0x3020 0x10 : Unload, CS1, CS_1 ON->VALID ON : PS ON",0
+12321,"0x3021 0x10 : Unload, CS1, CS_1 ON->VALID ON : PL ON",0
+12322,0x3022 0x10 : Reserved : Reserved,0
+12323,0x3023 0x10 : Reserved : Reserved,0
+12307,0x3013 0x10 : Reserved : Reserved,0
+12324,"0x3024 0x10 : Unload, CS1, VALID ON->U_REQ ON : OHT PIO Off-line",0
+12325,"0x3025 0x10 : Unload, CS1, VALID ON->U_REQ ON : CS_0 OFF",0
+12326,"0x3026 0x10 : Unload, CS1, VALID ON->U_REQ ON : VALID OFF",0
+12327,"0x3027 0x10 : Unload, CS1, VALID ON->U_REQ ON : CS_1 OFF",0
+12328,"0x3028 0x10 : Unload, CS1, VALID ON->U_REQ ON : AM_AVBL OFF",0
+12329,"0x3029 0x10 : Unload, CS1, VALID ON->U_REQ ON : TR_REQ OFF",0
+12330,"0x302A 0x10 : Unload, CS1, VALID ON->U_REQ ON : BUSY OFF",0
+12331,"0x302B 0x10 : Unload, CS1, VALID ON->U_REQ ON : COMPT OFF",0
+12332,"0x302C 0x10 : Unload, CS1, VALID ON->U_REQ ON : CONT OFF",0
+12333,"0x302D 0x15 : Unload, CS1, VALID ON->U_REQ ON : ES OFF",1
+12334,"0x302E 0x10 : Unload, CS1, VALID ON->U_REQ ON : Clamp ON",0
+12335,"0x302F 0x10 : Unload, CS1, VALID ON->U_REQ ON : EQ_ER ON",0
+12336,"0x3030 0x10 : Unload, CS1, VALID ON->U_REQ ON : Light Curtain ON",0
+12337,"0x3031 0x10 : Unload, CS1, VALID ON->U_REQ ON : PS ON",0
+12338,"0x3032 0x10 : Unload, CS1, VALID ON->U_REQ ON : PL ON",0
+12339,0x3033 0x10 : Reserved : Reserved,0
+12340,0x3034 0x10 : Reserved : Reserved,0
+12341,"0x3035 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : OHT PIO Off-line",0
+12342,0x3036 0x10 : Reserved : Reserved,0
+12343,"0x3037 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : VALID OFF",0
+12344,"0x3038 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : CS_1 OFF",0
+12345,"0x3039 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : AM_AVBL OFF",0
+12346,"0x303A 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : BUSY OFF",0
+12347,"0x303B 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : COMPT OFF",0
+12348,"0x303C 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : CONT OFF",0
+12349,"0x303D 0x15 : Unload, CS1, U_REQ ON->TR_REQ ON : ES OFF",1
+12350,"0x303E 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : Clamp ON",0
+12351,"0x303F 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : EQ_ER ON",0
+12352,"0x3040 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : Light Curtain ON",0
+12353,"0x3041 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : PS OFF",0
+12354,"0x3042 0x10 : Unload, CS1, U_REQ ON->TR_REQ ON : PL OFF",0
+12355,0x3043 0x10 : Reserved : Reserved,0
+12356,0x3044 0x10 : Reserved : Reserved,0
+12357,"0x3045 0x10 : Unload, CS1, TR_REQ ON->READY ON : OHT PIO Off-line",0
+12358,"0x3046 0x10 : Unload, CS1, TR_REQ ON->READY ON : CS_0 OFF",0
+12359,"0x3047 0x10 : Unload, CS1, TR_REQ ON->READY ON : VALID OFF",0
+12360,"0x3048 0x10 : Unload, CS1, TR_REQ ON->READY ON : CS_1 OFF",0
+12361,"0x3049 0x10 : Unload, CS1, TR_REQ ON->READY ON : AM_AVBL OFF",0
+12362,"0x304A 0x10 : Unload, CS1, TR_REQ ON->READY ON : TR_REQ OFF",0
+12363,"0x304B 0x10 : Unload, CS1, TR_REQ ON->READY ON : BUSY OFF",0
+12364,"0x304C 0x10 : Unload, CS1, TR_REQ ON->READY ON : COMPT OFF",0
+12365,"0x304D 0x10 : Unload, CS1, TR_REQ ON->READY ON : CONT OFF",0
+12366,"0x304E 0x15 : Unload, CS1, TR_REQ ON->READY ON : ES OFF",1
+12367,"0x304F 0x10 : Unload, CS1, TR_REQ ON->READY ON : Clamp ON",0
+12368,"0x3050 0x10 : Unload, CS1, TR_REQ ON->READY ON : EQ_ER ON",0
+12369,"0x3051 0x10 : Unload, CS1, TR_REQ ON->READY ON : Light Curtain ON",0
+12370,"0x3052 0x10 : Unload, CS1, TR_REQ ON->READY ON : PS ON",0
+12371,"0x3053 0x10 : Unload, CS1, TR_REQ ON->READY ON : PL ON",0
+12372,0x3054 0x10 : Reserved : Reserved,0
+12373,0x3055 0x10 : Reserved : Reserved,0
+12374,"0x3056 0x10 : Unload, CS1, READY ON->BUSY ON : OHT PIO Off-line",0
+12375,0x3057 0x10 : Reserved : Reserved,0
+12376,"0x3058 0x10 : Unload, CS1, READY ON->BUSY ON : VALID OFF",0
+12377,"0x3059 0x10 : Unload, CS1, READY ON->BUSY ON : CS_1 OFF",0
+12378,"0x305A 0x10 : Unload, CS1, READY ON->BUSY ON : AM_AVBL OFF",0
+12379,"0x305B 0x10 : Unload, CS1, READY ON->BUSY ON : TR_REQ OFF",0
+12380,"0x305C 0x10 : Unload, CS1, READY ON->BUSY ON : COMPT OFF",0
+12381,"0x305D 0x10 : Unload, CS1, READY ON->BUSY ON : CONT OFF",0
+12382,"0x305E 0x15 : Unload, CS1, READY ON->BUSY ON : ES OFF",1
+12383,"0x305F 0x10 : Unload, CS1, READY ON->BUSY ON : Clamp ON",0
+12384,"0x3060 0x10 : Unload, CS1, READY ON->BUSY ON : EQ_ER ON",0
+12385,"0x3061 0x10 : Unload, CS1, READY ON->BUSY ON : Light Curtain ON",0
+12386,"0x3062 0x10 : Unload, CS1, READY ON->BUSY ON : PS OFF",0
+12387,"0x3063 0x10 : Unload, CS1, READY ON->BUSY ON : PL OFF",0
+12388,0x3064 0x10 : Reserved : Reserved,0
+12389,0x3065 0x10 : Reserved : Reserved,0
+12390,"0x3066 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : OHT PIO Off-line",1
+12391,"0x3067 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : CS_0 OFF",1
+12392,"0x3068 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : VALID OFF",1
+12393,"0x3069 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : CS_1 OFF",1
+12394,"0x306A 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : AM_AVBL OFF",1
+12395,"0x306B 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : TR_REQ OFF",1
+12396,"0x306C 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : BUSY OFF",1
+12397,"0x306D 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : COMPT OFF",1
+12398,"0x306E 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : ES OFF",1
+12399,"0x306F 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : Clamp ON",1
+12400,"0x3070 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : EQ_ER ON",1
+12401,"0x3071 0x15 : Unload, CS1, BUSY ON->PS & PL OFF : Light Curtain ON",1
+12402,0x3072 0x10 : Reserved : Reserved,0
+12403,0x3073 0x10 : Reserved : Reserved,0
+12404,"0x3074 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : OHT PIO Off-line",1
+12405,"0x3075 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : CS_0 OFF",1
+12406,"0x3076 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : VALID OFF",1
+12407,"0x3077 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : CS_1 OFF",1
+12408,"0x3078 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : AM_AVBL OFF",1
+12409,"0x3079 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : TR_REQ OFF",1
+12410,"0x307A 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : BUSY OFF",1
+12411,"0x307B 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : COMPT OFF",1
+12412,"0x307C 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : ES OFF",1
+12413,"0x307D 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : Clamp ON",1
+12414,"0x307E 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : EQ_ER ON",1
+12415,"0x307F 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : Light Curtain ON",1
+12416,"0x3080 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : PS OFF",1
+12417,"0x3081 0x15 : Unload, CS1, PS & PL OFF->U_REQ OFF : PL OFF",1
+12418,0x3082 0x10 : Reserved : Reserved,0
+12419,0x3083 0x10 : Reserved : Reserved,0
+12420,"0x3084 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+12421,0x3085 0x15 : Reserved : Reserved,1
+12422,"0x3086 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : VALID OFF",1
+12423,"0x3087 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : CS_1 OFF",1
+12424,"0x3088 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+12425,"0x3089 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : TR_REQ OFF",1
+12426,"0x308A 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : COMPT OFF",1
+12427,"0x308B 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : ES OFF",1
+12428,"0x308C 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : Clamp ON",1
+12429,"0x308D 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : EQ_ER ON",1
+12430,"0x308E 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : Light Curtain ON",1
+12431,"0x308F 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : PS ON",1
+12432,"0x3090 0x15 : Unload, CS1, U_REQ OFF->BUSY OFF : PL ON",1
+12433,0x3091 0x10 : Reserved : Reserved,0
+12434,0x3092 0x10 : Reserved : Reserved,0
+12435,"0x3093 0x10 : Unload, CS1, BUSY OFF->COMPT ON : OHT PIO Off-line",0
+12436,"0x3094 0x10 : Unload, CS1, BUSY OFF->COMPT ON : CS_0 OFF",0
+12437,"0x3095 0x10 : Unload, CS1, BUSY OFF->COMPT ON : VALID OFF",0
+12438,"0x3096 0x10 : Unload, CS1, BUSY OFF->COMPT ON : CS_1 OFF",0
+12439,"0x3097 0x10 : Unload, CS1, BUSY OFF->COMPT ON : AM_AVBL OFF",0
+12440,"0x3098 0x10 : Unload, CS1, BUSY OFF->COMPT ON : TR_REQ OFF",0
+12441,"0x3099 0x10 : Unload, CS1, BUSY OFF->COMPT ON : BUSY OFF",0
+12442,"0x309A 0x15 : Unload, CS1, BUSY OFF->COMPT ON : ES OFF",1
+12443,"0x309B 0x10 : Unload, CS1, BUSY OFF->COMPT ON : Clamp ON",0
+12444,"0x309C 0x10 : Unload, CS1, BUSY OFF->COMPT ON : EQ_ER ON",0
+12445,"0x309D 0x10 : Unload, CS1, BUSY OFF->COMPT ON : Light Curtain ON",0
+12446,"0x309E 0x10 : Unload, CS1, BUSY OFF->COMPT ON : PS OFF",0
+12447,"0x309F 0x10 : Unload, CS1, BUSY OFF->COMPT ON : PL OFF",0
+12448,0x30A0 0x10 : Reserved : Reserved,0
+12449,0x30A1 0x10 : Reserved : Reserved,0
+12450,"0x30A2 0x10 : Unload, CS1, COMPT ON->READY OFF : OHT PIO Off-line",0
+12451,"0x30A3 0x10 : Unload, CS1, COMPT ON->READY OFF : CS_0 OFF",0
+12452,"0x30A4 0x10 : Unload, CS1, COMPT ON->READY OFF : VALID OFF",0
+12453,"0x30A5 0x10 : Unload, CS1, COMPT ON->READY OFF : CS_1 OFF",0
+12454,"0x30A6 0x10 : Unload, CS1, COMPT ON->READY OFF : AM_AVBL OFF",0
+12455,"0x30A7 0x10 : Unload, CS1, COMPT ON->READY OFF : TR_REQ OFF",0
+12456,"0x30A8 0x10 : Unload, CS1, COMPT ON->READY OFF : BUSY OFF",0
+12457,"0x30A9 0x10 : Unload, CS1, COMPT ON->READY OFF : COMPT OFF",0
+12458,"0x30AA 0x15 : Unload, CS1, COMPT ON->READY OFF : ES OFF",1
+12459,"0x30AB 0x10 : Unload, CS1, COMPT ON->READY OFF : Clamp ON",0
+12460,"0x30AC 0x10 : Unload, CS1, COMPT ON->READY OFF : EQ_ER ON",0
+12461,"0x30AD 0x10 : Unload, CS1, COMPT ON->READY OFF : Light Curtain ON",0
+12462,"0x30AE 0x10 : Unload, CS1, COMPT ON->READY OFF : PS OFF",0
+12463,"0x30AF 0x10 : Unload, CS1, COMPT ON->READY OFF : PL OFF",0
+12464,0x30B0 0x10 : Reserved : Reserved,0
+12465,0x30B1 0x10 : Reserved : Reserved,0
+12466,"0x30B2 0x10 : Unload, CS1, READY OFF->CS_1 OFF : OHT PIO Off-line",0
+12467,0x30B3 0x10 : Reserved : Reserved,0
+12468,"0x30B4 0x10 : Unload, CS1, READY OFF->CS_1 OFF : AM_AVBL OFF",0
+12469,"0x30B5 0x10 : Unload, CS1, READY OFF->CS_1 OFF : TR_REQ OFF",0
+12470,"0x30B6 0x10 : Unload, CS1, READY OFF->CS_1 OFF : BUSY OFF",0
+12471,"0x30B7 0x15 : Unload, CS1, READY OFF->CS_1 OFF : ES OFF",1
+12472,"0x30B8 0x10 : Unload, CS1, READY OFF->CS_1 OFF : Clamp ON",0
+12473,"0x30B9 0x10 : Unload, CS1, READY OFF->CS_1 OFF : EQ_ER ON",0
+12474,"0x30BA 0x10 : Unload, CS1, READY OFF->CS_1 OFF : Light Curtain ON",0
+12475,"0x30BB 0x10 : Unload, CS1, READY OFF->CS_1 OFF : PS ON",0
+12476,"0x30BC 0x10 : Unload, CS1, READY OFF->CS_1 OFF : PL ON",0
+12477,0x30BD 0x10 : Reserved : Reserved,0
+12478,0x30BE 0x10 : Reserved : Reserved,0
+12479,0x30BF 0x10 : Reserved : Reserved,0
+16384,"0x4000 0x15 : Load, CS1, Ready->GO ON : ES OFF",1
+16385,"0x4001 0x10 : Load, CS1, Ready->GO ON : Clamp ON",0
+16386,"0x4002 0x10 : Load, CS1, Ready->GO ON : EQ ERROR",0
+16387,"0x4003 0x10 : Load, CS1, Ready->GO ON : Light Curtain ERROR",0
+16388,"0x4004 0x10 : Load, CS1, Ready->GO ON : PS ON",0
+16389,"0x4005 0x10 : Load, CS1, Ready->GO ON : PL ON",0
+16390,"0x4006 0x10 : Load, CS1, GO ON->CS_1 ON : VALID OFF",0
+16391,"0x4007 0x10 : Load, CS1, GO ON->CS_1 ON : AM_AVBL OFF",0
+16392,"0x4008 0x10 : Load, CS1, GO ON->CS_1 ON : TR_REQ OFF",0
+16393,"0x4009 0x10 : Load, CS1, GO ON->CS_1 ON : BUSY OFF",0
+16394,"0x400A 0x10 : Load, CS1, GO ON->CS_1 ON : COMPT OFF",0
+16395,"0x400B 0x10 : Load, CS1, GO ON->CS_1 ON : CONT OFF",0
+16396,"0x400C 0x15 : Load, CS1, GO ON->CS_1 ON : ES OFF",1
+16397,"0x400D 0x10 : Load, CS1, GO ON->CS_1 ON : Clamp ON",0
+16398,"0x400E 0x10 : Load, CS1, GO ON->CS_1 ON : EQ_ER ON",0
+16399,"0x400F 0x10 : Load, CS1, GO ON->CS_1 ON : Light Curtain ON",0
+16400,"0x4010 0x10 : Load, CS1, GO ON->CS_1 ON : PS ON",0
+16401,"0x4011 0x10 : Load, CS1, GO ON->CS_1 ON : PL ON",0
+16402,0x4012 0x10 : Reserved : Reserved,0
+16403,0x4013 0x10 : Reserved : Reserved,0
+16404,"0x4014 0x10 : Load, CS1, CS_1 ON->VALID ON : OHT PIO Off-line",0
+16405,"0x4015 0x10 : Load, CS1, CS_1 ON->VALID ON : CS_0 OFF",0
+16406,"0x4016 0x10 : Load, CS1, CS_1 ON->VALID ON : CS_1 OFF",0
+16407,"0x4017 0x10 : Load, CS1, CS_1 ON->VALID ON : AM_AVBL OFF",0
+16408,"0x4018 0x10 : Load, CS1, CS_1 ON->VALID ON : TR_REQ OFF",0
+16409,"0x4019 0x10 : Load, CS1, CS_1 ON->VALID ON : BUSY OFF",0
+16410,"0x401A 0x10 : Load, CS1, CS_1 ON->VALID ON : COMPT OFF",0
+16411,"0x401B 0x10 : Load, CS1, CS_1 ON->VALID ON : CONT OFF",0
+16412,"0x401C 0x15 : Load, CS1, CS_1 ON->VALID ON : ES OFF",1
+16413,"0x401D 0x10 : Load, CS1, CS_1 ON->VALID ON : Clamp ON",0
+16414,"0x401E 0x10 : Load, CS1, CS_1 ON->VALID ON : EQ_ER ON",0
+16415,"0x401F 0x10 : Load, CS1, CS_1 ON->VALID ON : Light Curtain ON",0
+16416,"0x4020 0x10 : Load, CS1, CS_1 ON->VALID ON : PS ON",0
+16417,"0x4021 0x10 : Load, CS1, CS_1 ON->VALID ON : PL ON",0
+16418,0x4022 0x10 : Reserved : Reserved,0
+16419,0x4023 0x10 : Reserved : Reserved,0
+16420,"0x4024 0x10 : Load, CS1, VALID ON->L_REQ ON : OHT PIO Off-line",0
+16421,"0x4025 0x10 : Load, CS1, VALID ON->L_REQ ON : CS_0 OFF",0
+16422,"0x4026 0x10 : Load, CS1, VALID ON->L_REQ ON : VALID OFF",0
+16423,"0x4027 0x10 : Load, CS1, VALID ON->L_REQ ON : CS_1 OFF",0
+16424,"0x4028 0x10 : Load, CS1, VALID ON->L_REQ ON : AM_AVBL OFF",0
+16425,"0x4029 0x10 : Load, CS1, VALID ON->L_REQ ON : TR_REQ OFF",0
+16426,"0x402A 0x10 : Load, CS1, VALID ON->L_REQ ON : BUSY OFF",0
+16427,"0x402B 0x10 : Load, CS1, VALID ON->L_REQ ON : COMPT OFF",0
+16428,"0x402C 0x10 : Load, CS1, VALID ON->L_REQ ON : CONT OFF",0
+16429,"0x402D 0x15 : Load, CS1, VALID ON->L_REQ ON : ES OFF",1
+16430,"0x402E 0x10 : Load, CS1, VALID ON->L_REQ ON : Clamp ON",0
+16431,"0x402F 0x10 : Load, CS1, VALID ON->L_REQ ON : EQ_ER ON",0
+16432,"0x4030 0x10 : Load, CS1, VALID ON->L_REQ ON : Light Curtain ON",0
+16433,"0x4031 0x10 : Load, CS1, VALID ON->L_REQ ON : PS ON",0
+16434,"0x4032 0x10 : Load, CS1, VALID ON->L_REQ ON : PL ON",0
+16435,0x4033 0x10 : Reserved : Reserved,0
+16436,0x4034 0x10 : Reserved : Reserved,0
+16437,"0x4035 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : OHT PIO Off-line",0
+16438,0x4036 0x10 : Reserved : Reserved,0
+16439,"0x4037 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : VALID OFF",0
+16440,"0x4038 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : CS_1 OFF",0
+16441,"0x4039 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : AM_AVBL OFF",0
+16442,"0x403A 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : BUSY OFF",0
+16443,"0x403B 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : COMPT OFF",0
+16444,"0x403C 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : CONT OFF",0
+16445,"0x403D 0x15 : Load, CS1, L_REQ ON->TR_REQ ON : ES OFF",1
+16446,"0x403E 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : Clamp ON",0
+16447,"0x403F 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : EQ_ER ON",0
+16448,"0x4040 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : Light Curtain ON",0
+16449,"0x4041 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : PS ON",0
+16450,"0x4042 0x10 : Load, CS1, L_REQ ON->TR_REQ ON : PL ON",0
+16451,0x4043 0x10 : Reserved : Reserved,0
+16452,0x4044 0x10 : Reserved : Reserved,0
+16453,"0x4045 0x10 : Load, CS1, TR_REQ ON->READY ON : OHT PIO Off-line",0
+16454,"0x4046 0x10 : Load, CS1, TR_REQ ON->READY ON : CS_0 OFF",0
+16455,"0x4047 0x10 : Load, CS1, TR_REQ ON->READY ON : VALID OFF",0
+16456,"0x4048 0x10 : Load, CS1, TR_REQ ON->READY ON : CS_1 OFF",0
+16457,"0x4049 0x10 : Load, CS1, TR_REQ ON->READY ON : AM_AVBL OFF",0
+16458,"0x404A 0x10 : Load, CS1, TR_REQ ON->READY ON : TR_REQ OFF",0
+16459,"0x404B 0x10 : Load, CS1, TR_REQ ON->READY ON : BUSY OFF",0
+16460,"0x404C 0x10 : Load, CS1, TR_REQ ON->READY ON : COMPT OFF",0
+16461,"0x404D 0x10 : Load, CS1, TR_REQ ON->READY ON : CONT OFF",0
+16462,"0x404E 0x15 : Load, CS1, TR_REQ ON->READY ON : ES OFF",1
+16463,"0x404F 0x10 : Load, CS1, TR_REQ ON->READY ON : Clamp ON",0
+16464,"0x4050 0x10 : Load, CS1, TR_REQ ON->READY ON : EQ_ER ON",0
+16465,"0x4051 0x10 : Load, CS1, TR_REQ ON->READY ON : Light Curtain ON",0
+16466,"0x4052 0x10 : Load, CS1, TR_REQ ON->READY ON : PS ON",0
+16467,"0x4053 0x10 : Load, CS1, TR_REQ ON->READY ON : PL ON",0
+16468,0x4054 0x10 : Reserved : Reserved,0
+16469,0x4055 0x10 : Reserved : Reserved,0
+16470,"0x4056 0x10 : Load, CS1, READY ON->BUSY ON : OHT PIO Off-line",0
+16471,0x4057 0x10 : Reserved : Reserved,0
+16472,"0x4058 0x10 : Load, CS1, READY ON->BUSY ON : VALID OFF",0
+16473,"0x4059 0x10 : Load, CS1, READY ON->BUSY ON : CS_1 OFF",0
+16474,"0x405A 0x10 : Load, CS1, READY ON->BUSY ON : AM_AVBL OFF",0
+16475,"0x405B 0x10 : Load, CS1, READY ON->BUSY ON : TR_REQ OFF",0
+16476,"0x405C 0x10 : Load, CS1, READY ON->BUSY ON : COMPT OFF",0
+16477,"0x405D 0x10 : Load, CS1, READY ON->BUSY ON : CONT OFF",0
+16478,"0x405E 0x15 : Load, CS1, READY ON->BUSY ON : ES OFF",1
+16479,"0x405F 0x10 : Load, CS1, READY ON->BUSY ON : Clamp ON",0
+16480,"0x4060 0x10 : Load, CS1, READY ON->BUSY ON : EQ_ER ON",0
+16481,"0x4061 0x10 : Load, CS1, READY ON->BUSY ON : Light Curtain ON",0
+16482,"0x4062 0x10 : Load, CS1, READY ON->BUSY ON : PS ON",0
+16483,"0x4063 0x10 : Load, CS1, READY ON->BUSY ON : PL ON",0
+16484,0x4064 0x10 : Reserved : Reserved,0
+16485,0x4065 0x10 : Reserved : Reserved,0
+16486,"0x4066 0x15 : Load, CS1, BUSY ON->PS & PL ON : OHT PIO Off-line",1
+16487,0x4067 0x15 : Reserved : Reserved,1
+16488,"0x4068 0x15 : Load, CS1, BUSY ON->PS & PL ON : VALID OFF",1
+16489,"0x4069 0x15 : Load, CS1, BUSY ON->PS & PL ON : CS_1 OFF",1
+16490,"0x406A 0x15 : Load, CS1, BUSY ON->PS & PL ON : AM_AVBL OFF",1
+16491,"0x406B 0x15 : Load, CS1, BUSY ON->PS & PL ON : TR_REQ OFF",1
+16492,"0x406C 0x15 : Load, CS1, BUSY ON->PS & PL ON : BUSY OFF",1
+16493,"0x406D 0x15 : Load, CS1, BUSY ON->PS & PL ON : COMPT OFF",1
+16494,"0x406E 0x15 : Load, CS1, BUSY ON->PS & PL ON : ES OFF",1
+16495,"0x406F 0x15 : Load, CS1, BUSY ON->PS & PL ON : Clamp ON",1
+16496,"0x4070 0x15 : Load, CS1, BUSY ON->PS & PL ON : EQ_ER ON",1
+16497,"0x4071 0x15 : Load, CS1, BUSY ON->PS & PL ON : Light Curtain ON",1
+16498,0x4072 0x10 : Reserved : Reserved,0
+16499,0x4073 0x10 : Reserved : Reserved,0
+16500,"0x4074 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : OHT PIO Off-line",1
+16501,"0x4075 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : CS_0 OFF",1
+16502,"0x4076 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : VALID OFF",1
+16503,"0x4077 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : CS_1 OFF",1
+16504,"0x4078 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : AM_AVBL OFF",1
+16505,"0x4079 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : TR_REQ OFF",1
+16506,"0x407A 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : BUSY OFF",1
+16507,"0x407B 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : COMPT OFF",1
+16508,"0x407C 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : ES OFF",1
+16509,"0x407D 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : Clamp ON",1
+16510,"0x407E 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : EQ_ER ON",1
+16511,"0x407F 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : Light Curtain ON",1
+16512,"0x4080 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : PS OFF",1
+16513,"0x4081 0x15 : Load, CS1, PS & PL ON->L_REQ OFF : PL OFF",1
+16514,0x4082 0x10 : Reserved : Reserved,0
+16515,0x4083 0x10 : Reserved : Reserved,0
+16516,"0x4084 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+16517,0x4085 0x15 : Reserved : Reserved,1
+16518,"0x4086 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : VALID OFF",1
+16519,"0x4087 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : CS_1 OFF",1
+16520,"0x4088 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+16521,"0x4089 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : TR_REQ OFF",1
+16522,"0x408A 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : COMPT OFF",1
+16523,"0x408B 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : ES OFF",1
+16524,"0x408C 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : Clamp ON",1
+16525,"0x408D 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : EQ_ER ON",1
+16526,"0x408E 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : Light Curtain ON",1
+16527,"0x408F 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : PS OFF",1
+16528,"0x4090 0x15 : Load, CS1, L_REQ OFF->BUSY OFF : PL OFF",1
+16529,0x4091 0x10 : Reserved : Reserved,0
+16530,0x4092 0x10 : Reserved : Reserved,0
+16531,"0x4093 0x10 : Load, CS1, BUSY OFF->COMPT ON : OHT PIO Off-line",0
+16532,"0x4094 0x10 : Load, CS1, BUSY OFF->COMPT ON : CS_0 OFF",0
+16533,"0x4095 0x10 : Load, CS1, BUSY OFF->COMPT ON : VALID OFF",0
+16534,"0x4096 0x10 : Load, CS1, BUSY OFF->COMPT ON : CS_1 OFF",0
+16535,"0x4097 0x10 : Load, CS1, BUSY OFF->COMPT ON : AM_AVBL OFF",0
+16536,"0x4098 0x10 : Load, CS1, BUSY OFF->COMPT ON : TR_REQ OFF",0
+16537,"0x4099 0x10 : Load, CS1, BUSY OFF->COMPT ON : BUSY OFF",0
+16538,"0x409A 0x15 : Load, CS1, BUSY OFF->COMPT ON : ES OFF",1
+16539,"0x409B 0x10 : Load, CS1, BUSY OFF->COMPT ON : Clamp ON",0
+16540,"0x409C 0x10 : Load, CS1, BUSY OFF->COMPT ON : EQ_ER ON",0
+16541,"0x409D 0x10 : Load, CS1, BUSY OFF->COMPT ON : Light Curtain ON",0
+16542,"0x409E 0x10 : Load, CS1, BUSY OFF->COMPT ON : PS OFF",0
+16543,"0x409F 0x10 : Load, CS1, BUSY OFF->COMPT ON : PL OFF",0
+16544,0x40A0 0x10 : Reserved : Reserved,0
+16545,0x40A1 0x10 : Reserved : Reserved,0
+16546,"0x40A2 0x10 : Load, CS1, COMPT ON->READY OFF : OHT PIO Off-line",0
+16547,"0x40A3 0x10 : Load, CS1, COMPT ON->READY OFF : CS_0 OFF",0
+16548,"0x40A4 0x10 : Load, CS1, COMPT ON->READY OFF : VALID OFF",0
+16549,"0x40A5 0x10 : Load, CS1, COMPT ON->READY OFF : CS_1 OFF",0
+16550,"0x40A6 0x10 : Load, CS1, COMPT ON->READY OFF : AM_AVBL OFF",0
+16551,"0x40A7 0x10 : Load, CS1, COMPT ON->READY OFF : TR_REQ OFF",0
+16552,"0x40A8 0x10 : Load, CS1, COMPT ON->READY OFF : BUSY OFF",0
+16553,"0x40A9 0x10 : Load, CS1, COMPT ON->READY OFF : COMPT OFF",0
+16554,"0x40AA 0x15 : Load, CS1, COMPT ON->READY OFF : ES OFF",1
+16555,"0x40AB 0x10 : Load, CS1, COMPT ON->READY OFF : Clamp ON",0
+16556,"0x40AC 0x10 : Load, CS1, COMPT ON->READY OFF : EQ_ER ON",0
+16557,"0x40AD 0x10 : Load, CS1, COMPT ON->READY OFF : Light Curtain ON",0
+16558,"0x40AE 0x10 : Load, CS1, COMPT ON->READY OFF : PS OFF",0
+16559,"0x40AF 0x10 : Load, CS1, COMPT ON->READY OFF : PL OFF",0
+16560,0x40B0 0x10 : Reserved : Reserved,0
+16561,0x40B1 0x10 : Reserved : Reserved,0
+16562,"0x40B2 0x10 : Load, CS1, READY OFF->CS_1 OFF : OHT PIO Off-line",0
+16563,0x40B3 0x10 : Reserved : Reserved,0
+16564,"0x40B4 0x10 : Load, CS1, READY OFF->CS_1 OFF : AM_AVBL OFF",0
+16565,"0x40B5 0x10 : Load, CS1, READY OFF->CS_1 OFF : TR_REQ OFF",0
+16566,"0x40B6 0x10 : Load, CS1, READY OFF->CS_1 OFF : BUSY OFF",0
+16567,"0x40B7 0x15 : Load, CS1, READY OFF->CS_1 OFF : ES OFF",1
+16568,"0x40B8 0x10 : Load, CS1, READY OFF->CS_1 OFF : Clamp ON",0
+16569,"0x40B9 0x10 : Load, CS1, READY OFF->CS_1 OFF : EQ_ER ON",0
+16570,"0x40BA 0x10 : Load, CS1, READY OFF->CS_1 OFF : Light Curtain ON",0
+16571,"0x40BB 0x10 : Load, CS1, READY OFF->CS_1 OFF : PS OFF",0
+16572,"0x40BC 0x10 : Load, CS1, READY OFF->CS_1 OFF : PL OFF",0
+16573,0x40BD 0x10 : Reserved : Reserved,0
+16574,0x40BE 0x10 : Reserved : Reserved,0
+16575,0x40BF 0x10 : Reserved : Reserved,0
+8704,"0x2200 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : OHT PIO Off-line",1
+8705,"0x2201 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : CS_0 OFF",1
+8706,"0x2202 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : VALID OFF",1
+8707,"0x2203 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : CS_1 OFF",1
+8708,"0x2204 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : AM_AVBL OFF",1
+8709,"0x2205 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : TR_REQ OFF",1
+8710,"0x2206 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : BUSY OFF",1
+8711,"0x2207 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : COMPT OFF",1
+8712,"0x2208 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : CONT OFF",1
+8713,"0x2209 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : ES OFF",1
+8714,"0x220A 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : Clamp ON",1
+8715,"0x220B 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : EQ_ER ON",1
+8716,"0x220C 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL OFF : Light Curtain ON",1
+8717,0x220D 0x10 : Reserved : Reserved,0
+8718,0x220E 0x10 : Reserved : Reserved,0
+8719,"0x220F 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : OHT PIO Off-line",1
+8720,"0x2210 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : CS_0 OFF",1
+8721,"0x2211 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : VALID OFF",1
+8722,"0x2212 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : CS_1 OFF",1
+8723,"0x2213 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : AM_AVBL OFF",1
+8724,"0x2214 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : TR_REQ OFF",1
+8725,"0x2215 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : BUSY OFF",1
+8726,"0x2216 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : COMPT OFF",1
+8727,"0x2217 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : CONT OFF",1
+8728,"0x2218 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : ES OFF",1
+8729,"0x2219 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : Clamp ON",1
+8730,"0x221A 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : EQ_ER ON",1
+8731,"0x221B 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : Light Curtain ON",1
+8732,"0x221C 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : PS ON",1
+8733,"0x221D 0x15 : Unload to Load, CS1, PS & PL OFF->U_REQ OFF : PL ON",1
+8734,0x221E 0x10 : Reserved : Reserved,0
+8735,0x221F 0x10 : Reserved : Reserved,0
+8736,"0x2220 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+8737,"0x2221 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : CS_0 OFF",1
+8738,"0x2222 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : VALID OFF",1
+8739,"0x2223 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : CS_1 OFF",1
+8740,"0x2224 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+8741,"0x2225 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : TR_REQ OFF",1
+8742,"0x2226 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : COMPT OFF",1
+8743,"0x2227 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : CONT OFF",1
+8744,"0x2228 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : ES OFF",1
+8745,"0x2229 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : Clamp ON",1
+8746,"0x222A 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : EQ_ER ON",1
+8747,"0x222B 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : Light Curtain ON",1
+8748,"0x222C 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : PS ON",1
+8749,"0x222D 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : PL ON",1
+8750,0x222E 0x10 : Reserved : Reserved,0
+8751,0x222F 0x10 : Reserved : Reserved,0
+8752,"0x2230 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : OHT PIO Off-line",0
+8753,"0x2231 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : CS_0 OFF",0
+8754,"0x2232 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : VALID OFF",0
+8755,"0x2233 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : CS_1 OFF",0
+8756,"0x2234 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : AM_AVBL OFF",0
+8757,"0x2235 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : TR_REQ OFF",0
+8758,"0x2236 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : CONT OFF",0
+8759,"0x2237 0x15 : Unload to Load, CS1, BUSY OFF->COMPT ON : ES OFF",1
+8760,"0x2238 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : Clamp ON",0
+8761,"0x2239 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : EQ_ER ON",0
+8762,"0x223A 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : Light Curtain ON",0
+8763,"0x223B 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : PS ON",0
+8764,"0x223C 0x10 : Unload to Load, CS1, BUSY OFF->COMPT ON : PL ON",0
+8765,0x223D 0x10 : Reserved : Reserved,0
+8766,0x223E 0x10 : Reserved : Reserved,0
+8767,"0x223F 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : OHT PIO Off-line",0
+8768,"0x2240 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : CS_0 OFF",0
+8769,"0x2241 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : VALID OFF",0
+8770,"0x2242 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : CS_1 OFF",0
+8771,"0x2243 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : AM_AVBL OFF",0
+8772,"0x2244 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : TR_REQ OFF",0
+8773,"0x2245 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : COMPT OFF",0
+8774,"0x2246 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : CONT OFF",0
+8775,"0x2247 0x15 : Unload to Load, CS1, COMPT ON->READY OFF : ES OFF",1
+8776,"0x2248 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : Clamp ON",0
+8777,"0x2249 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : EQ_ER ON",0
+8778,"0x224A 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : Light Curtain ON",0
+8779,"0x224B 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : PS ON",0
+8780,"0x224C 0x10 : Unload to Load, CS1, COMPT ON->READY OFF : PL ON",0
+8781,0x224D 0x10 : Reserved : Reserved,0
+8782,0x224E 0x10 : Reserved : Reserved,0
+8783,"0x224F 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : OHT PIO Off-line",0
+8784,0x2250 0x10 : Reserved : Reserved,0
+8785,"0x2251 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : AM_AVBL OFF",0
+8786,"0x2252 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : TR_REQ OFF",0
+8787,"0x2253 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : BUSY OFF",0
+8788,"0x2254 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : CONT OFF",0
+8789,"0x2255 0x15 : Unload to Load, CS1, READY OFF->CS_1 OFF : ES OFF",1
+8790,"0x2256 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : Clamp ON",0
+8791,"0x2257 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : EQ_ER ON",0
+8792,"0x2258 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : Light Curtain ON",0
+8793,"0x2259 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : PS ON",0
+8794,"0x225A 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : PL ON",0
+8795,0x225B 0x10 : Reserved : Reserved,0
+8796,"0x225C 0x10 : Unload to Load, CS1, Ready->CS_1 ON : OHT PIO Off-line",0
+8797,"0x225D 0x10 : Unload to Load, CS1, Ready->CS_1 ON : CS_0 OFF",0
+8798,0x225E 0x10 : Reserved : Reserved,0
+8799,"0x225F 0x10 : Unload to Load, CS1, Ready->CS_1 ON : AM_AVBL OFF",0
+8800,"0x2260 0x10 : Unload to Load, CS1, Ready->CS_1 ON : TR_REQ OFF",0
+8801,"0x2261 0x10 : Unload to Load, CS1, Ready->CS_1 ON : BUSY OFF",0
+8802,"0x2262 0x10 : Unload to Load, CS1, Ready->CS_1 ON : COMPT OFF",0
+8803,"0x2263 0x10 : Unload to Load, CS1, Ready->CS_1 ON : CONT OFF",0
+8804,"0x2264 0x15 : Unload to Load, CS1, Ready->CS_1 ON : ES OFF",1
+8805,"0x2265 0x10 : Unload to Load, CS1, Ready->CS_1 ON : Clamp ON",0
+8806,"0x2266 0x10 : Unload to Load, CS1, Ready->CS_1 ON : EQ_ER ON",0
+8807,"0x2267 0x10 : Unload to Load, CS1, Ready->CS_1 ON : Light Curtain ON",0
+8808,"0x2268 0x10 : Unload to Load, CS1, Ready->CS_1 ON : PS ON",0
+8809,"0x2269 0x10 : Unload to Load, CS1, Ready->CS_1 ON : PL ON",0
+8810,0x226A 0x10 : Reserved : Reserved,0
+8811,0x226B 0x10 : Reserved : Reserved,0
+8812,"0x226C 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : OHT PIO Off-line",0
+8813,"0x226D 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : CS_0 OFF",0
+8814,"0x226E 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : CS_1 OFF",0
+8815,"0x226F 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : AM_AVBL OFF",0
+8816,"0x2270 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : TR_REQ OFF",0
+8817,"0x2271 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : BUSY OFF",0
+8818,"0x2272 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : COMPT OFF",0
+8819,"0x2273 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : CONT OFF",0
+8820,"0x2274 0x15 : Unload to Load, CS1, CS_1 ON->VALID ON : ES OFF",1
+8821,"0x2275 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : Clamp ON",0
+8822,"0x2276 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : EQ_ER ON",0
+8823,"0x2277 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : Light Curtain ON",0
+8824,"0x2278 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : PS ON",0
+8825,"0x2279 0x10 : Unload to Load, CS1, CS_1 ON->VALID ON : PL ON",0
+8826,0x227A 0x10 : Reserved : Reserved,0
+8827,0x227B 0x10 : Reserved : Reserved,0
+8828,"0x227C 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : OHT PIO Off-line",0
+8829,"0x227D 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : CS_0 OFF",0
+8830,"0x227E 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : VALID OFF",0
+8831,"0x227F 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : CS_1 OFF",0
+8832,"0x2280 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : AM_AVBL OFF",0
+8833,"0x2281 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : TR_REQ OFF",0
+8834,"0x2282 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : BUSY OFF",0
+8835,"0x2283 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : COMPT OFF",0
+8836,"0x2284 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : CONT OFF",0
+8837,"0x2285 0x15 : Unload to Load, CS1, VALID ON->L_REQ ON : ES OFF",1
+8838,"0x2286 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : Clamp ON",0
+8839,"0x2287 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : EQ_ER ON",0
+8840,"0x2288 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : Light Curtain ON",0
+8841,"0x2289 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : PS ON",0
+8842,"0x228A 0x10 : Unload to Load, CS1, VALID ON->L_REQ ON : PL ON",0
+8843,0x228B 0x10 : Reserved : Reserved,0
+8844,0x228C 0x10 : Reserved : Reserved,0
+8845,"0x228D 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : OHT PIO Off-line",0
+8846,"0x228E 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : CS_0 OFF",0
+8847,"0x228F 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : VALID OFF",0
+8848,"0x2290 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : CS_1 OFF",0
+8849,"0x2291 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : AM_AVBL OFF",0
+8850,"0x2292 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : BUSY OFF",0
+8851,"0x2293 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : COMPT OFF",0
+8852,"0x2294 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : CONT OFF",0
+8853,"0x2295 0x15 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : ES OFF",1
+8854,"0x2296 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : Clamp ON",0
+8855,"0x2297 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : EQ_ER ON",0
+8856,"0x2298 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : Light Curtain ON",0
+8857,"0x2299 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : PS ON",0
+8858,"0x229A 0x10 : Unload to Load, CS1, L_REQ ON->TR_REQ ON : PL ON",0
+8859,0x229B 0x10 : Reserved : Reserved,0
+8860,0x229C 0x10 : Reserved : Reserved,0
+8861,"0x229D 0x10 : Unload to Load, CS1, READY ON->BUSY ON : OHT PIO Off-line",0
+8862,"0x229E 0x10 : Unload to Load, CS1, READY ON->BUSY ON : CS_0 OFF",0
+8863,"0x229F 0x10 : Unload to Load, CS1, READY ON->BUSY ON : VALID OFF",0
+8864,"0x22A0 0x10 : Unload to Load, CS1, READY ON->BUSY ON : CS_1 OFF",0
+8865,"0x22A1 0x10 : Unload to Load, CS1, READY ON->BUSY ON : AM_AVBL OFF",0
+8866,"0x22A2 0x10 : Unload to Load, CS1, READY ON->BUSY ON : TR_REQ OFF",0
+8867,"0x22A3 0x10 : Unload to Load, CS1, READY ON->BUSY ON : COMPT OFF",0
+8868,"0x22A4 0x10 : Unload to Load, CS1, READY ON->BUSY ON : CONT OFF",0
+8869,"0x22A5 0x15 : Unload to Load, CS1, READY ON->BUSY ON : ES OFF",1
+8870,"0x22A6 0x10 : Unload to Load, CS1, READY ON->BUSY ON : Clamp ON",0
+8871,"0x22A7 0x10 : Unload to Load, CS1, READY ON->BUSY ON : EQ_ER ON",0
+8872,"0x22A8 0x10 : Unload to Load, CS1, READY ON->BUSY ON : Light Curtain ON",0
+8873,"0x22A9 0x10 : Unload to Load, CS1, READY ON->BUSY ON : PS ON",0
+8874,"0x22AA 0x10 : Unload to Load, CS1, READY ON->BUSY ON : PL ON",0
+8875,0x22AB 0x10 : Reserved : Reserved,0
+8876,0x22AC 0x10 : Reserved : Reserved,0
+8877,"0x22AD 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : OHT PIO Off-line",1
+8878,"0x22AE 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : CS_0 OFF",1
+8879,"0x22AF 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : VALID OFF",1
+8880,"0x22B0 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : CS_1 OFF",1
+8881,"0x22B1 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : AM_AVBL OFF",1
+8882,"0x22B2 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : TR_REQ OFF",1
+8883,"0x22B3 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : BUSY OFF",1
+8884,"0x22B4 0x15 : Unload to Load, CS1, BUSY ON & CONT OFF->PS & PL ON : COMPT OFF",1
+8885,0x22B5 0x15 : Reserved : Reserved,1
+8886,"0x22B6 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL ON : ES OFF",1
+8887,"0x22B7 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL ON : Clamp ON",1
+8888,"0x22B8 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL ON : EQ_ER ON",1
+8889,"0x22B9 0x15 : Unload to Load, CS1, BUSY & CONT ON->PS & PL ON : Light Curtain ON",1
+8890,0x22BA 0x10 : Reserved : Reserved,0
+8891,0x22BB 0x10 : Reserved : Reserved,0
+8892,"0x22BC 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : OHT PIO Off-line",1
+8893,"0x22BD 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : CS_0 OFF",1
+8894,"0x22BE 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : VALID OFF",1
+8895,"0x22BF 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : CS_1 OFF",1
+8896,"0x22C0 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : AM_AVBL OFF",1
+8897,"0x22C1 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : TR_REQ OFF",1
+8898,"0x22C2 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : COMPT OFF",1
+8899,0x22C3 0x15 : Reserved : Reserved,1
+8900,"0x22C4 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : ES OFF",1
+8901,"0x22C5 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : Clamp ON",1
+8902,"0x22C6 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : EQ_ER ON",1
+8903,"0x22C7 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : Light Curtain ON",1
+8904,"0x22C8 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : PS OFF",1
+8905,"0x22C9 0x15 : Unload to Load, CS1, U_REQ OFF->BUSY OFF : PL OFF",1
+8906,0x22CA 0x10 : Reserved : Reserved,0
+8907,"0x22CB 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : OHT PIO Off-line",0
+8908,"0x22CC 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : CS_1 OFF",0
+8909,0x22CD 0x10 : Reserved : Reserved,0
+8910,"0x22CE 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : AM_AVBL OFF",0
+8911,"0x22CF 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : TR_REQ OFF",0
+8912,"0x22D0 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : BUSY OFF",0
+8913,"0x22D1 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : CONT OFF",0
+8914,"0x22D2 0x15 : Unload to Load, CS1, READY OFF->CS_1 OFF : ES OFF",1
+8915,"0x22D3 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : Clamp ON",0
+8916,"0x22D4 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : EQ_ER ON",0
+8917,"0x22D5 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : Light Curtain ON",0
+8918,"0x22D6 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : PS OFF",0
+8919,"0x22D7 0x10 : Unload to Load, CS1, READY OFF->CS_1 OFF : PL OFF",0
+8920,0x22D8 0x10 : Reserved : Reserved,0
+8921,0x22D9 0x10 : Reserved : Reserved,0
+8922,0x22DA 0x10 : Reserved : Reserved,0
+8923,0x22DB 0x10 : Reserved : Reserved,0
+8924,0x22DC 0x10 : Reserved : Reserved,0
+8925,0x22DD 0x10 : Reserved : Reserved,0
+20480,0x5000 0x00 : CS0 : TP1 timeout,0
+20481,0x5001 0x00 : CS0 : TP2 timeout,0
+20482,0x5002 0x05 : CS0 : TP3 timeout,1
+20483,0x5003 0x05 : CS0 : TP4 timeout,1
+20484,0x5004 0x00 : CS0 : TP5 timeout,0
+20485,0x5005 0x00 : CS0 : TP6 timeout,0
+20486,0x5006 0x00 : CS0 : TD0 timeout,0
+20487,0x5007 0x00 : CS0 : Link timeout,0
+20488,0x5008 0x05 : CS0 : TP3 ANY ERROR,1
+20489,0x5009 0x05 : CS0 : TP4 ANY ERROR,1
+20490,0x500A 0x00 : CS0 : PS_PL_CHECK_ERROR,0
+20491,0x500B 0x00 : CS0 : TP7_TIMEOUT,0
+20492,0x500C 0x00 : CS0 : DONE_NOT_READY,0
+20493,0x500D 0x00 : CS0 : CS0_CS1_ALL_ON_ERROR,0
+20494,0x500E 0x00 : CS0 : Door_Close_Timeout,0
+20495,0x500F 0x00 : CS0 : MI have Door_wait_Clamp_off_Timeout,0
+20496,0x5010 0x05 : CS0 : EXT0_OFFLINE(OPA off-line),1
+20497,0x5011 0x05 : CS0 : EXT1_OFFLINE(Key+Relay off-line),1
+20498,0x5012 0x05 : CS0 : EXT2_OFFLINE(FURANCE off-line),1
+20499,0x5013 0x05 : CS0 : EXT3_OFFLINE(ACT8_0 off-line),1
+20500,0x5014 0x05 : CS0 : EXT4_OFFLINE(ASTSY_EXT off-line),1
+20501,0x5015 0x05 : CS0 : EXT5_OFFLINE(Tow_Relay_Output off-line),1
+20502,0x5016 0x05 : CS0 : EXT6_OFFLINE(ASCII_ASTSY_INT off-line),1
+20503,0x5017 0x05 : CS0 : ASTSY_OFFLINE,1
+20504,0x5018 0x05 : CS0 : EXT7_OFFLINE(ACT8_1 off-line),1
+20480,0x5000 0x10 : CS1 : TP1 timeout,0
+20481,0x5001 0x10 : CS1 : TP2 timeout,0
+20482,0x5002 0x15 : CS1 : TP3 timeout,1
+20483,0x5003 0x15 : CS1 : TP4 timeout,1
+20484,0x5004 0x10 : CS1 : TP5 timeout,0
+20485,0x5005 0x10 : CS1 : TP6 timeout,0
+20486,0x5006 0x10 : CS1 : TD0 timeout,0
+20487,0x5007 0x10 : CS1 : Link timeout,0
+20488,0x5008 0x15 : CS1 : TP3 ANY ERROR,1
+20489,0x5009 0x15 : CS1 : TP4 ANY ERROR,1
+20490,0x500A 0x10 : CS1 : PS_PL_CHECK_ERROR,0
+20491,0x500B 0x10 : CS1 : TP7_TIMEOUT,0
+20492,0x500C 0x10 : CS1 : DONE_NOT_READY,0
+20493,0x500D 0x10 : CS1 : CS0_CS1_ALL_ON_ERROR,0
+20494,0x500E 0x10 : CS1 : Door_Close_Timeout,0
+20495,0x500F 0x10 : CS1 : MI have Door_wait_Clamp_off_Timeout,0
+20496,0x5010 0x15 : CS1 : EXT0_OFFLINE(OPA off-line),1
+20497,0x5011 0x15 : CS1 : EXT1_OFFLINE(Key+Relay off-line),1
+20498,0x5012 0x15 : CS1 : EXT2_OFFLINE(FURANCE off-line),1
+20499,0x5013 0x15 : CS1 : EXT3_OFFLINE(ACT8_0 off-line),1
+20500,0x5014 0x15 : CS1 : EXT4_OFFLINE(ASTSY_EXT off-line),1
+20501,0x5015 0x15 : CS1 : EXT5_OFFLINE(Tow_Relay_Output off-line),1
+20502,0x5016 0x15 : CS1 : EXT6_OFFLINE(ASCII_ASTSY_INT off-line),1
+20503,0x5017 0x15 : CS1 : ASTSY_OFFLINE,1
+20504,0x5018 0x15 : CS1 : EXT7_OFFLINE(ACT8_1 off-line),1

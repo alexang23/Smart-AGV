@@ -1,0 +1,191 @@
+#define RSP80_EQU_OFFLINE              (uint16_t)0x0000
+#define RSP80_EMS_ERROR                (uint16_t)0x0001
+
+#define ALARM_E84_START_ERR_L_REQ_ON   (uint16_t)0x0002    // L_REQ on.
+#define ALARM_E84_START_ERR_U_REQ_ON   (uint16_t)0x0003    // U_REQ on.
+#define ALARM_E84_START_ERR_VA_ON      (uint16_t)0x0004    // VA on.
+#define ALARM_E84_START_ERR_READY_ON   (uint16_t)0x0005    // READY on.
+#define ALARM_E84_START_ERR_VS_0_ON    (uint16_t)0x0006    // VS_0 on.
+#define ALARM_E84_START_ERR_VS_1_ON    (uint16_t)0x0007    // VS_1 on.
+#define ALARM_E84_START_ERR_HO_AVBL_OFF (uint16_t)0x0008    // EQ not in auto mode. (HO_AVBL off)
+#define ALARM_E84_START_ERR_GO_OFF     (uint16_t)0x000A    // GO off.
+
+#define ALARM_EQ_ERR                   (uint16_t)0x0013    // EQ err
+#define ALARM_EQ_ERR_L_REQ_OFF         (uint16_t)0x0014    // L_REQ off.
+#define ALARM_EQ_ERR_U_REQ_ON          (uint16_t)0x0015    // U_REQ on.
+#define ALARM_EQ_ERR_VA_ON             (uint16_t)0x0016    // VA on.
+#define ALARM_EQ_ERR_READY_ON          (uint16_t)0x0017    // READY on.
+#define ALARM_EQ_ERR_VS_0_ON           (uint16_t)0x0018    // VS_0 on.
+#define ALARM_EQ_ERR_VS_1_ON           (uint16_t)0x0019    // VS_1 on.
+#define ALARM_EQ_ERR_HO_AVBL_OFF       (uint16_t)0x001A    // HO_AVBL off.
+
+#define ALARM_EQ_READY_ERR_GO_OFF      (uint16_t)0x0024    // GO off.
+#define ALARM_EQ_READY_ERR_L_REQ_OFF   (uint16_t)0x0025    // L_REQ off.
+#define ALARM_EQ_READY_ERR_U_REQ_ON    (uint16_t)0x0026    // U_REQ on.
+#define ALARM_EQ_READY_ERR_VA_ON       (uint16_t)0x0027    // VA on.
+#define ALARM_EQ_READY_ERR_READY_OFF   (uint16_t)0x0028    // READY off.
+#define ALARM_EQ_READY_ERR_VS_0_ON     (uint16_t)0x0029    // VS_0 on.
+#define ALARM_EQ_READY_ERR_VS_1_ON     (uint16_t)0x002A    // VS_1 on.
+#define ALARM_EQ_READY_ERR_HO_AVBL_OFF (uint16_t)0x002B    // HO_AVBL off.
+#define ALARM_EQ_READY_ERR_ES_OFF      (uint16_t)0x002C    // ES off.
+
+//#define RSP80_E84_LVALID_ERR1        (uint16_t)0x000B
+#define RSP80_E84_LVALID_ERR2          (uint16_t)0x000C
+#define RSP80_E84_LVALID_ERR3          (uint16_t)0x000D
+#define RSP80_E84_LVALID_ERR4          (uint16_t)0x000E
+#define RSP80_E84_LVALID_ERR5          (uint16_t)0x000F
+#define RSP80_E84_LVALID_ERR6          (uint16_t)0x0010
+#define RSP80_E84_LVALID_ERR7          (uint16_t)0x0011
+
+#define RSP80_E84_BUSY_ON_ERR1         (uint16_t)0x002E
+#define RSP80_E84_BUSY_ON_ERR2         (uint16_t)0x002F
+#define RSP80_E84_BUSY_ON_ERR3         (uint16_t)0x0030
+#define RSP80_E84_BUSY_ON_ERR4         (uint16_t)0x0031
+#define RSP80_E84_BUSY_ON_ERR5         (uint16_t)0x0032
+#define RSP80_E84_BUSY_ON_ERR6         (uint16_t)0x0033
+#define RSP80_E84_BUSY_ON_ERR7         (uint16_t)0x0034
+
+#define RSP80_AMR_BACK_ERR1            (uint16_t)0x003F
+#define RSP80_AMR_BACK_ERR2            (uint16_t)0x0040
+#define RSP80_AMR_BACK_ERR3            (uint16_t)0x0041
+#define RSP80_AMR_BACK_ERR4            (uint16_t)0x0042
+#define RSP80_AMR_BACK_ERR5            (uint16_t)0x0043
+#define RSP80_AMR_BACK_ERR6            (uint16_t)0x0044
+#define RSP80_AMR_BACK_ERR7            (uint16_t)0x0045
+
+#define RSP80_E84_LARM_POP_ERR1        (uint16_t)0x0037
+#define RSP80_E84_LARM_POP_ERR2        (uint16_t)0x0038
+#define RSP80_E84_LARM_POP_ERR3        (uint16_t)0x0039
+#define RSP80_E84_LARM_POP_ERR4        (uint16_t)0x003A
+#define RSP80_E84_LARM_POP_ERR5        (uint16_t)0x003B
+#define RSP80_E84_LARM_POP_ERR6        (uint16_t)0x003C
+
+======
+
+#define RSP80_E84_UBUSY_ON_ERR1        (uint16_t)0x102D
+#define RSP80_E84_UBUSY_ON_ERR2        (uint16_t)0x102E
+#define RSP80_E84_UBUSY_ON_ERR3        (uint16_t)0x102F
+#define RSP80_E84_UBUSY_ON_ERR4        (uint16_t)0x1030
+#define RSP80_E84_UBUSY_ON_ERR5        (uint16_t)0x1031
+#define RSP80_E84_UBUSY_ON_ERR6        (uint16_t)0x1032
+#define RSP80_E84_UBUSY_ON_ERR7        (uint16_t)0x1033
+
+#define RSP80_E84_UEQ_OFFLINE          (uint16_t)0x1000
+#define RSP80_E84_UVALID_ERR1          (uint16_t)0x100B
+#define RSP80_E84_UVALID_ERR2          (uint16_t)0x100C
+#define RSP80_E84_UVALID_ERR3          (uint16_t)0x100D
+#define RSP80_E84_UVALID_ERR4          (uint16_t)0x100E
+#define RSP80_E84_UVALID_ERR5          (uint16_t)0x100F
+#define RSP80_E84_UVALID_ERR6          (uint16_t)0x1010
+#define RSP80_E84_UARM_POP_ERR1        (uint16_t)0x1036
+#define RSP80_E84_UARM_POP_ERR2        (uint16_t)0x1037
+#define RSP80_E84_UARM_POP_ERR3        (uint16_t)0x1038
+#define RSP80_E84_UARM_POP_ERR4        (uint16_t)0x1039
+#define RSP80_E84_UARM_POP_ERR5        (uint16_t)0x103A
+#define RSP80_E84_UARM_POP_ERR6        (uint16_t)0x103B
+
+#define RSP80_E84_TD0_TIMEOUT          (uint16_t)0x4010
+#define RSP80_E84_TA1_TIMEOUT          (uint16_t)0x4000    // TA1 timeout.
+#define RSP80_E84_TA2_TIMEOUT          (uint16_t)0x4001    // TA2 timeout.
+#define RSP80_E84_TA3_TIMEOUT          (uint16_t)0x4002    // TA3 timeout.
+#define RSP80_E84_TA4_TIMEOUT          (uint16_t)0x4003    // TA4 timeout.
+
+====
+
+#define RSP80_E84_TP1_TIMEOUT          (uint16_t)0x5000
+#define RSP80_E84_TP2_TIMEOUT          (uint16_t)0x5001
+#define RSP80_E84_TP3_TIMEOUT          (uint16_t)0x5002
+#define RSP80_E84_TP4_TIMEOUT          (uint16_t)0x5003
+#define RSP80_E84_TP5_TIMEOUT          (uint16_t)0x5004
+#define RSP80_E84_TP6_TIMEOUT          (uint16_t)0x5005
+#define RSP80__VALID_ERROR             (uint16_t)0x000B
+
+#define RSP80_E84_UARM_POP_ERR6        (uint16_t)0x103B
+
+RSP80_EQU_OFFLINE              (uint16_t)0x0000
+RSP80_EMS_ERROR                (uint16_t)0x0001
+ALARM_E84_START_ERR_L_REQ_ON   (uint16_t)0x0002    // L_REQ on.
+ALARM_E84_START_ERR_U_REQ_ON   (uint16_t)0x0003    // U_REQ on.
+ALARM_E84_START_ERR_VA_ON      (uint16_t)0x0004    // VA on.
+ALARM_E84_START_ERR_READY_ON   (uint16_t)0x0005    // READY on.
+ALARM_E84_START_ERR_VS_0_ON    (uint16_t)0x0006    // VS_0 on.
+ALARM_E84_START_ERR_VS_1_ON    (uint16_t)0x0007    // VS_1 on.
+ALARM_E84_START_ERR_HO_AVBL_OFF (uint16_t)0x0008    // EQ not in auto mode. (HO_AVBL off)
+ALARM_E84_START_ERR_GO_OFF     (uint16_t)0x000A    // GO off.
+ALARM_EQ_ERR                   (uint16_t)0x0013    // EQ err
+ALARM_EQ_ERR_L_REQ_OFF         (uint16_t)0x0014    // L_REQ off.
+ALARM_EQ_ERR_U_REQ_ON          (uint16_t)0x0015    // U_REQ on.
+ALARM_EQ_ERR_VA_ON             (uint16_t)0x0016    // VA on.
+ALARM_EQ_ERR_READY_ON          (uint16_t)0x0017    // READY on.
+ALARM_EQ_ERR_VS_0_ON           (uint16_t)0x0018    // VS_0 on.
+ALARM_EQ_ERR_VS_1_ON           (uint16_t)0x0019    // VS_1 on.
+ALARM_EQ_ERR_HO_AVBL_OFF       (uint16_t)0x001A    // HO_AVBL off.
+ALARM_EQ_READY_ERR_GO_OFF      (uint16_t)0x0024    // GO off.
+ALARM_EQ_READY_ERR_L_REQ_OFF   (uint16_t)0x0025    // L_REQ off.
+ALARM_EQ_READY_ERR_U_REQ_ON    (uint16_t)0x0026    // U_REQ on.
+ALARM_EQ_READY_ERR_VA_ON       (uint16_t)0x0027    // VA on.
+ALARM_EQ_READY_ERR_READY_OFF   (uint16_t)0x0028    // READY off.
+ALARM_EQ_READY_ERR_VS_0_ON     (uint16_t)0x0029    // VS_0 on.
+ALARM_EQ_READY_ERR_VS_1_ON     (uint16_t)0x002A    // VS_1 on.
+ALARM_EQ_READY_ERR_HO_AVBL_OFF (uint16_t)0x002B    // HO_AVBL off.
+ALARM_EQ_READY_ERR_ES_OFF      (uint16_t)0x002C    // ES off.
+//RSP80_E84_LVALID_ERR1        (uint16_t)0x000B
+RSP80_E84_LVALID_ERR2          (uint16_t)0x000C
+RSP80_E84_LVALID_ERR3          (uint16_t)0x000D
+RSP80_E84_LVALID_ERR4          (uint16_t)0x000E
+RSP80_E84_LVALID_ERR5          (uint16_t)0x000F
+RSP80_E84_LVALID_ERR6          (uint16_t)0x0010
+RSP80_E84_LVALID_ERR7          (uint16_t)0x0011
+RSP80_E84_BUSY_ON_ERR1         (uint16_t)0x002E
+RSP80_E84_BUSY_ON_ERR2         (uint16_t)0x002F
+RSP80_E84_BUSY_ON_ERR3         (uint16_t)0x0030
+RSP80_E84_BUSY_ON_ERR4         (uint16_t)0x0031
+RSP80_E84_BUSY_ON_ERR5         (uint16_t)0x0032
+RSP80_E84_BUSY_ON_ERR6         (uint16_t)0x0033
+RSP80_E84_BUSY_ON_ERR7         (uint16_t)0x0034
+RSP80_AMR_BACK_ERR1            (uint16_t)0x003F
+RSP80_AMR_BACK_ERR2            (uint16_t)0x0040
+RSP80_AMR_BACK_ERR3            (uint16_t)0x0041
+RSP80_AMR_BACK_ERR4            (uint16_t)0x0042
+RSP80_AMR_BACK_ERR5            (uint16_t)0x0043
+RSP80_AMR_BACK_ERR6            (uint16_t)0x0044
+RSP80_AMR_BACK_ERR7            (uint16_t)0x0045
+RSP80_E84_LARM_POP_ERR1        (uint16_t)0x0037
+RSP80_E84_LARM_POP_ERR2        (uint16_t)0x0038
+RSP80_E84_LARM_POP_ERR3        (uint16_t)0x0039
+RSP80_E84_LARM_POP_ERR4        (uint16_t)0x003A
+RSP80_E84_LARM_POP_ERR5        (uint16_t)0x003B
+RSP80_E84_LARM_POP_ERR6        (uint16_t)0x003C
+RSP80_E84_UBUSY_ON_ERR1        (uint16_t)0x102D
+RSP80_E84_UBUSY_ON_ERR2        (uint16_t)0x102E
+RSP80_E84_UBUSY_ON_ERR3        (uint16_t)0x102F
+RSP80_E84_UBUSY_ON_ERR4        (uint16_t)0x1030
+RSP80_E84_UBUSY_ON_ERR5        (uint16_t)0x1031
+RSP80_E84_UBUSY_ON_ERR6        (uint16_t)0x1032
+RSP80_E84_UBUSY_ON_ERR7        (uint16_t)0x1033
+RSP80_E84_UEQ_OFFLINE          (uint16_t)0x1000
+RSP80_E84_UVALID_ERR1          (uint16_t)0x100B
+RSP80_E84_UVALID_ERR2          (uint16_t)0x100C
+RSP80_E84_UVALID_ERR3          (uint16_t)0x100D
+RSP80_E84_UVALID_ERR4          (uint16_t)0x100E
+RSP80_E84_UVALID_ERR5          (uint16_t)0x100F
+RSP80_E84_UVALID_ERR6          (uint16_t)0x1010
+RSP80_E84_UARM_POP_ERR1        (uint16_t)0x1036
+RSP80_E84_UARM_POP_ERR2        (uint16_t)0x1037
+RSP80_E84_UARM_POP_ERR3        (uint16_t)0x1038
+RSP80_E84_UARM_POP_ERR4        (uint16_t)0x1039
+RSP80_E84_UARM_POP_ERR5        (uint16_t)0x103A
+RSP80_E84_UARM_POP_ERR6        (uint16_t)0x103B
+RSP80_E84_TD0_TIMEOUT          (uint16_t)0x4010
+RSP80_E84_TA1_TIMEOUT          (uint16_t)0x4000    // TA1 timeout.
+RSP80_E84_TA2_TIMEOUT          (uint16_t)0x4001    // TA2 timeout.
+RSP80_E84_TA3_TIMEOUT          (uint16_t)0x4002    // TA3 timeout.
+RSP80_E84_TA4_TIMEOUT          (uint16_t)0x4003    // TA4 timeout.
+RSP80_E84_TP1_TIMEOUT          (uint16_t)0x5000
+RSP80_E84_TP2_TIMEOUT          (uint16_t)0x5001
+RSP80_E84_TP3_TIMEOUT          (uint16_t)0x5002
+RSP80_E84_TP4_TIMEOUT          (uint16_t)0x5003
+RSP80_E84_TP5_TIMEOUT          (uint16_t)0x5004
+RSP80_E84_TP6_TIMEOUT          (uint16_t)0x5005
+RSP80__VALID_ERROR             (uint16_t)0x000B
+RSP80_E84_UARM_POP_ERR6        (uint16_t)0x103B

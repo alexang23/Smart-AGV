@@ -1,0 +1,16 @@
+!.gitignore 
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+log/
+log_0/
+*.log
+output*/
+output*/**
+web*/
+web*/**
+build/
+*.spec
+Pipfile.lock
+

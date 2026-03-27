@@ -1,0 +1,4 @@
+.\test_api.exe -url 127.0.0.1:7007 -method POST -api /api/port/channel -json "{\"port_no\":1, \"enable\":true}"
+.\test_api.exe -url 127.0.0.1:7007 -method POST -api /api/port/handoff -json "{\"port_no\":1, \"cs\":0, \"task\":0}"
+.\test_api.exe -url 127.0.0.1:7007 -method POST -api /api/port/arm-back -json "{\"port_no\":1, \"enable\":true}"
+.\test_api.exe -url 127.0.0.1:7007 -method POST -api /api/port/alarm-reset -json "{\"port_no\":1, \"enable\":true}"

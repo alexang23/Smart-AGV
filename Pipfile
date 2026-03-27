@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+sqlalchemy = "*"
+passlib = {extras = ["bcrypt"], version = "*"}
+colorlog = "*"
+pyserial = "*"
+schedule = "*"
+paho-mqtt = "*"
+python-multipart = "*"
+bcrypt = "<=4.0.1"
+psutil = "*"
+requests = "*"
+zeep = "*"
+pywin32 = "*"
+pydantic = "*"
+pydantic-settings = "*"
+another-fastapi-jwt-auth = "*"
+pytest = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.14"
+python_full_version = "3.14.0"
