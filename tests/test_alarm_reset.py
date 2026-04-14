@@ -2,9 +2,10 @@ import asyncio
 import types
 
 from e84_client import E84Client, E84Command, E84Protocol, E84StateEvent
+from e84 import E84
 from serial_gyro import AsyncSerialPort
 from smart_e84 import SmartE84
-from routers.port import api_port_arm_back, api_port_handoff
+from routers.port import api_port_arm_back, api_port_channel, api_port_handoff
 
 
 class DummyLogger:
@@ -331,6 +332,194 @@ def test_api_port_handoff_runs_after_rf_channel_opened():
     asyncio.run(run_test())
 
 
+def test_api_port_channel_returns_fail_when_rf_channel_open_fails():
+    async def run_test():
+        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+
+        class DummyQuery:
+            def filter(self, *args, **kwargs):
+                return self
+
+            def first(self):
+                return login_user
+
+        class DummyDB:
+            def query(self, *args, **kwargs):
+                return DummyQuery()
+
+        channel_calls = []
+
+        class DummyE84Client:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+                self.rf_channel_opened_success = False
+
+        class DummyPort:
+            def __init__(self):
+                self.e84 = DummyE84Client()
+
+            async def open_RF_channel(self):
+                channel_calls.append("open")
+                return False
+
+            async def alarm_reset_async(self):
+                channel_calls.append("reset")
+                return True
+
+        request = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                state=types.SimpleNamespace(
+                    glogger=DummyLogger(),
+                    tsc=types.SimpleNamespace(
+                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                        e84={0: DummyPort()},
+                    ),
+                )
+            )
+        )
+
+        result = await api_port_channel(
+            condition=types.SimpleNamespace(port_no=1, enable=True),
+            request=request,
+            db=DummyDB(),
+            login_id="1",
+        )
+
+        assert result["Success"] is False
+        assert result["State"] == "NG"
+        assert result["ErrorCode"] == 500
+        assert "RF channel open failed" in result["Message"]
+        assert channel_calls == ["open"]
+
+    asyncio.run(run_test())
+
+
+def test_api_port_channel_returns_success_when_rf_channel_open_succeeds():
+    async def run_test():
+        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+
+        class DummyQuery:
+            def filter(self, *args, **kwargs):
+                return self
+
+            def first(self):
+                return login_user
+
+        class DummyDB:
+            def query(self, *args, **kwargs):
+                return DummyQuery()
+
+        channel_calls = []
+
+        class DummyE84Client:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+                self.rf_channel_opened_success = False
+
+        class DummyPort:
+            def __init__(self):
+                self.e84 = DummyE84Client()
+
+            async def open_RF_channel(self):
+                channel_calls.append("open")
+                self.e84.rf_channel_opened_success = True
+                return True
+
+            async def alarm_reset_async(self):
+                channel_calls.append("reset")
+                return True
+
+        request = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                state=types.SimpleNamespace(
+                    glogger=DummyLogger(),
+                    tsc=types.SimpleNamespace(
+                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                        e84={0: DummyPort()},
+                    ),
+                )
+            )
+        )
+
+        result = await api_port_channel(
+            condition=types.SimpleNamespace(port_no=1, enable=True),
+            request=request,
+            db=DummyDB(),
+            login_id="1",
+        )
+
+        assert result["Success"] is True
+        assert result["State"] == "OK"
+        assert result["ErrorCode"] == 0
+        assert result["Message"] == ""
+        assert channel_calls == ["open"]
+
+    asyncio.run(run_test())
+
+
+def test_api_port_channel_returns_fail_when_alarm_reset_fails():
+    async def run_test():
+        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+
+        class DummyQuery:
+            def filter(self, *args, **kwargs):
+                return self
+
+            def first(self):
+                return login_user
+
+        class DummyDB:
+            def query(self, *args, **kwargs):
+                return DummyQuery()
+
+        channel_calls = []
+
+        class DummyE84Client:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+                self.rf_channel_opened_success = True
+
+        class DummyPort:
+            def __init__(self):
+                self.e84 = DummyE84Client()
+
+            async def open_RF_channel(self):
+                channel_calls.append("open")
+                return True
+
+            async def alarm_reset_async(self):
+                channel_calls.append("reset")
+                return False
+
+        request = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                state=types.SimpleNamespace(
+                    glogger=DummyLogger(),
+                    tsc=types.SimpleNamespace(
+                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                        e84={0: DummyPort()},
+                    ),
+                )
+            )
+        )
+
+        result = await api_port_channel(
+            condition=types.SimpleNamespace(port_no=1, enable=False),
+            request=request,
+            db=DummyDB(),
+            login_id="1",
+        )
+
+        assert result["Success"] is False
+        assert result["State"] == "NG"
+        assert result["ErrorCode"] == 500
+        assert "RF channel reset failed" in result["Message"]
+        assert channel_calls == ["reset"]
+        assert request.app.state.tsc.e84[0].e84.rf_channel_opened_success is False
+
+    asyncio.run(run_test())
+
+
 def test_e84_client_connect_async_returns_parent_result():
     async def run_test():
         client = object.__new__(E84Client)
@@ -386,6 +575,30 @@ def test_smart_e84_alarm_reset_connects_before_send():
         assert result is True
         assert smart.e84.connect_calls == 1
         assert smart.e84.alarm_reset_calls == 1
+
+    asyncio.run(run_test())
+
+
+def test_legacy_e84_alarm_reset_async_returns_bool_and_clears_rf_channel_flag():
+    async def run_test():
+        legacy = object.__new__(E84)
+
+        class DummyE84Device:
+            def __init__(self):
+                self.rf_channel_opened_success = True
+                self.alarm_reset_calls = 0
+
+            async def alarm_reset(self):
+                self.alarm_reset_calls += 1
+                return True
+
+        legacy.e84 = DummyE84Device()
+
+        result = await E84.alarm_reset_async(legacy)
+
+        assert result is True
+        assert legacy.e84.rf_channel_opened_success is False
+        assert legacy.e84.alarm_reset_calls == 1
 
     asyncio.run(run_test())
 

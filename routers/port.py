@@ -211,14 +211,31 @@ async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Se
             id = tsc.loadport[portno]['id']
             e84_port = tsc.e84[id]
             e84_client = getattr(e84_port, 'e84', None)
-            dual = '2' if tsc.loadport[portno]['dual'] > 0 else ''
-            # print(f"dual={dual}")
-            if e84_client is not None:
-                e84_client.rf_channel_opened_success = False
+
+            if e84_client is None:
+                msg = 'E84 RF channel operation failed. Device is not ready.'
+                glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                return {'Success': False,
+                        'State': 'NG',
+                        'ErrorCode': 500,
+                        'Message': msg}
+
             if condition.enable:
-                e84_port.run_cmd(f'channel')
+                success = await e84_port.open_RF_channel()
+                if not success:
+                    result = 'NG'
+                    msg = 'E84 RF channel open failed. Device is not connected or did not respond.'
+                    glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                            {'user': '{},{}'.format(login_user.userid, login_user.name)})
             else:
-                e84_port.run_cmd(f'alarm_reset')
+                success = await e84_port.alarm_reset_async()
+                if not success:
+                    e84_client.rf_channel_opened_success = False
+                    result = 'NG'
+                    msg = 'E84 RF channel reset failed. Device is not connected or did not respond.'
+                    glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                            {'user': '{},{}'.format(login_user.userid, login_user.name)})
     
             print(f"api_port_channel : {portno}") 
         else:
@@ -233,10 +250,10 @@ async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Se
                 'ErrorCode': 500,
                 'Message': str(err)}
     
-    return {'Success': True,
+    return {'Success': result == 'OK',
             'State': result,
-            'ErrorCode': 0,
-            'Message': ""}
+            'ErrorCode': 0 if result == 'OK' else 500,
+            'Message': "" if result == 'OK' else msg}
 
 # @router.post('/continue')
 async def api_port_continue(condition: schemas.PortInfo, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
