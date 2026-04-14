@@ -3,6 +3,7 @@ import types
 
 from e84_client import E84Client, E84Command, E84Protocol, E84StateEvent
 from smart_e84 import SmartE84
+from routers.port import api_port_arm_back
 
 
 class DummyLogger:
@@ -149,6 +150,69 @@ def test_e84_client_state_event_updates_arm_back_gate():
         assert client._last_state_event_code == E84StateEvent.UNLOAD_COMPLETE
         assert client._last_state_event_description == E84StateEvent.get_description(E84StateEvent.UNLOAD_COMPLETE)
         assert client._can_send_arm_back() is True
+
+    asyncio.run(run_test())
+
+
+def test_api_port_arm_back_returns_fail_when_called_too_early():
+    async def run_test():
+        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+
+        class DummyQuery:
+            def filter(self, *args, **kwargs):
+                return self
+
+            def first(self):
+                return login_user
+
+        class DummyDB:
+            def query(self, *args, **kwargs):
+                return DummyQuery()
+
+        arm_back_calls = []
+
+        class DummyE84Client:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+
+            def _can_send_arm_back(self):
+                return False
+
+            async def arm_back_complete(self, is_unload=False, ready_timeout=30.0):
+                arm_back_calls.append((is_unload, ready_timeout))
+                return True
+
+        class DummyPort:
+            def __init__(self):
+                self.e84 = DummyE84Client()
+
+            async def _ensure_e84_connected(self, operation_name: str, attempts: int = 3):
+                return True
+
+        request = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                state=types.SimpleNamespace(
+                    glogger=DummyLogger(),
+                    tsc=types.SimpleNamespace(
+                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                        e84={0: DummyPort()},
+                    ),
+                )
+            )
+        )
+
+        result = await api_port_arm_back(
+            condition=types.SimpleNamespace(port_no=1),
+            request=request,
+            db=DummyDB(),
+            login_id="1",
+        )
+
+        assert result["Success"] is False
+        assert result["State"] == "NG"
+        assert result["ErrorCode"] == 500
+        assert "Load Complete or Unload Complete" in result["Message"]
+        assert arm_back_calls == []
 
     asyncio.run(run_test())
 

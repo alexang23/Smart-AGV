@@ -419,9 +419,37 @@ async def api_port_arm_back(condition: schemas.PortInfo, request: Request, db: S
     
         if tsc.loadport[portno]['com'] == 'e84':
             id = tsc.loadport[portno]['id']
-            dual = '2' if tsc.loadport[portno]['dual'] > 0 else ''
-            # print(f"dual={dual}")
-            tsc.e84[id].run_cmd(f'arm_back')
+            e84_port = tsc.e84[id]
+            e84_client = getattr(e84_port, 'e84', None)
+
+            if e84_client is None:
+                result = 'NG'
+                msg = 'E84 arm back failed. Device is not ready.'
+            else:
+                ensure_connected = getattr(e84_port, '_ensure_e84_connected', None)
+                if callable(ensure_connected):
+                    connected = await ensure_connected("api_port_arm_back")
+                else:
+                    connected = getattr(getattr(e84_client, '_state', None), 'value', None) == "connected"
+                    if not connected:
+                        await e84_client.connect_async()
+                        connected = getattr(getattr(e84_client, '_state', None), 'value', None) == "connected"
+
+                if not connected:
+                    result = 'NG'
+                    msg = 'E84 arm back failed. Device is not connected.'
+                elif not e84_client._can_send_arm_back():
+                    result = 'NG'
+                    msg = 'E84 arm back failed. Wait for Load Complete or Unload Complete before calling /arm-back.'
+                else:
+                    success = await e84_client.arm_back_complete(is_unload=True, ready_timeout=0.0)
+                    if not success:
+                        result = 'NG'
+                        msg = 'E84 arm back failed. Device is not connected or did not respond.'
+
+            if result == 'NG':
+                glogger.warning('api_port_arm_back : port_no {} {}'.format(portno, msg),
+                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
 
             print(f"api_port_arm_back : {portno}") 
         else:
@@ -436,10 +464,10 @@ async def api_port_arm_back(condition: schemas.PortInfo, request: Request, db: S
                 'ErrorCode': 500,
                 'Message': str(err)}
     
-    return {'Success': True,
+    return {'Success': result == 'OK',
             'State': result,
-            'ErrorCode': 0,
-            'Message': ""}
+            'ErrorCode': 0 if result == 'OK' else 500,
+            'Message': "" if result == 'OK' else msg}
 
 @router.post('/cmd')
 async def api_port_cmd(condition: schemas.PortCmd, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
