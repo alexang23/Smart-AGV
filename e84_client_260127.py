@@ -629,11 +629,9 @@ class E84Client(AsyncSerialPort):
             # self.logger.warning(f"DEBUG: _e84_response_parser 未知命令: {message}")
             pass
         
-        # 返回 command_id 用於命令匹配
+        # 返回 command_id 與完整回應幀，避免共享 _last_message 被後續事件覆寫
         command_id = f"E84_{message.command:04X}"
-        
-        # FRAME 模式：沒有剩餘資料（每個幀都是完整的）
-        return (command_id, b'')
+        return (command_id, data)
     
     async def _handle_sensor_event(self, message: E84Message) -> None:
         """處理感測器事件 (70 系列)"""
@@ -816,12 +814,18 @@ class E84Client(AsyncSerialPort):
                 data=message,
                 timeout=timeout
             )
-            
-            # response_data 會是原始 bytes，但已被解析器處理過
-            # _last_message 包含最後解析的訊息
+
+            if response_data:
+                response_message = E84Protocol.parse_message(response_data)
+                if response_message and response_message.command == command:
+                    self._last_message = response_message
+                    return response_message
+
             if self._last_message and self._last_message.command == command:
                 return self._last_message
-            
+
+            response_hex = response_data.hex() if response_data else "None"
+            self.logger.warning(f"0x{command:04X} response {response_hex}")
             return None
              
         except asyncio.TimeoutError:
