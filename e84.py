@@ -1022,9 +1022,12 @@ class E84(threading.Thread):
 
     async def alarm_reset_async(self):
         if self.e84 == None:
-            return
+            return False
         success = await self.e84.alarm_reset()
+        if success:
+            self.e84.rf_channel_opened_success = False
         print(f"######################## alarm_reset_async 結果: {'成功' if success else '失敗'} ########################")
+        return success
 
     def event_msg(self, data, cs=0):
         try:
