@@ -567,11 +567,12 @@ class E84Client(AsyncSerialPort):
         """
         Ensure the event queue is created on the running event loop.
         """
-        await super().connect_async(*args, **kwargs)
-        if self._event_queue_size and self._event_queue is None:
+        connected = await super().connect_async(*args, **kwargs)
+        if connected and self._event_queue_size and self._event_queue is None:
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
             self.logger.info(f"事件佇列建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+        return connected
 
     def _e84_response_parser(self, data: bytes) -> Tuple[Optional[str], bytes]:
         """
