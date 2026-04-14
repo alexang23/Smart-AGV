@@ -1161,9 +1161,11 @@ class SmartE84(threading.Thread):
 
     async def arm_back_async(self):
         if self.e84 == None:
-            return
+            return False
         success = await self.e84.cobot_arm_back_complete_async()
         # print(f"######################## arm_back_complete_async 結果: {'成功' if success else '失敗'} ########################")
+        return success
+
     async def _ensure_e84_connected(self, operation_name: str, attempts: int = 3):
         if self.e84 == None:
             return False

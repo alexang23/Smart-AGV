@@ -1,7 +1,7 @@
 import asyncio
 import types
 
-from e84_client import E84Client, E84Command, E84Protocol
+from e84_client import E84Client, E84Command, E84Protocol, E84StateEvent
 from smart_e84 import SmartE84
 
 
@@ -81,6 +81,74 @@ def test_send_e84_command_uses_matched_response_when_last_message_changes():
 
         assert result is not None
         assert result.command == E84Command.ALARM_RESET
+
+    asyncio.run(run_test())
+
+
+def test_e84_client_arm_back_complete_requires_completion_state():
+    async def run_test():
+        client = object.__new__(E84Client)
+        client.logger = DummyLogger()
+        client._last_state_event_code = E84StateEvent.HANDOFF_COMPLETE
+        client._last_state_event_description = E84StateEvent.get_description(E84StateEvent.HANDOFF_COMPLETE)
+
+        send_calls = []
+
+        async def fake_send_e84_command(command, param):
+            send_calls.append((command, param))
+            return object()
+
+        client._send_e84_command = fake_send_e84_command
+
+        result = await E84Client.arm_back_complete(client, ready_timeout=0.0)
+
+        assert result is False
+        assert send_calls == []
+
+    asyncio.run(run_test())
+
+
+def test_e84_client_arm_back_complete_sends_after_load_complete():
+    async def run_test():
+        client = object.__new__(E84Client)
+        client.logger = DummyLogger()
+        client._last_state_event_code = E84StateEvent.LOAD_COMPLETE
+        client._last_state_event_description = E84StateEvent.get_description(E84StateEvent.LOAD_COMPLETE)
+
+        send_calls = []
+
+        async def fake_send_e84_command(command, param):
+            send_calls.append((command, param))
+            return object()
+
+        client._send_e84_command = fake_send_e84_command
+
+        result = await E84Client.arm_back_complete(client, ready_timeout=0.0)
+
+        assert result is True
+        assert send_calls == [(E84Command.ARM_BACK, 0x0001)]
+
+    asyncio.run(run_test())
+
+
+def test_e84_client_state_event_updates_arm_back_gate():
+    async def run_test():
+        client = object.__new__(E84Client)
+        client.logger = DummyLogger()
+        client._on_state_event = None
+        client._event_queue = None
+        client._event_queue_size = None
+        client._event_queue_loop = None
+        client._last_state_event_code = None
+        client._last_state_event_description = ""
+
+        message = E84Protocol.parse_message(build_read_frame(0x0071, E84StateEvent.UNLOAD_COMPLETE))
+
+        await E84Client._handle_state_event(client, message)
+
+        assert client._last_state_event_code == E84StateEvent.UNLOAD_COMPLETE
+        assert client._last_state_event_description == E84StateEvent.get_description(E84StateEvent.UNLOAD_COMPLETE)
+        assert client._can_send_arm_back() is True
 
     asyncio.run(run_test())
 

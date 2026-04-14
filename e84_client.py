@@ -181,7 +181,9 @@ class E84StateEvent:
     """E84 狀態事件定義（71 系列）"""
     AUTO_ONLINE = 0x01
     READY_TO_LOAD = 0x02      # 可伸出手臂放貨
-    LOAD_RECEIVED = 0x03      # 設備已接收貨
+    LOAD_COMPLETE = 0x03      # 設備已接收貨（可回收手臂）
+    LOAD_RECEIVED = LOAD_COMPLETE
+    HANDOFF_COMPLETE = 0x04
     READY_TO_UNLOAD = 0x1002  # 可伸出手臂取貨
     UNLOAD_COMPLETE = 0x1003  # 設備已取貨
     
@@ -552,6 +554,8 @@ class E84Client(AsyncSerialPort):
         
         # 內部狀態
         self._current_signals: Dict[str, bool] = {}  # 當前訊號狀態
+        self._last_state_event_code: Optional[int] = None
+        self._last_state_event_description: str = ""
         self._last_message: Optional[E84Message] = None
         self.RF_port = RF_port
         self._sensor_RF = None
@@ -702,6 +706,9 @@ class E84Client(AsyncSerialPort):
         # 71 系列可能有不同的資料格式
         code = message.data
         description = E84StateEvent.get_description(code)
+
+        self._last_state_event_code = code
+        self._last_state_event_description = description
         
         # 建立事件物件
         event = E84Event(
@@ -836,6 +843,25 @@ class E84Client(AsyncSerialPort):
     def get_signal_state(self, signal_name: str) -> Optional[bool]:
         """取得當前訊號狀態"""
         return self._current_signals.get(signal_name)
+
+    def _can_send_arm_back(self) -> bool:
+        """ARM Back 只能在 Load Complete / Unload Complete 後送出。"""
+        return self._last_state_event_code in {
+            E84StateEvent.LOAD_COMPLETE,
+            E84StateEvent.UNLOAD_COMPLETE,
+        }
+
+    async def _wait_for_arm_back_ready(self, timeout: float = 30.0) -> bool:
+        if self._can_send_arm_back():
+            return True
+
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            if self._can_send_arm_back():
+                return True
+            await asyncio.sleep(0.05)
+
+        return False
     
     # ==================== 基本 E84 命令 ====================
     
@@ -1300,23 +1326,31 @@ class E84Client(AsyncSerialPort):
             return True
         return False
     
-    async def arm_back_complete(self, is_unload: bool = False) -> bool:
+    async def arm_back_complete(self, is_unload: bool = False, ready_timeout: float = 30.0) -> bool:
         """
         手臂回收完成
         
         Args:
             is_unload: True=Unload 流程, False=Load 流程
+            ready_timeout: 等待 Load Complete / Unload Complete 的時間（秒）
         
         Returns:
             是否成功
         """
+        if not await self._wait_for_arm_back_ready(ready_timeout):
+            last_state = self._last_state_event_description or "No E84 state event"
+            self.logger.warning(
+                "------------------ ARM Back Complete blocked until Load Complete or Unload Complete "
+                f"(last state: {last_state})"
+            )
+            return False
+
         param = 0x0001 if is_unload else 0x0001  # 根據協議，兩者都是 0x0001
         response = await self._send_e84_command(E84Command.ARM_BACK, param)
-        # if response:
-        #     self.logger.info("------------------ 手臂回收完成")
-        #     return True
-        # return False
-        return True
+        if response:
+            self.logger.info("------------------ 手臂回收完成")
+            return True
+        return False
     
     async def alarm_reset(self) -> bool:
         """Alarm Reset"""
@@ -1621,7 +1655,10 @@ class E84Client(AsyncSerialPort):
             
             # Step 7: 手臂回收完成
             self.logger.info("------------------ 發送 ARM Back Complete")
-            if not await self.arm_back_complete(is_unload=False):
+            if not await self.arm_back_complete(
+                is_unload=False,
+                ready_timeout=max(timeout_per_step * 6, timeout_per_step),
+            ):
                 self.logger.error("------------------ ARM Back Complete 失敗")
                 return False
             
@@ -1731,7 +1768,10 @@ class E84Client(AsyncSerialPort):
             
             # Step 7: 手臂回收完成
             self.logger.info("------------------ 發送 ARM Back Complete")
-            if not await self.arm_back_complete(is_unload=True):
+            if not await self.arm_back_complete(
+                is_unload=True,
+                ready_timeout=max(timeout_per_step * 6, timeout_per_step),
+            ):
                 self.logger.error("------------------ ARM Back Complete 失敗")
                 return False
             
@@ -1881,7 +1921,10 @@ class E84Client(AsyncSerialPort):
         try:
             # Step 7: 手臂回收完成
             self.logger.info("------------------ 發送 ARM Back Complete")
-            if not await self.arm_back_complete(is_unload=True):
+            if not await self.arm_back_complete(
+                is_unload=True,
+                ready_timeout=max(timeout_per_step * 6, timeout_per_step),
+            ):
                 self.logger.error("------------------ ARM Back Complete 失敗")
                 return False
             
