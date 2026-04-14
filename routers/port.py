@@ -209,12 +209,16 @@ async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Se
     
         if tsc.loadport[portno]['com'] == 'e84':
             id = tsc.loadport[portno]['id']
+            e84_port = tsc.e84[id]
+            e84_client = getattr(e84_port, 'e84', None)
             dual = '2' if tsc.loadport[portno]['dual'] > 0 else ''
             # print(f"dual={dual}")
+            if e84_client is not None:
+                e84_client.rf_channel_opened_success = False
             if condition.enable:
-                tsc.e84[id].run_cmd(f'channel')
+                e84_port.run_cmd(f'channel')
             else:
-                tsc.e84[id].run_cmd(f'alarm_reset')
+                e84_port.run_cmd(f'alarm_reset')
     
             print(f"api_port_channel : {portno}") 
         else:
