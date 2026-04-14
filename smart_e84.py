@@ -1164,12 +1164,39 @@ class SmartE84(threading.Thread):
             return
         success = await self.e84.cobot_arm_back_complete_async()
         # print(f"######################## arm_back_complete_async 結果: {'成功' if success else '失敗'} ########################")
+    async def _ensure_e84_connected(self, operation_name: str, attempts: int = 3):
+        if self.e84 == None:
+            return False
+
+        if self.e84._state.value == "connected":
+            return True
+
+        for attempt in range(1, attempts + 1):
+            self.logger.info(f"{operation_name} connect attempt {attempt}/{attempts}")
+            try:
+                await self.e84.connect_async()
+            except Exception as err:
+                self.logger.error(f"{operation_name} connect attempt {attempt}/{attempts} failed: {err}")
+
+            if self.e84._state.value == "connected":
+                return True
+
+            if attempt < attempts:
+                await asyncio.sleep(1)
+
+        self.logger.error(f"{operation_name} failed: E84 client is not connected")
+        return False
 
     async def alarm_reset_async(self):
         if self.e84 == None:
-            return
+            return False
+
+        if not await self._ensure_e84_connected("alarm_reset_async"):
+            return False
+
         success = await self.e84.alarm_reset()
         # print(f"######################## alarm_reset_async 結果: {'成功' if success else '失敗'} ########################")
+        return success
 
     def cmd_msg(self, data):
         try:

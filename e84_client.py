@@ -1318,10 +1318,10 @@ class E84Client(AsyncSerialPort):
     async def alarm_reset(self) -> bool:
         """Alarm Reset"""
         response = await self._send_e84_command(E84Command.ALARM_RESET, 0x0000)
-        # if response:
-        #     self.logger.info("------------------ Alarm Reset")
-        #     return True
-        return True
+        if response:
+            self.logger.info("------------------ Alarm Reset")
+            return True
+        return False
     
     # ==================== 完整的 Load/Unload 流程 ====================
     
