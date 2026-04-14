@@ -151,29 +151,32 @@ async def api_port_alarm_reset(condition: schemas.PortInfo, request: Request, db
     
         if tsc.loadport[portno]['com'] == 'e84':
             id = tsc.loadport[portno]['id']
-            dual = '2' if tsc.loadport[portno]['dual'] > 0 else ''
-            # print(f"dual={dual}")
-            # tsc.e84[id].run_cmd(f'reset{dual}')
             print(f"id={id}, len={len(tsc.e84)}")
-            tsc.e84[id].run_cmd(f'alarm_reset')
-    
+            success = await tsc.e84[id].alarm_reset_async()
+
+            if not success:
+                result = 'NG'
+                msg = 'E84 alarm reset failed. Device is not connected or did not respond.'
+                glogger.warning('api_port_alarm_reset : port_no {} {}'.format(portno, msg), 
+                {'user': '{},{}'.format(login_user.userid, login_user.name)})
+
             print(f"api_port_alarm_reset : {portno}") 
         else:
             result = 'NG'
             msg = 'RFID reader do not support this command.'    
-    
+
     except Exception as err:
         glogger.warning(f'api_port_alarm_reset : port_no={portno}, error={str(err)}', 
-                {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
         return {'Success': False,
                 'State': 'NG',
                 'ErrorCode': 500,
                 'Message': str(err)}
-    
-    return {'Success': True,
+
+    return {'Success': result == 'OK',
             'State': result,
-            'ErrorCode': 0,
-            'Message': ""}
+            'ErrorCode': 0 if result == 'OK' else 500,
+            'Message': "" if result == 'OK' else msg}
 
 @router.post('/channel')
 async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
