@@ -957,18 +957,21 @@ class E84(threading.Thread):
 
     async def open_RF_channel(self):
         if self.e84 == None:
-            return
+            return False
+        self.e84.rf_channel_opened_success = False
         if self.e84._state.value != "connected":
             if not await self.e84.connect_async():
                 print("❌ 連線失敗，可能原因：")
                 print("   1. 串口不存在或已被占用")
                 print("   2. 串口權限不足")
                 print("   3. 波特率不正確")
-                return
+                return False
 
         try:
             success = await self.e84.initialize_COMport_RFsensor()
+            self.e84.rf_channel_opened_success = bool(success)
             print(f"######################## initialize E84 RF Sensor 結果: {'成功' if success else '失敗'} ########################")
+            return success
         finally:
             if self.e84._state.value == "connected":
                 await self.e84.disconnect_async()

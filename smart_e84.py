@@ -1081,7 +1081,8 @@ class SmartE84(threading.Thread):
 
     async def open_RF_channel(self):
         if self.e84 == None:
-            return
+            return False
+        self.e84.rf_channel_opened_success = False
         if self.e84._state.value != "connected":
             connected = False
             for attempt in range(1, 4):
@@ -1097,11 +1098,13 @@ class SmartE84(threading.Thread):
                 print("   1. 串口不存在或已被占用")
                 print("   2. 串口權限不足")
                 print("   3. 波特率不正確")
-                return
+                return False
 
         try:
             success = await self.e84.initialize_COMport_RFsensor()
+            self.e84.rf_channel_opened_success = bool(success)
             print(f"######################## initialize E84 RF Sensor 結果: {'成功' if success else '失敗'} ########################")
+            return success
         finally:
             if self.e84._state.value == "connected":
                 await self.e84.disconnect_async()
@@ -1197,6 +1200,8 @@ class SmartE84(threading.Thread):
             return False
 
         success = await self.e84.alarm_reset()
+        if success:
+            self.e84.rf_channel_opened_success = False
         # print(f"######################## alarm_reset_async 結果: {'成功' if success else '失敗'} ########################")
         return success
 
@@ -1954,7 +1959,9 @@ class SmartE84(threading.Thread):
                 traceback.print_exc()
                 # self.check()
                 # self.e84.stop()
-                self._run_coro(self.alarm_reset_async())
+                success = self._run_coro(self.alarm_reset_async())
+                if success:
+                    self.e84.rf_channel_opened_success = False
                 #logger.error(traceback.format_exc())
                 time.sleep(3)
 

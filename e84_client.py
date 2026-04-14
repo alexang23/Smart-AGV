@@ -559,6 +559,7 @@ class E84Client(AsyncSerialPort):
         self._last_message: Optional[E84Message] = None
         self.RF_port = RF_port
         self._sensor_RF = None
+        self.rf_channel_opened_success = False
         
         self.logger.info(f"E84Client 初始化: {port} @ {baudrate}")
 

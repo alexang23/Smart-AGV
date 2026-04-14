@@ -2,8 +2,9 @@ import asyncio
 import types
 
 from e84_client import E84Client, E84Command, E84Protocol, E84StateEvent
+from serial_gyro import AsyncSerialPort
 from smart_e84 import SmartE84
-from routers.port import api_port_arm_back
+from routers.port import api_port_arm_back, api_port_handoff
 
 
 class DummyLogger:
@@ -217,6 +218,148 @@ def test_api_port_arm_back_returns_fail_when_called_too_early():
     asyncio.run(run_test())
 
 
+def test_api_port_handoff_returns_fail_when_rf_channel_not_opened():
+    async def run_test():
+        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+
+        class DummyQuery:
+            def filter(self, *args, **kwargs):
+                return self
+
+            def first(self):
+                return login_user
+
+        class DummyDB:
+            def query(self, *args, **kwargs):
+                return DummyQuery()
+
+        handoff_calls = []
+
+        class DummyE84Client:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+                self.rf_channel_opened_success = False
+
+        class DummyPort:
+            def __init__(self):
+                self.e84 = DummyE84Client()
+
+            def run_cmd(self, command):
+                handoff_calls.append(command)
+
+        request = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                state=types.SimpleNamespace(
+                    glogger=DummyLogger(),
+                    tsc=types.SimpleNamespace(
+                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                        e84={0: DummyPort()},
+                    ),
+                )
+            )
+        )
+
+        result = await api_port_handoff(
+            condition=types.SimpleNamespace(port_no=1, cs=0, task=0),
+            request=request,
+            db=DummyDB(),
+            login_id="1",
+        )
+
+        assert result["Success"] is False
+        assert result["State"] == "NG"
+        assert result["ErrorCode"] == 500
+        assert "Open RF channel successfully" in result["Message"]
+        assert handoff_calls == []
+
+    asyncio.run(run_test())
+
+
+def test_api_port_handoff_runs_after_rf_channel_opened():
+    async def run_test():
+        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+
+        class DummyQuery:
+            def filter(self, *args, **kwargs):
+                return self
+
+            def first(self):
+                return login_user
+
+        class DummyDB:
+            def query(self, *args, **kwargs):
+                return DummyQuery()
+
+        handoff_calls = []
+
+        class DummyE84Client:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+                self.rf_channel_opened_success = True
+
+        class DummyPort:
+            def __init__(self):
+                self.e84 = DummyE84Client()
+
+            def run_cmd(self, command):
+                handoff_calls.append(command)
+
+        request = types.SimpleNamespace(
+            app=types.SimpleNamespace(
+                state=types.SimpleNamespace(
+                    glogger=DummyLogger(),
+                    tsc=types.SimpleNamespace(
+                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                        e84={0: DummyPort()},
+                    ),
+                )
+            )
+        )
+
+        result = await api_port_handoff(
+            condition=types.SimpleNamespace(port_no=1, cs=1, task=0),
+            request=request,
+            db=DummyDB(),
+            login_id="1",
+        )
+
+        assert result["Success"] is True
+        assert result["State"] == "OK"
+        assert result["ErrorCode"] == 0
+        assert handoff_calls == ["handoff 1 0"]
+
+    asyncio.run(run_test())
+
+
+def test_e84_client_connect_async_returns_parent_result():
+    async def run_test():
+        client = object.__new__(E84Client)
+        client.logger = DummyLogger()
+        client._event_queue = None
+        client._event_queue_size = 1
+        client._event_queue_loop = None
+
+        connect_calls = []
+        original_connect_async = AsyncSerialPort.connect_async
+
+        async def fake_connect_async(self, *args, **kwargs):
+            connect_calls.append((args, kwargs))
+            return True
+
+        AsyncSerialPort.connect_async = fake_connect_async
+        try:
+            result = await E84Client.connect_async(client)
+        finally:
+            AsyncSerialPort.connect_async = original_connect_async
+
+        assert result is True
+        assert len(connect_calls) == 1
+        assert client._event_queue is not None
+        assert client._event_queue_loop is asyncio.get_running_loop()
+
+    asyncio.run(run_test())
+
+
 def test_smart_e84_alarm_reset_connects_before_send():
     async def run_test():
         smart = object.__new__(SmartE84)
@@ -243,5 +386,37 @@ def test_smart_e84_alarm_reset_connects_before_send():
         assert result is True
         assert smart.e84.connect_calls == 1
         assert smart.e84.alarm_reset_calls == 1
+
+    asyncio.run(run_test())
+
+
+def test_smart_e84_open_rf_channel_marks_ready_on_success():
+    async def run_test():
+        smart = object.__new__(SmartE84)
+        smart.logger = DummyLogger()
+
+        class DummyE84:
+            def __init__(self):
+                self._state = types.SimpleNamespace(value="connected")
+                self.rf_channel_opened_success = False
+                self.initialize_calls = 0
+                self.disconnect_calls = 0
+
+            async def initialize_COMport_RFsensor(self):
+                self.initialize_calls += 1
+                return True
+
+            async def disconnect_async(self):
+                self.disconnect_calls += 1
+                self._state.value = "disconnected"
+
+        smart.e84 = DummyE84()
+
+        result = await SmartE84.open_RF_channel(smart)
+
+        assert result is True
+        assert smart.e84.rf_channel_opened_success is True
+        assert smart.e84.initialize_calls == 1
+        assert smart.e84.disconnect_calls == 1
 
     asyncio.run(run_test())

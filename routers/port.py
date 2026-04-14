@@ -156,6 +156,7 @@ async def api_port_alarm_reset(condition: schemas.PortInfo, request: Request, db
 
             if not success:
                 result = 'NG'
+                tsc.e84[id].rf_channel_opened_success = False
                 msg = 'E84 alarm reset failed. Device is not connected or did not respond.'
                 glogger.warning('api_port_alarm_reset : port_no {} {}'.format(portno, msg), 
                 {'user': '{},{}'.format(login_user.userid, login_user.name)})
@@ -367,9 +368,29 @@ async def api_port_handoff(condition: schemas.Handoff, request: Request, db: Ses
     
         if tsc.loadport[portno]['com'] == 'e84':
             id = tsc.loadport[portno]['id']
+            e84_port = tsc.e84[id]
+            e84_client = getattr(e84_port, 'e84', None)
             dual = '2' if tsc.loadport[portno]['dual'] > 0 else ''
             # print(f"dual={dual}")
-            tsc.e84[id].run_cmd(f'handoff {condition.cs} {condition.task}')
+            if e84_client is None:
+                msg = 'E84 handoff failed. Device is not ready.'
+                glogger.warning('api_port_handoff : port_no {} {}'.format(portno, msg),
+                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                return {'Success': False,
+                        'State': 'NG',
+                        'ErrorCode': 500,
+                        'Message': msg}
+
+            if not getattr(e84_client, 'rf_channel_opened_success', False):
+                msg = 'E84 handoff failed. RF channel should open successfully before calling /handoff.'
+                glogger.warning('api_port_handoff : port_no {} {}'.format(portno, msg),
+                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                return {'Success': False,
+                        'State': 'NG',
+                        'ErrorCode': 500,
+                        'Message': msg}
+
+            e84_port.run_cmd(f'handoff {condition.cs} {condition.task}')
 
             print(f"api_port_handoff : {portno}, {condition.cs}, {condition.task}") 
         else:
