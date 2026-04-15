@@ -1167,6 +1167,7 @@ class E84Client(AsyncSerialPort):
         self.logger.info("=" * 60)
         
         try:
+            rf_sensor_configured = False
             await asyncio.sleep(1)
             # Step 1: DB25 Port Open
             for connect in range(1, 5):
@@ -1202,10 +1203,9 @@ class E84Client(AsyncSerialPort):
             # Step 2-1: set RF Sensor async
             self.logger.info("------------------ set_RF_sensor")
             for connect in range(1, 5):
-                success = await self.set_RF_sensor()
-                if not success:
-                    self.logger.error("------------------ set_RF_sensor 失敗")
-                    # return False
+                rf_sensor_configured = await self.set_RF_sensor()
+                if not rf_sensor_configured:
+                    self.logger.error("------------------ ,")
                     await asyncio.sleep(0.2)
                 else:
                     self.logger.info("------------------ set_RF_sensor 成功")
@@ -1236,7 +1236,7 @@ class E84Client(AsyncSerialPort):
             #     if not await self._wait_for_signal(signal_name, state, timeout_per_step):
             #         self.logger.error(f"等待 {signal_name} 超時")
             #         return False
-            return True
+            return rf_sensor_configured
         except Exception as e:
             self.logger.error(f"######################## initialize_COMport_RFsensor 流程異常: {e}", exc_info=True)
             return False
