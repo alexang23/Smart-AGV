@@ -1124,7 +1124,9 @@ class RFSensorProtocol:
     
     async def __aenter__(self):
         """Async context manager entry"""
-        await self.connect_async()
+        connected = await self.connect_async()
+        if not connected:
+            raise ConnectionError(f"Failed to connect to RF sensor on {self._port}")
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -1133,7 +1135,9 @@ class RFSensorProtocol:
     
     def __enter__(self):
         """Sync context manager entry"""
-        self.connect()
+        connected = self.connect()
+        if not connected:
+            raise ConnectionError(f"Failed to connect to RF sensor on {self._port}")
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
