@@ -1,8 +1,10 @@
 import asyncio
 import types
 
+import e84_client as e84_client_module
 from e84_client import E84Client, E84Command, E84Protocol, E84StateEvent
 from e84 import E84
+from RF_sensor import RFSensorProtocol
 from serial_gyro import AsyncSerialPort
 from smart_e84 import SmartE84
 from routers.port import api_port_arm_back, api_port_channel, api_port_handoff
@@ -631,5 +633,64 @@ def test_smart_e84_open_rf_channel_marks_ready_on_success():
         assert smart.e84.rf_channel_opened_success is True
         assert smart.e84.initialize_calls == 1
         assert smart.e84.disconnect_calls == 1
+
+    asyncio.run(run_test())
+
+
+def test_e84_initialize_comport_rf_sensor_returns_false_when_setup_never_succeeds():
+    async def run_test():
+        client = object.__new__(E84Client)
+        client.logger = DummyLogger()
+
+        select_calls = []
+        rf_sensor_calls = []
+
+        async def fake_sleep(_seconds):
+            return None
+
+        async def fake_db25_port_control(open=True):
+            return True
+
+        async def fake_select_control(select_on, go=False, mode=False, select=True, power=False):
+            select_calls.append(select_on)
+            return True
+
+        async def fake_set_rf_sensor():
+            rf_sensor_calls.append(True)
+            return False
+
+        original_sleep = e84_client_module.asyncio.sleep
+        e84_client_module.asyncio.sleep = fake_sleep
+        client.db25_port_control = fake_db25_port_control
+        client.select_control = fake_select_control
+        client.set_RF_sensor = fake_set_rf_sensor
+
+        try:
+            result = await E84Client.initialize_COMport_RFsensor(client)
+        finally:
+            e84_client_module.asyncio.sleep = original_sleep
+
+        assert result is False
+        assert len(rf_sensor_calls) == 4
+        assert select_calls == [True, False]
+
+    asyncio.run(run_test())
+
+
+def test_rf_sensor_async_context_manager_raises_when_connect_fails():
+    async def run_test():
+        sensor = object.__new__(RFSensorProtocol)
+        sensor._port = "COM15"
+
+        async def fake_connect_async():
+            return False
+
+        sensor.connect_async = fake_connect_async
+
+        try:
+            await RFSensorProtocol.__aenter__(sensor)
+            assert False, "Expected ConnectionError when RF sensor connect_async returns False"
+        except ConnectionError as err:
+            assert "COM15" in str(err)
 
     asyncio.run(run_test())
