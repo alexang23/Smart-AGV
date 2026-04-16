@@ -24,6 +24,7 @@ AsyncSerialPort - 支援 Async/Sync 讀寫，自動重連，Command-Response 匹
 import asyncio
 import serial
 import serial_asyncio
+from serial.tools import list_ports
 import threading
 import time
 import logging
@@ -56,6 +57,32 @@ class PendingCommand:
     data: bytes
     response_time: Optional[float] = None
     completed_at: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class SerialPortIdentity:
+    """Stable USB identity used to recover after COM re-enumeration."""
+    serial_number: Optional[str] = None
+    location: Optional[str] = None
+    vid: Optional[int] = None
+    pid: Optional[int] = None
+    manufacturer: Optional[str] = None
+    product: Optional[str] = None
+    interface: Optional[str] = None
+
+    def has_fingerprint(self) -> bool:
+        return any(
+            value is not None and value != ""
+            for value in (
+                self.serial_number,
+                self.location,
+                self.vid,
+                self.pid,
+                self.manufacturer,
+                self.product,
+                self.interface,
+            )
+        )
 
 
 class AsyncSerialPort:
@@ -112,6 +139,7 @@ class AsyncSerialPort:
         """初始化串口"""
         # 串口配置
         self.port = port
+        self._configured_port = port
         self.baudrate = baudrate
         self.bytesize = bytesize
         self.parity = parity
@@ -149,6 +177,7 @@ class AsyncSerialPort:
         self._serial: Optional[serial.Serial] = None
         self._reader: Optional[asyncio.StreamReader] = None
         self._writer: Optional[asyncio.StreamWriter] = None
+        self._port_identity: Optional[SerialPortIdentity] = None
         
         # 待處理命令
         self._pending_commands: Dict[str, PendingCommand] = {}
@@ -194,6 +223,8 @@ class AsyncSerialPort:
         # Logger
         self._logger = logging.getLogger(f"AsyncSerialPort({port})")
         self._logger.setLevel(logging.DEBUG)
+
+        self._remember_port_identity()
         
         # 啟動背景事件循環
         self._start_event_loop()
@@ -224,6 +255,102 @@ class AsyncSerialPort:
         asyncio.set_event_loop(self._loop)
         if self._loop is not None:
             self._loop.run_forever()
+
+    @staticmethod
+    def _normalize_port_name(port: Optional[str]) -> str:
+        return (port or "").strip().upper()
+
+    def _find_port_info(self, port: Optional[str]):
+        target = self._normalize_port_name(port)
+        if not target:
+            return None
+
+        for info in list_ports.comports():
+            if self._normalize_port_name(getattr(info, "device", None)) == target:
+                return info
+        return None
+
+    def _build_port_identity(self, port: Optional[str]) -> Optional[SerialPortIdentity]:
+        info = self._find_port_info(port)
+        if info is None:
+            return None
+
+        identity = SerialPortIdentity(
+            serial_number=getattr(info, "serial_number", None),
+            location=getattr(info, "location", None),
+            vid=getattr(info, "vid", None),
+            pid=getattr(info, "pid", None),
+            manufacturer=getattr(info, "manufacturer", None),
+            product=getattr(info, "product", None),
+            interface=getattr(info, "interface", None),
+        )
+        return identity if identity.has_fingerprint() else None
+
+    def _remember_port_identity(self, port: Optional[str] = None):
+        identity = self._build_port_identity(port or self.port)
+        if identity is not None:
+            self._port_identity = identity
+
+    def _has_active_transport(self) -> bool:
+        if self._reader is None or self._writer is None:
+            return False
+
+        is_closing = getattr(self._writer, "is_closing", None)
+        if callable(is_closing) and is_closing():
+            return False
+
+        return True
+
+    def _find_matching_port(self) -> Optional[str]:
+        if self._find_port_info(self.port) is not None:
+            return self.port
+
+        identity = self._port_identity or self._build_port_identity(self._configured_port)
+        if identity is None:
+            return None
+
+        available_ports = list(list_ports.comports())
+
+        if identity.serial_number:
+            matches = [
+                info for info in available_ports
+                if getattr(info, "serial_number", None) == identity.serial_number
+            ]
+            if len(matches) == 1:
+                return getattr(matches[0], "device", None)
+
+        if identity.location:
+            matches = [
+                info for info in available_ports
+                if getattr(info, "location", None) == identity.location
+            ]
+            if identity.vid is not None and identity.pid is not None:
+                matches = [
+                    info for info in matches
+                    if getattr(info, "vid", None) == identity.vid
+                    and getattr(info, "pid", None) == identity.pid
+                ]
+            if len(matches) == 1:
+                return getattr(matches[0], "device", None)
+
+        matches = []
+        for info in available_ports:
+            if identity.vid is not None and getattr(info, "vid", None) != identity.vid:
+                continue
+            if identity.pid is not None and getattr(info, "pid", None) != identity.pid:
+                continue
+            if identity.manufacturer and getattr(info, "manufacturer", None) != identity.manufacturer:
+                continue
+            if identity.product and getattr(info, "product", None) != identity.product:
+                continue
+            if identity.interface and getattr(info, "interface", None) != identity.interface:
+                continue
+            matches.append(info)
+
+        if len(matches) == 1:
+            return getattr(matches[0], "device", None)
+
+        return None
     
     # ==================== 連線管理 ====================
     
@@ -235,45 +362,79 @@ class AsyncSerialPort:
             bool: 連線是否成功
         """
         if self._state == ConnectionState.CONNECTED:
-            self._logger.warning("Already connected")
-            return True
+            if self._has_active_transport():
+                self._logger.warning("Already connected")
+                return True
+
+            self._logger.warning(
+                f"Connection state is connected but transport is unavailable on {self.port}; reconnecting"
+            )
+            self._state = ConnectionState.DISCONNECTED
         
         try:
-            self._state = ConnectionState.CONNECTING
-            self._logger.info(f"Connecting to {self.port}...")
-            
-            # 建立串口連線
-            self._reader, self._writer = await serial_asyncio.open_serial_connection(
-                url=self.port,
-                baudrate=self.baudrate,
-                bytesize=self.bytesize,
-                parity=self.parity,
-                stopbits=self.stopbits,
-            )
-            
-            self._state = ConnectionState.CONNECTED
-            self._running = True
-            
-            # 啟動背景任務
-            self._reader_task = asyncio.create_task(self._response_reader_loop())
-            self._timeout_checker_task = asyncio.create_task(self._timeout_checker_loop())
-            
-            if self.auto_reconnect:
-                self._reconnect_task = asyncio.create_task(self._auto_reconnect_loop())
-            
-            self._logger.info(f"Connected to {self.port}")
-            
-            # 觸發回調
-            if self._on_connected:
+            requested_port = self.port
+            ports_to_try = [requested_port]
+            resolved_port = self._find_matching_port()
+            if (
+                resolved_port
+                and self._normalize_port_name(resolved_port) != self._normalize_port_name(requested_port)
+            ):
+                ports_to_try.append(resolved_port)
+
+            last_error: Optional[Exception] = None
+            for index, candidate_port in enumerate(ports_to_try):
+                self._state = ConnectionState.CONNECTING
+                if index == 0:
+                    self._logger.info(f"Connecting to {candidate_port}...")
+                else:
+                    self._logger.warning(
+                        f"Retrying serial connection on detected port {candidate_port} instead of {requested_port}"
+                    )
+                    self._logger.info(f"Connecting to {candidate_port}...")
+
+                self.port = candidate_port
+
                 try:
-                    self._on_connected()
+                    self._reader, self._writer = await serial_asyncio.open_serial_connection(
+                        url=self.port,
+                        baudrate=self.baudrate,
+                        bytesize=self.bytesize,
+                        parity=self.parity,
+                        stopbits=self.stopbits,
+                    )
                 except Exception as e:
-                    self._logger.error(f"Error in on_connected callback: {e}")
-            
-            return True
-            
+                    last_error = e
+                    self._reader = None
+                    self._writer = None
+                    continue
+
+                self._state = ConnectionState.CONNECTED
+                self._running = True
+                self._remember_port_identity(self.port)
+
+                if self._reader_task is None or self._reader_task.done():
+                    self._reader_task = asyncio.create_task(self._response_reader_loop())
+                if self._timeout_checker_task is None or self._timeout_checker_task.done():
+                    self._timeout_checker_task = asyncio.create_task(self._timeout_checker_loop())
+                if self.auto_reconnect and (self._reconnect_task is None or self._reconnect_task.done()):
+                    self._reconnect_task = asyncio.create_task(self._auto_reconnect_loop())
+
+                self._logger.info(f"Connected to {self.port}")
+
+                if self._on_connected:
+                    try:
+                        self._on_connected()
+                    except Exception as e:
+                        self._logger.error(f"Error in on_connected callback: {e}")
+
+                return True
+
+            if last_error is not None:
+                raise last_error
+
+            raise ConnectionError(f"Unable to connect to {requested_port}")
         except Exception as e:
-            self._logger.error(f"Connection failed: {e}")
+            self._logger.error(f"Connection failed on {self.port}: {e}")
             self._state = ConnectionState.DISCONNECTED
             return False
     
@@ -320,9 +481,16 @@ class AsyncSerialPort:
         if self._writer:
             self._writer.close()
             await self._writer.wait_closed()
+
+        self._reader = None
+        self._writer = None
         
         self._state = ConnectionState.DISCONNECTED
         self._logger.info("Disconnected")
+
+        self._reader_task = None
+        self._timeout_checker_task = None
+        self._reconnect_task = None
         
         # 觸發回調
         if self._on_disconnected:
@@ -410,6 +578,9 @@ class AsyncSerialPort:
         
         try:
             data = await self._reader.read(size)
+            if data == b"":
+                await self._handle_disconnection()
+                raise ConnectionError(f"Connection closed while reading from {self.port}")
             self._stats["bytes_received"] += len(data)
             return data
         except Exception as e:
@@ -449,6 +620,9 @@ class AsyncSerialPort:
         
         try:
             data = await self._reader.readline()
+            if data == b"":
+                await self._handle_disconnection()
+                raise ConnectionError(f"Connection closed while reading a line from {self.port}")
             self._stats["bytes_received"] += len(data)
             return data
         except Exception as e:
@@ -1156,6 +1330,8 @@ class AsyncSerialPort:
         if self._state == ConnectionState.CONNECTED:
             self._logger.warning("Connection lost")
             self._state = ConnectionState.DISCONNECTED
+            self._reader = None
+            self._writer = None
             
             if self._on_disconnected:
                 try:
