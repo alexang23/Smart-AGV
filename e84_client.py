@@ -501,7 +501,7 @@ class E84Client(AsyncSerialPort):
     def __init__(
         self,
         port: str,
-        RF_port: str,
+        RF_port: str = None,
         baudrate: int = 115200,
         # 事件處理
         on_message_event: Optional[Callable[[str], None]] = None,
@@ -1095,41 +1095,42 @@ class E84Client(AsyncSerialPort):
                 return False
             await asyncio.sleep(0.2)
 
-            self.logger.info("------------------ read_config")
-            if not await self.read_config():
-                self.logger.error("------------------ read_config 失敗")
-                return False
-            await asyncio.sleep(0.2)
-
-            self.logger.info("------------------ initialize_timeout_params")
-            if not await self.initialize_timeout_params():
-                self.logger.error("------------------ initialize_timeout_params 失敗")
-                return False
-            await asyncio.sleep(0.2)
-
-            self.logger.info("------------------ set_unknown_0x8067")
-            if not await self.set_unknown_0x8067():
-                self.logger.error("------------------ set_unknown_0x8067 失敗")
-                return False
-            await asyncio.sleep(0.2)
-
             self.logger.info("------------------ set_sensor_event")
             if not await self.set_sensor_event():
                 self.logger.error("------------------ set_sensor_event 失敗")
                 return False
             await asyncio.sleep(0.2)
 
-            self.logger.info("------------------ set_input_timeout")
-            if not await self.set_input_timeout():
-                self.logger.error("------------------ set_input_timeout 失敗")
-                return False
-            await asyncio.sleep(0.2)
+            if self.RF_port:
+                self.logger.info("------------------ read_config")
+                if not await self.read_config():
+                    self.logger.error("------------------ read_config 失敗")
+                    return False
+                await asyncio.sleep(0.2)
 
-            self.logger.info("------------------ set_alarm_mode")
-            if not await self.set_alarm_mode():
-                self.logger.error("------------------ set_alarm_mode 失敗")
-                return False
-            await asyncio.sleep(0.2)
+                self.logger.info("------------------ initialize_timeout_params")
+                if not await self.initialize_timeout_params():
+                    self.logger.error("------------------ initialize_timeout_params 失敗")
+                    return False
+                await asyncio.sleep(0.2)
+
+                self.logger.info("------------------ set_unknown_0x8067")
+                if not await self.set_unknown_0x8067():
+                    self.logger.error("------------------ set_unknown_0x8067 失敗")
+                    return False
+                await asyncio.sleep(0.2)
+
+                self.logger.info("------------------ set_input_timeout")
+                if not await self.set_input_timeout():
+                    self.logger.error("------------------ set_input_timeout 失敗")
+                    return False
+                await asyncio.sleep(0.2)
+
+                self.logger.info("------------------ set_alarm_mode")
+                if not await self.set_alarm_mode():
+                    self.logger.error("------------------ set_alarm_mode 失敗")
+                    return False
+                await asyncio.sleep(0.2)
 
             # self.logger.info("------------------ 發送 CS 命令")
             # if not await self.send_CS_command(cs = 0):
