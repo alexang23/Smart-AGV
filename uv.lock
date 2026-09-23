@@ -652,7 +652,7 @@ wheels = [
 [[package]]
 name = "smartio-agv"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "another-fastapi-jwt-auth" },
     { name = "bcrypt" },
