@@ -14,7 +14,7 @@ from event import EventMgr
 if settings.E84_TYPE == 2:
     from smart_e84 import SmartE84
 else:
-    from e84 import E84
+    from e84_non_RF import E84
 from rfid import Sunion, SunionPS
 from rfid_UHF_RegalScan import SunionUHF_RS
 from rfid_UHF_SILION import SunionUHF_SL
@@ -173,14 +173,7 @@ class Controller(Thread):
                         if settings.E84_TYPE == 2:
                             self.e84[i] = SmartE84(f'COM{com}', controller=self, log=self.tsc_logger, enable=enable, port_no=i+1, port_id=port_id, rfid=self.rfid, event_mgr=self.event_mgr)
                         else:
-                            # self.e84[i] = E84(f'COM{com}', controller=self, log=self.tsc_logger, enable=enable, port_no=i+1, port_id=f'LP{i+1}', rfid=self.rfid, event_mgr=self.event_mgr, ui=self)
-                            if settings.DUAL_RFID:
-                                self.e84[i] = E84(f'COM{com}', controller=self, log=self.tsc_logger, enable=enable, port_no=i+1, port_id=port_id, rfid=self.rfid, rfid2=self.rfid_UHF, event_mgr=self.event_mgr, led_id=led_id)
-                            else:
-                                if settings.UHF_RFID_ENABLE:
-                                    self.e84[i] = E84(f'COM{com}', controller=self, log=self.tsc_logger, enable=enable, port_no=i+1, port_id=port_id, rfid=self.rfid_UHF, event_mgr=self.event_mgr, led_id=led_id)
-                                else:
-                                    self.e84[i] = E84(f'COM{com}', controller=self, log=self.tsc_logger, enable=enable, port_no=i+1, port_id=port_id, rfid=self.rfid, event_mgr=self.event_mgr, led_id=led_id)
+                            self.e84[i] = E84(f'COM{com}', controller=self, log=self.tsc_logger, enable=enable, port_no=i+1, port_id=port_id, rfid=self.rfid, event_mgr=self.event_mgr)
                         self.e84[i].daemon = True
                         self.e84[i].start()
                         self.loadport[i+1] = {}
