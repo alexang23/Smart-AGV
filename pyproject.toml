@@ -1,0 +1,37 @@
+[project]
+name = "smartio-agv"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "alexang23", email = "alex1385.ang@gmail.com" }
+]
+requires-python = ">=3.14.6"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "sqlalchemy",
+    "passlib[bcrypt]",
+    "colorlog",
+    "pyserial",
+    "schedule",
+    "paho-mqtt",
+    "python-multipart",
+    "bcrypt<=4.0.1",
+    "psutil",
+    "requests",
+    "zeep",
+    "pywin32",
+    "pydantic",
+    "pydantic-settings",
+    "another-fastapi-jwt-auth",
+    "pytest",
+    "pyserial-asyncio>=0.6",
+]
+
+[project.scripts]
+smartio-agv = "smartio_agv:main"
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
