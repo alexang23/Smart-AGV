@@ -2,7 +2,6 @@
 name = "smartio-agv"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
 authors = [
     { name = "alexang23", email = "alex1385.ang@gmail.com" }
 ]
