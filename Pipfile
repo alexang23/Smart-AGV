@@ -10,6 +10,7 @@ sqlalchemy = "*"
 passlib = {extras = ["bcrypt"], version = "*"}
 colorlog = "*"
 pyserial = "*"
+pyserial-asyncio = "*"
 schedule = "*"
 paho-mqtt = "*"
 python-multipart = "*"
