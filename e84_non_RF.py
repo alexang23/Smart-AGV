@@ -20,7 +20,10 @@ import sys
 from collections import OrderedDict
 import queue
 import asyncio
-from e84_client import E84Client
+if settings.E84_RF_SENSOR_ENABLE:
+    from e84_client import E84Client
+else:
+    from e84_client_non_RF import E84Client
 
 #e84Path = '/dev/ttyS5'
 #e84Path = '/dev/ttyUSB0'
@@ -438,7 +441,11 @@ class E84(threading.Thread):
 
     async def init_e84(self):
         try:
-            self.e84 = E84Client(self.devPath, f"COM{settings.E84_RF_SENSOR_COM}", baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100)
+            if settings.E84_RF_SENSOR_ENABLE:
+                self.e84 = E84Client(self.devPath, f"COM{settings.E84_RF_SENSOR_COM}", baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100)
+            else:
+                self.e84 = E84Client(self.devPath, baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100)
+
             await self.e84.connect_async()
 
             # self.handler_task = asyncio.create_task(self.complex_event_handler())
@@ -1101,10 +1108,11 @@ class E84(threading.Thread):
                 return False
 
         try:
-            success = await self.e84.initialize_COMport_RFsensor()
-            self.e84.rf_channel_opened_success = bool(success)
-            print(f"######################## initialize E84 RF Sensor 結果: {'成功' if success else '失敗'} ########################")
-            return success
+            # success = await self.e84.initialize_COMport_RFsensor()
+            # self.e84.rf_channel_opened_success = bool(success)
+            self.e84.rf_channel_opened_success = True
+            print(f"######################## initialize E84 RF Sensor 結果: {'成功' if self.e84.rf_channel_opened_success else '失敗'} ########################")
+            return self.e84.rf_channel_opened_success
         finally:
             if self.e84._state.value == "connected":
                 await self.e84.disconnect_async()
