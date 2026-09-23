@@ -20,10 +20,7 @@ import sys
 from collections import OrderedDict
 import queue
 import asyncio
-if settings.E84_RF_SENSOR_ENABLE:
-    from e84_client import E84Client
-else:
-    from e84_client_non_RF import E84Client
+from e84_client import E84Client
 
 #e84Path = '/dev/ttyS5'
 #e84Path = '/dev/ttyUSB0'
@@ -1108,9 +1105,11 @@ class E84(threading.Thread):
                 return False
 
         try:
-            # success = await self.e84.initialize_COMport_RFsensor()
-            # self.e84.rf_channel_opened_success = bool(success)
-            self.e84.rf_channel_opened_success = True
+            if settings.E84_RF_SENSOR_ENABLE:
+                success = await self.e84.initialize_COMport_RFsensor()
+                self.e84.rf_channel_opened_success = bool(success)
+            else:
+                self.e84.rf_channel_opened_success = True
             print(f"######################## initialize E84 RF Sensor 結果: {'成功' if self.e84.rf_channel_opened_success else '失敗'} ########################")
             return self.e84.rf_channel_opened_success
         finally:
