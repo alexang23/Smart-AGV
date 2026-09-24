@@ -16,7 +16,7 @@ import json
 router = APIRouter()
 
 @router.post('/status')
-async def api_port_status(condition: schemas.PortInfo, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
+async def api_port_status(condition: schemas.Port, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
     glogger = request.app.state.glogger
     glogger.warning('api_port_status : PortID={}'.format(condition.port_no))
     login_user = db.query(User).filter(User.id == login_id).first()
@@ -121,7 +121,7 @@ async def api_port_status(condition: schemas.PortInfo, request: Request, db: Ses
             }
 
 @router.post('/alarm-reset')
-async def api_port_alarm_reset(condition: schemas.PortInfo, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
+async def api_port_alarm_reset(condition: schemas.Port, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
     glogger = request.app.state.glogger
 
     login_user = db.query(User).filter(User.id == login_id).first()
@@ -432,7 +432,7 @@ async def api_port_handoff(condition: schemas.Handoff, request: Request, db: Ses
             'Message': ""}
 
 @router.post('/arm-back')
-async def api_port_arm_back(condition: schemas.PortInfo, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
+async def api_port_arm_back(condition: schemas.Port, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
     glogger = request.app.state.glogger
     login_user = db.query(User).filter(User.id == login_id).first()
     

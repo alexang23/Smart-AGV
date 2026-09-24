@@ -512,6 +512,9 @@ class ConfigNetwork(BaseModel):
 # Topic = PiIPC
     
 ########## Port ##########
+
+class Port(BaseModel):
+    port_no: int
     
 class PortInfo(BaseModel):
     # device_id: str
