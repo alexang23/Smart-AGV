@@ -230,8 +230,7 @@ async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Se
                         glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
                                 {'user': '{},{}'.format(login_user.userid, login_user.name)})
                 else:
-                    success = True
-                    tsc.e84[id].run_cmd(f'channel {portno}')
+                    success = await e84_port.channel_async(portno)
                     if not success:
                         result = 'NG'
                         msg = 'E84 channel operation failed. Sensor is not enabled.'
@@ -247,8 +246,7 @@ async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Se
                         glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
                                 {'user': '{},{}'.format(login_user.userid, login_user.name)})
                 else:
-                    success = True
-                    tsc.e84[id].run_cmd(f'channel 0')
+                    success = await e84_port.channel_async(0)
                     if not success:
                         result = 'NG'
                         msg = 'E84 channel operation failed. Sensor is not enabled.'

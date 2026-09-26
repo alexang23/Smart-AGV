@@ -9,6 +9,9 @@ from serial_gyro import AsyncSerialPort
 from smart_e84 import SmartE84
 from routers.port import api_port_arm_back, api_port_channel, api_port_handoff
 
+from config import settings
+
+
 
 class DummyLogger:
     def debug(self, *args, **kwargs):
@@ -223,301 +226,326 @@ def test_api_port_arm_back_returns_fail_when_called_too_early():
 
 def test_api_port_handoff_returns_fail_when_rf_channel_not_opened():
     async def run_test():
-        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+        original_rf_enable = settings.E84_RF_SENSOR_ENABLE
+        settings.E84_RF_SENSOR_ENABLE = True
+        try:
+            login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
 
-        class DummyQuery:
-            def filter(self, *args, **kwargs):
-                return self
+            class DummyQuery:
+                def filter(self, *args, **kwargs):
+                    return self
 
-            def first(self):
-                return login_user
+                def first(self):
+                    return login_user
 
-        class DummyDB:
-            def query(self, *args, **kwargs):
-                return DummyQuery()
+            class DummyDB:
+                def query(self, *args, **kwargs):
+                    return DummyQuery()
 
-        handoff_calls = []
+            handoff_calls = []
 
-        class DummyE84Client:
-            def __init__(self):
-                self._state = types.SimpleNamespace(value="connected")
-                self.rf_channel_opened_success = False
+            class DummyE84Client:
+                def __init__(self):
+                    self._state = types.SimpleNamespace(value="connected")
+                    self.rf_channel_opened_success = False
 
-        class DummyPort:
-            def __init__(self):
-                self.e84 = DummyE84Client()
+            class DummyPort:
+                def __init__(self):
+                    self.e84 = DummyE84Client()
 
-            def run_cmd(self, command):
-                handoff_calls.append(command)
+                def run_cmd(self, command):
+                    handoff_calls.append(command)
 
-        request = types.SimpleNamespace(
-            app=types.SimpleNamespace(
-                state=types.SimpleNamespace(
-                    glogger=DummyLogger(),
-                    tsc=types.SimpleNamespace(
-                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
-                        e84={0: DummyPort()},
-                    ),
+            request = types.SimpleNamespace(
+                app=types.SimpleNamespace(
+                    state=types.SimpleNamespace(
+                        glogger=DummyLogger(),
+                        tsc=types.SimpleNamespace(
+                            loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                            e84={0: DummyPort()},
+                        ),
+                    )
                 )
             )
-        )
 
-        result = await api_port_handoff(
-            condition=types.SimpleNamespace(port_no=1, cs=0, task=0),
-            request=request,
-            db=DummyDB(),
-            login_id="1",
-        )
+            result = await api_port_handoff(
+                condition=types.SimpleNamespace(port_no=1, cs=0, task=0),
+                request=request,
+                db=DummyDB(),
+                login_id="1",
+            )
 
-        assert result["Success"] is False
-        assert result["State"] == "NG"
-        assert result["ErrorCode"] == 500
-        assert "Open RF channel successfully" in result["Message"]
-        assert handoff_calls == []
+            assert result["Success"] is False
+            assert result["State"] == "NG"
+            assert result["ErrorCode"] == 500
+            assert "RF channel should open successfully" in result["Message"]
+            assert handoff_calls == []
+        finally:
+            settings.E84_RF_SENSOR_ENABLE = original_rf_enable
 
     asyncio.run(run_test())
 
 
 def test_api_port_handoff_runs_after_rf_channel_opened():
     async def run_test():
-        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+        original_rf_enable = settings.E84_RF_SENSOR_ENABLE
+        settings.E84_RF_SENSOR_ENABLE = True
+        try:
+            login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
 
-        class DummyQuery:
-            def filter(self, *args, **kwargs):
-                return self
+            class DummyQuery:
+                def filter(self, *args, **kwargs):
+                    return self
 
-            def first(self):
-                return login_user
+                def first(self):
+                    return login_user
 
-        class DummyDB:
-            def query(self, *args, **kwargs):
-                return DummyQuery()
+            class DummyDB:
+                def query(self, *args, **kwargs):
+                    return DummyQuery()
 
-        handoff_calls = []
+            handoff_calls = []
 
-        class DummyE84Client:
-            def __init__(self):
-                self._state = types.SimpleNamespace(value="connected")
-                self.rf_channel_opened_success = True
+            class DummyE84Client:
+                def __init__(self):
+                    self._state = types.SimpleNamespace(value="connected")
+                    self.rf_channel_opened_success = True
 
-        class DummyPort:
-            def __init__(self):
-                self.e84 = DummyE84Client()
+            class DummyPort:
+                def __init__(self):
+                    self.e84 = DummyE84Client()
 
-            def run_cmd(self, command):
-                handoff_calls.append(command)
+                def run_cmd(self, command):
+                    handoff_calls.append(command)
 
-        request = types.SimpleNamespace(
-            app=types.SimpleNamespace(
-                state=types.SimpleNamespace(
-                    glogger=DummyLogger(),
-                    tsc=types.SimpleNamespace(
-                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
-                        e84={0: DummyPort()},
-                    ),
+            request = types.SimpleNamespace(
+                app=types.SimpleNamespace(
+                    state=types.SimpleNamespace(
+                        glogger=DummyLogger(),
+                        tsc=types.SimpleNamespace(
+                            loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                            e84={0: DummyPort()},
+                        ),
+                    )
                 )
             )
-        )
 
-        result = await api_port_handoff(
-            condition=types.SimpleNamespace(port_no=1, cs=1, task=0),
-            request=request,
-            db=DummyDB(),
-            login_id="1",
-        )
+            result = await api_port_handoff(
+                condition=types.SimpleNamespace(port_no=1, cs=1, task=0),
+                request=request,
+                db=DummyDB(),
+                login_id="1",
+            )
 
-        assert result["Success"] is True
-        assert result["State"] == "OK"
-        assert result["ErrorCode"] == 0
-        assert handoff_calls == ["handoff 1 0"]
+            assert result["Success"] is True
+            assert result["State"] == "OK"
+            assert result["ErrorCode"] == 0
+            assert handoff_calls == ["handoff 1 0"]
+        finally:
+            settings.E84_RF_SENSOR_ENABLE = original_rf_enable
 
     asyncio.run(run_test())
 
 
 def test_api_port_channel_returns_fail_when_rf_channel_open_fails():
     async def run_test():
-        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+        original_rf_enable = settings.E84_RF_SENSOR_ENABLE
+        settings.E84_RF_SENSOR_ENABLE = True
+        try:
+            login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
 
-        class DummyQuery:
-            def filter(self, *args, **kwargs):
-                return self
+            class DummyQuery:
+                def filter(self, *args, **kwargs):
+                    return self
 
-            def first(self):
-                return login_user
+                def first(self):
+                    return login_user
 
-        class DummyDB:
-            def query(self, *args, **kwargs):
-                return DummyQuery()
+            class DummyDB:
+                def query(self, *args, **kwargs):
+                    return DummyQuery()
 
-        channel_calls = []
+            channel_calls = []
 
-        class DummyE84Client:
-            def __init__(self):
-                self._state = types.SimpleNamespace(value="connected")
-                self.rf_channel_opened_success = False
+            class DummyE84Client:
+                def __init__(self):
+                    self._state = types.SimpleNamespace(value="connected")
+                    self.rf_channel_opened_success = False
 
-        class DummyPort:
-            def __init__(self):
-                self.e84 = DummyE84Client()
+            class DummyPort:
+                def __init__(self):
+                    self.e84 = DummyE84Client()
 
-            async def open_RF_channel(self):
-                channel_calls.append("open")
-                return False
+                async def open_RF_channel(self):
+                    channel_calls.append("open")
+                    return False
 
-            async def alarm_reset_async(self):
-                channel_calls.append("reset")
-                return True
+                async def alarm_reset_async(self):
+                    channel_calls.append("reset")
+                    return True
 
-        request = types.SimpleNamespace(
-            app=types.SimpleNamespace(
-                state=types.SimpleNamespace(
-                    glogger=DummyLogger(),
-                    tsc=types.SimpleNamespace(
-                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
-                        e84={0: DummyPort()},
-                    ),
+            request = types.SimpleNamespace(
+                app=types.SimpleNamespace(
+                    state=types.SimpleNamespace(
+                        glogger=DummyLogger(),
+                        tsc=types.SimpleNamespace(
+                            loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                            e84={0: DummyPort()},
+                        ),
+                    )
                 )
             )
-        )
 
-        result = await api_port_channel(
-            condition=types.SimpleNamespace(port_no=1, enable=True),
-            request=request,
-            db=DummyDB(),
-            login_id="1",
-        )
+            result = await api_port_channel(
+                condition=types.SimpleNamespace(port_no=1, enable=True),
+                request=request,
+                db=DummyDB(),
+                login_id="1",
+            )
 
-        assert result["Success"] is False
-        assert result["State"] == "NG"
-        assert result["ErrorCode"] == 500
-        assert "RF channel open failed" in result["Message"]
-        assert channel_calls == ["open"]
+            assert result["Success"] is False
+            assert result["State"] == "NG"
+            assert result["ErrorCode"] == 500
+            assert "RF channel open failed" in result["Message"]
+            assert channel_calls == ["open"]
+        finally:
+            settings.E84_RF_SENSOR_ENABLE = original_rf_enable
 
     asyncio.run(run_test())
 
 
 def test_api_port_channel_returns_success_when_rf_channel_open_succeeds():
     async def run_test():
-        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+        original_rf_enable = settings.E84_RF_SENSOR_ENABLE
+        settings.E84_RF_SENSOR_ENABLE = True
+        try:
+            login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
 
-        class DummyQuery:
-            def filter(self, *args, **kwargs):
-                return self
+            class DummyQuery:
+                def filter(self, *args, **kwargs):
+                    return self
 
-            def first(self):
-                return login_user
+                def first(self):
+                    return login_user
 
-        class DummyDB:
-            def query(self, *args, **kwargs):
-                return DummyQuery()
+            class DummyDB:
+                def query(self, *args, **kwargs):
+                    return DummyQuery()
 
-        channel_calls = []
+            channel_calls = []
 
-        class DummyE84Client:
-            def __init__(self):
-                self._state = types.SimpleNamespace(value="connected")
-                self.rf_channel_opened_success = False
+            class DummyE84Client:
+                def __init__(self):
+                    self._state = types.SimpleNamespace(value="connected")
+                    self.rf_channel_opened_success = False
 
-        class DummyPort:
-            def __init__(self):
-                self.e84 = DummyE84Client()
+            class DummyPort:
+                def __init__(self):
+                    self.e84 = DummyE84Client()
 
-            async def open_RF_channel(self):
-                channel_calls.append("open")
-                self.e84.rf_channel_opened_success = True
-                return True
+                async def open_RF_channel(self):
+                    channel_calls.append("open")
+                    self.e84.rf_channel_opened_success = True
+                    return True
 
-            async def alarm_reset_async(self):
-                channel_calls.append("reset")
-                return True
+                async def alarm_reset_async(self):
+                    channel_calls.append("reset")
+                    return True
 
-        request = types.SimpleNamespace(
-            app=types.SimpleNamespace(
-                state=types.SimpleNamespace(
-                    glogger=DummyLogger(),
-                    tsc=types.SimpleNamespace(
-                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
-                        e84={0: DummyPort()},
-                    ),
+            request = types.SimpleNamespace(
+                app=types.SimpleNamespace(
+                    state=types.SimpleNamespace(
+                        glogger=DummyLogger(),
+                        tsc=types.SimpleNamespace(
+                            loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                            e84={0: DummyPort()},
+                        ),
+                    )
                 )
             )
-        )
 
-        result = await api_port_channel(
-            condition=types.SimpleNamespace(port_no=1, enable=True),
-            request=request,
-            db=DummyDB(),
-            login_id="1",
-        )
+            result = await api_port_channel(
+                condition=types.SimpleNamespace(port_no=1, enable=True),
+                request=request,
+                db=DummyDB(),
+                login_id="1",
+            )
 
-        assert result["Success"] is True
-        assert result["State"] == "OK"
-        assert result["ErrorCode"] == 0
-        assert result["Message"] == ""
-        assert channel_calls == ["open"]
+            assert result["Success"] is True
+            assert result["State"] == "OK"
+            assert result["ErrorCode"] == 0
+            assert result["Message"] == ""
+            assert channel_calls == ["open"]
+        finally:
+            settings.E84_RF_SENSOR_ENABLE = original_rf_enable
 
     asyncio.run(run_test())
 
 
 def test_api_port_channel_returns_fail_when_alarm_reset_fails():
     async def run_test():
-        login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
+        original_rf_enable = settings.E84_RF_SENSOR_ENABLE
+        settings.E84_RF_SENSOR_ENABLE = True
+        try:
+            login_user = types.SimpleNamespace(acc_type="USER", userid="tester", name="Tester")
 
-        class DummyQuery:
-            def filter(self, *args, **kwargs):
-                return self
+            class DummyQuery:
+                def filter(self, *args, **kwargs):
+                    return self
 
-            def first(self):
-                return login_user
+                def first(self):
+                    return login_user
 
-        class DummyDB:
-            def query(self, *args, **kwargs):
-                return DummyQuery()
+            class DummyDB:
+                def query(self, *args, **kwargs):
+                    return DummyQuery()
 
-        channel_calls = []
+            channel_calls = []
 
-        class DummyE84Client:
-            def __init__(self):
-                self._state = types.SimpleNamespace(value="connected")
-                self.rf_channel_opened_success = True
+            class DummyE84Client:
+                def __init__(self):
+                    self._state = types.SimpleNamespace(value="connected")
+                    self.rf_channel_opened_success = True
 
-        class DummyPort:
-            def __init__(self):
-                self.e84 = DummyE84Client()
+            class DummyPort:
+                def __init__(self):
+                    self.e84 = DummyE84Client()
 
-            async def open_RF_channel(self):
-                channel_calls.append("open")
-                return True
+                async def open_RF_channel(self):
+                    channel_calls.append("open")
+                    return True
 
-            async def alarm_reset_async(self):
-                channel_calls.append("reset")
-                return False
+                async def alarm_reset_async(self):
+                    channel_calls.append("reset")
+                    return False
 
-        request = types.SimpleNamespace(
-            app=types.SimpleNamespace(
-                state=types.SimpleNamespace(
-                    glogger=DummyLogger(),
-                    tsc=types.SimpleNamespace(
-                        loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
-                        e84={0: DummyPort()},
-                    ),
+            request = types.SimpleNamespace(
+                app=types.SimpleNamespace(
+                    state=types.SimpleNamespace(
+                        glogger=DummyLogger(),
+                        tsc=types.SimpleNamespace(
+                            loadport={1: {'com': 'e84', 'id': 0, 'dual': 0}},
+                            e84={0: DummyPort()},
+                        ),
+                    )
                 )
             )
-        )
 
-        result = await api_port_channel(
-            condition=types.SimpleNamespace(port_no=1, enable=False),
-            request=request,
-            db=DummyDB(),
-            login_id="1",
-        )
+            result = await api_port_channel(
+                condition=types.SimpleNamespace(port_no=1, enable=False),
+                request=request,
+                db=DummyDB(),
+                login_id="1",
+            )
 
-        assert result["Success"] is False
-        assert result["State"] == "NG"
-        assert result["ErrorCode"] == 500
-        assert "RF channel reset failed" in result["Message"]
-        assert channel_calls == ["reset"]
-        assert request.app.state.tsc.e84[0].e84.rf_channel_opened_success is False
+            assert result["Success"] is False
+            assert result["State"] == "NG"
+            assert result["ErrorCode"] == 500
+            assert "RF channel reset failed" in result["Message"]
+            assert channel_calls == ["reset"]
+            assert request.app.state.tsc.e84[0].e84.rf_channel_opened_success is False
+        finally:
+            settings.E84_RF_SENSOR_ENABLE = original_rf_enable
 
     asyncio.run(run_test())
 

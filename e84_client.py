@@ -1852,7 +1852,8 @@ class E84Client(AsyncSerialPort):
                     self.logger.error("------------------ CHANNEL 命令失敗")
                     return False
                 await asyncio.sleep(0.2)
-                
+                return True
+
             except Exception as e:
                 self.logger.error(f"CHANNEL 流程異常: {e}", exc_info=True)
                 return False
