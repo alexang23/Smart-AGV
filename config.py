@@ -160,6 +160,7 @@ class Settings(BaseSettings):
 	E84_TYPE:int = 0 # 0:andrews, 1:Gyro-E84, 2:Smart-E84
 	RPA:bool = False
 	DOOR:bool = False
+	SERVER_UPLOAD_ALL:bool = True
 	MULTIPLE_TYPE:bool = False
 	DUAL_RFID:bool = False
  
@@ -177,6 +178,7 @@ class Settings(BaseSettings):
 	MQTT_HEARTBEAT_TIME:int = 5
 
 	MQTT_KEEPALIVE:int = 60
+	MQTT_TIMEOUT:float = 10
 	MQTT_QOS:int = 2
 	MQTT_CLEAN_SESSION:int = 0
 	# MQTT_CLEAN_START=0

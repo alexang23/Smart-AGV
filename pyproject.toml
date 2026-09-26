@@ -26,6 +26,7 @@ dependencies = [
     "another-fastapi-jwt-auth",
     "pytest",
     "pyserial-asyncio>=0.6",
+    "aiomqtt>=2.5.1",
 ]
 
 [tool.uv]

@@ -29,14 +29,20 @@ Active E84 Protocol Implementation - AGV 與設備通訊協議 (Synchronous Vers
 import time
 import logging
 import queue
+import json
+from collections import OrderedDict
 from typing import Optional, Callable, Tuple, Dict, List
 from dataclasses import dataclass, field
 from enum import Enum
+from config import settings
 from sync_serial_gyro import SyncSerialPort, ProtocolMode
 from sync_rf_sensor import SyncRFSensor, CommunicationMedium
 
 # 設定 logger
 logger = logging.getLogger(__name__)
+
+# 所有 E84CommandSeries 訊息對應的 MQTT topic
+MQTT_TOPIC_ACTIVE_E84 = 'Active-E84'
 
 
 # ==================== E84 訊息格式定義 ====================
@@ -463,6 +469,10 @@ class ActiveE84(SyncSerialPort):
         on_state_event: Optional[Callable[[int, str], None]] = None,
         on_alarm_event: Optional[Callable[[str, int, str], None]] = None,
         event_queue_size: Optional[int] = None,
+        # MQTT 事件發送 (參考 GYRO-300 e84.py send_event/send_event2)
+        event_mgr=None,
+        port_no: int = -1,
+        port_id: str = '',
         # Timeout 參數預設值（單位：0.1 秒）
         default_ta_params: Optional[Dict[str, int]] = None,
         **kwargs
@@ -475,13 +485,13 @@ class ActiveE84(SyncSerialPort):
         kwargs['checksum_enabled'] = True  # 啟用 checksum 驗證
         kwargs['max_buffer_size'] = 256  # 緩衝區大小
         kwargs['response_parser'] = self._e84_response_parser
-        
+
         # 初始化父類別（FRAME 模式）
         super().__init__(port=port, baudrate=baudrate, **kwargs)
-        
+
         # RF Sensor 串口配置
         self._rf_port = rf_port if rf_port else port
-        
+
         # 事件處理
         self._on_sensor_event = on_sensor_event
         self._on_state_event = on_state_event
@@ -489,6 +499,11 @@ class ActiveE84(SyncSerialPort):
         self._event_queue: Optional[queue.Queue] = None
         if event_queue_size:
             self._event_queue = queue.Queue(maxsize=event_queue_size)
+
+        # MQTT 事件發送（EventMgr → MQTTSvc → topic 'Active-E84'）
+        self.event_mgr = event_mgr
+        self.port_no = port_no
+        self.port_id = port_id
         
         # TA 參數預設值
         self._ta_params = default_ta_params or {
@@ -541,7 +556,18 @@ class ActiveE84(SyncSerialPort):
         self._last_message = message
         logger.debug(f"解析 E84 訊息: {message}")
         logger.info(f"DEBUG: _e84_response_parser 解析 E84 訊息: {message}")
-        
+
+        # 所有已接收的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'
+        # (70/71/80 系列由各事件處理函式另行 send_event 發佈)
+        if message.command not in (0x70, 0x71, 0x80):
+            self.send_event2(
+                type=0, stream=-1, function=-1,
+                code=message.command, subcode=message.data,
+                msg_text=f"E84 recv 0x{message.command:04X}",
+                direction='recv', command=message.command, param=message.data,
+                raw=message.raw_bytes.hex().upper()
+            )
+
         # 處理事件訊息 (70/71/80 系列)
         if message.command == 0x70:
             # 感測器事件
@@ -582,7 +608,16 @@ class ActiveE84(SyncSerialPort):
         )
         
         logger.debug(f"感測器事件: {signal_name} = {state}")
-        
+
+        # 70 系列訊號事件 → MQTT topic 'Active-E84'
+        self.send_event(
+            type=0, stream=-1, function=-1, code=0x70, subcode=code,
+            msg_text=f"{signal_name} {'ON' if state else 'OFF'}",
+            signal_name=signal_name,
+            direction='recv', command=message.command, param=message.data,
+            raw=message.raw_bytes.hex().upper()
+        )
+
         # 1. Callback 立即執行
         if self._on_sensor_event:
             try:
@@ -614,7 +649,16 @@ class ActiveE84(SyncSerialPort):
         )
         
         logger.info(f"狀態事件: {description}")
-        
+
+        # 71 系列狀態事件 → MQTT topic 'Active-E84'
+        self.send_event(
+            type=0, stream=-1, function=-1, code=0x71, subcode=code,
+            msg_text=description,
+            signal_name="STATE",
+            direction='recv', command=message.command, param=message.data,
+            raw=message.raw_bytes.hex().upper()
+        )
+
         # 1. Callback 立即執行
         if self._on_state_event:
             try:
@@ -650,7 +694,16 @@ class ActiveE84(SyncSerialPort):
         )
         
         logger.error(f"⚠️ E84 警報事件: {description} (類型: {alarm_type}, 代碼: 0x{alarm_code:04X})")
-        
+
+        # 0x0080 系列警報事件 → MQTT topic 'Active-E84'
+        self.send_event(
+            type=0, stream=-1, function=-1, code=0x80, subcode=alarm_code,
+            msg_text=description,
+            signal_name="ALARM", alarm_type=alarm_type,
+            direction='recv', command=message.command, param=message.data,
+            raw=message.raw_bytes.hex().upper()
+        )
+
         # 1. Callback 立即執行
         if self._on_alarm_event:
             try:
@@ -688,6 +741,86 @@ class ActiveE84(SyncSerialPort):
         """取得當前訊號狀態"""
         return self._current_signals.get(signal_name)
     
+    def _notify(self, data: 'OrderedDict') -> None:
+        """推送至 EventMgr（由 MQTTSvc 發佈到 MQTT topic 'Active-E84'）"""
+        try:
+            if self.event_mgr:
+                self.event_mgr.on_notify(data)
+        except Exception as err:
+            logger.error(f"Active-E84 notify 錯誤: {err}")
+
+    # do not support status compare with send_event
+    def send_event2(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
+                    msg_text=None, direction='', command=None, param=None, raw=''):
+        """
+        單一 E84 訊息（任意 E84CommandSeries 系列）通知，無狀態快照
+        </br>參考 GYRO-300 e84.py send_event2()
+        </br>發佈至 MQTT topic 'Active-E84'
+        """
+        try:
+            data = OrderedDict()
+
+            if server:
+                data['Server'] = True
+
+            data['device_id'] = settings.DEVICE_ID
+            data['port_no'] = self.port_no
+            data['port_id'] = self.port_id
+            data['type'] = type
+            data['stream'] = stream
+            data['function'] = function
+            data['code_id'] = code
+            data['sub_id'] = subcode
+            data['msg_text'] = msg_text
+            data['direction'] = direction
+            data['command'] = command
+            data['param'] = param
+            data['raw'] = raw
+            data['occurred_at'] = time.time()
+            data['sw_version'] = settings.SW_VERSION
+            data['topic'] = MQTT_TOPIC_ACTIVE_E84
+            self._notify(data)
+        except Exception as err:
+            logger.error(f"Active-E84 send_event2 錯誤: {err}")
+
+    # support status
+    def send_event(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
+                   msg_text=None, signal_name='', alarm_type='', direction='',
+                   command=None, param=None, raw=''):
+        """
+        E84 事件（70/71/80 系列）通知，含目前訊號狀態快照
+        </br>參考 GYRO-300 e84.py send_event()
+        </br>發佈至 MQTT topic 'Active-E84'
+        """
+        try:
+            data = OrderedDict()
+
+            if server:
+                data['Server'] = True
+
+            data['device_id'] = settings.DEVICE_ID
+            data['port_no'] = self.port_no
+            data['port_id'] = self.port_id
+            data['type'] = type
+            data['stream'] = stream
+            data['function'] = function
+            data['code_id'] = code
+            data['sub_id'] = subcode
+            data['msg_text'] = msg_text
+            data['signal_name'] = signal_name
+            data['alarm_type'] = alarm_type
+            data['direction'] = direction
+            data['command'] = command
+            data['param'] = param
+            data['raw'] = raw
+            data['status'] = json.dumps(self._current_signals)
+            data['occurred_at'] = time.time()
+            data['sw_version'] = settings.SW_VERSION
+            data['topic'] = MQTT_TOPIC_ACTIVE_E84
+            self._notify(data)
+        except Exception as err:
+            logger.error(f"Active-E84 send_event 錯誤: {err}")
+
     # ==================== 基本 E84 命令 ====================
     
     def _send_e84_command(
@@ -710,8 +843,17 @@ class ActiveE84(SyncSerialPort):
         # 建構命令
         message = E84Protocol.build_write_message(command, param)
         command_id = f"E84_{command:04X}"
-        
+
         logger.debug(f"發送命令: {command:04X}, 參數: {param:04X}")
+
+        # 所有已發送的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'
+        self.send_event2(
+            type=0, stream=-1, function=-1,
+            code=command, subcode=param,
+            msg_text=f"E84 send 0x{command:04X}",
+            direction='send', command=command, param=param,
+            raw=message.hex().upper()
+        )
         
         try:
             # 發送並等待回應

@@ -1,292 +1,62 @@
-from threading import Thread
-from time import sleep
-import time
-# from datetime import datetime
-
+import asyncio
 import collections
+import concurrent.futures
+import copy
+import json
+import random
 import re
-import traceback
-# from models.server import Server
-# from database import get_db
+import threading
+import time
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from threading import Thread
 
-#from global_variables import alarm_queue, logger
+import aiomqtt
+from aiomqtt import Will
+from aiomqtt.client import Properties, ProtocolVersion, mqtt
+
+import gyro_watchdog
+from config import settings
 from global_log import LoggerFile
 
-# import requests
-import json
-# from fastapi.encoders import jsonable_encoder
-from config import settings
-from datetime import datetime
+DEFAULT_MAX_RECEIVE_QUEUE_SIZE = 1000
+MAX_RECONNECT_DELAY = 30
+MAX_OUTBOUND_RETRIES = 5
+MAX_CMD_WAIT = 30
+# Liveness gap for the MQTTSvc watchdog name. Must cover the worst legitimate
+# quiet period: backoff (<=MAX_RECONNECT_DELAY) + a connect attempt
+# (<= settings.MQTT_TIMEOUT) + margin, so a normal broker outage is not
+# reported as a stalled thread.
+MQTT_WATCHDOG_MAX_GAP = max(90, MAX_RECONNECT_DELAY + int(getattr(settings, "MQTT_TIMEOUT", 10)) + 60)
+# Dedicated, size-bounded executor for the blocking E84/RFID calls wrapped by
+# asyncio.wait_for. A stuck thread cannot be killed, but bounding it here keeps
+# one wedged call from occupying a slot in the shared default executor.
+CMD_EXECUTOR_MAX_WORKERS = 4
+# Coalescing window for broker-log "New client connected" re-polls: on a broker
+# restart many RPA_ clients reconnect within a short window, and each such log
+# line used to fire a status re-poll for every E84 port. Collapse that burst
+# into at most one re-poll per port per window.
+BROKER_LOG_POLL_DEBOUNCE_SECONDS = 3.0
 
-import paho.mqtt.client as mqtt
-from paho.mqtt.packettypes import PacketTypes
-import sys
-import schedule
 
-#### test OK version
-
-# ## MQTT v5 add 1 parameter compare to MQTT v3xx
-# def on_connect(thread, mqttc, obj, flags, rc):
-#     print("########## connect rc: " + str(rc))
-    
-# def on_connect_fail(mqttc, userdata):
-#     print("########## on_connect_fail: " + str(userdata))
-
-# def on_message(mqttc, obj, msg):
-#     print("########## " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-
-# def on_publish(mqttc, obj, mid):
-#     print("########## mid: " + str(mid))
-
-# ## MQTT v5 add 1 parameter compare to MQTT v3xx
-# def on_subscribe(thread, mqttc, obj, mid, granted_qos):
-#     print("########## Subscribed: " + str(mid) + " " + str(granted_qos))
-
-# def on_log(mqttc, obj, level, string):
-#     print("########## on_log : " + string)
+@dataclass
+class MQTTCorrelation:
+    ResponseTopic: str
+    CorrelationData: bytes | None = None
 
 
 class MQTTSvc(Thread):
-    __instance=None
-
-    @staticmethod
-    def getInstance():
-
-        if MQTTSvc.__instance==None:
-            MQTTSvc()
-
-        return MQTTSvc.__instance
-    
-    # # Expected signature for MQTT v3.1 and v3.1.1 is:
-    # def on_connect(self, client, userdata, flags, rc):
-    #     print("########## connect rc: " + str(rc))
-    #     pass
-
-    # for MQTT v5.0:
-    def on_connect(self, client, userdata, connect_flags, reason_code, properties):
-        try:
-            # self.logger.info(f"mqtt : on_connect {reason_code}, session = {connect_flags['session present']}, client_id = {properties.AssignedClientIdentifier}")
-            self.logger.info(f"mqtt : on_connect : reason_code={str(reason_code)}, client_id={properties.AssignedClientIdentifier}, connect_flags={str(connect_flags)}")
-            # print(client)
-            # print(userdata)
-            # print(flags)
-            # print(reasonCode)
-            # print(properties)
-        except Exception as err:
-            # print(str(err))
-            self.logger.error(f"mqtt : on_connect : {str(err)}")
-
-        self.startup_connect = 3
-        self.connect = True
-
-    ## MQTT v5 add 1 parameter compare to MQTT v3xx
-    # def on_connect(self, thread, mqttc, obj, flags, rc):
-    #     print("########## connect rc: " + str(rc))
-        
-    def on_connect_fail(self, client, userdata):
-        try:
-            self.logger.info(f"mqtt : on_connect_fail : client={str(client)}, userdata={str(userdata)}")
-            # print(client)
-            # print(userdata)
-        except Exception as err:
-            # print(str(err))
-            self.logger.error(f"mqtt : on_connect_fail : {str(err)}")
-
-        self.connect = False
-
-    # # Expected signature for MQTT v3.1.1 and v3.1 is:
-    # def on_disconnect(self, client, userdata, rc):
-    #     print("########## on_disconnect: " + str(rc))
-    #     pass
-
-    # for MQTT v5.0:
-    def on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
-        try:
-            self.logger.info(f"mqtt : on_disconnect : client={str(client)}, userdata={str(userdata)}, disconnect_flags={str(disconnect_flags)}, reason_code={str(reason_code)}, properties={str(properties)}")
-            # print(client)
-            # print(userdata)
-            # print(reasonCode)
-            # print(properties)
-        except Exception as err:
-            # print(str(err))
-            self.logger.error(f"mqtt : on_disconnect : {str(err)}")
-        self.connect = False
-
-    def on_message(self, client, userdata, msg):
-        # print("########## " + msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-        try:
-            
-            if msg.topic.endswith("Process"):
-                self.logger.info(f"mqtt : on_message topic={msg.topic}, qos={str(msg.qos)}, data={str(msg.payload)}")
-                if settings.CLAMP_ENABLE:
-                    payload = json.loads(msg.payload)
-
-                    portno = payload['port_no']
-                    if portno not in self.controller.loadport:
-                        self.logger.warning('mqtt : {}/Process port_no {} is not exist.'.format(settings.MQTT_TOPIC_SERVER, portno))
-                        return
-                
-                    if self.controller.loadport[portno]['com'] == 'e84':
-                        id = self.controller.loadport[portno]['id']
-                
-                        if payload['process_state'] == settings.CLAMP_ON:
-                            # payload['dual_port']
-                            self.controller.e84[id].run_cmd('clamp_on')
-                            self.logger.info(f"mqtt : port_no={portno}, process_state={payload['process_state']}, CLAMP_ON")
-                        elif payload['process_state'] == settings.CLAMP_OFF:
-                            self.controller.e84[id].run_cmd('clamp_off')
-                            self.logger.info(f"mqtt : port_no={portno}, process_state={payload['process_state']}, CLAMP_OFF")
-                    else:
-                        self.logger.warning('mqtt : {}/Process port_no {} is not a E84 controller.'.format(settings.MQTT_TOPIC_SERVER, portno))
-            
-            elif msg.topic.endswith("LEDBoard"):
-                self.logger.info(f"mqtt : on_message topic={msg.topic}, qos={str(msg.qos)}, data={str(msg.payload)}")
-                if settings.LEDBOARD_ENABLE:
-                    payload = json.loads(msg.payload)
-
-                    if 'type' in payload:
-                        if payload['type'] in [4, 5]:
-                            return
-
-                    portno = payload['port_no']
-                    if portno not in self.controller.loadport:
-                        self.logger.warning('mqtt : {} port_no {} is not exist.'.format(msg.topic, portno))
-                        return
-                
-                    if self.controller.loadport[portno]['com'] == 'e84':
-                        id = self.controller.loadport[portno]['id']
-                
-                        if payload['ledboard_state'] == settings.LEDBOARD_RESET:
-                            self.controller.equipment_state = 3
-                            if self.controller.loadport[portno]['dual'] > 0:
-                                self.controller.e84[id].run_cmd('reset2')
-                            else:
-                                self.controller.e84[id].run_cmd('reset')
-                            self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, RESET")
-                        elif payload['ledboard_state'] == settings.LEDBOARD_MODE:
-                            if self.controller.loadport[portno]['dual'] > 0:
-                                if self.controller.e84[id].mode[portno-1] == 1: # Auto:1 Manual:2
-                                    self.controller.e84[id].run_cmd('manual2')
-                                    self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MANUAL2")
-                                else:
-                                    self.controller.e84[id].run_cmd('auto2')
-                                    self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, AUTO2")
-                            else:
-                                if self.controller.e84[id].mode[0] == 1: # Auto:1 Manual:2
-                                    self.controller.e84[id].run_cmd('manual')
-                                    self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MANUAL")
-                                else:
-                                    self.controller.e84[id].run_cmd('auto')
-                                    self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, AUTO")
-                        # elif payload['ledboard_state'] == settings.LEDBOARD_MANUAL:
-                        #     self.controller.e84[id].run_cmd('manual')
-                        #     self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MANUAL")
-                        elif payload['ledboard_state'] == settings.LEDBOARD_INITIAL:
-                            if self.controller.loadport[portno]['dual'] > 0:
-                                pass
-                            else:
-                                self.controller.e84[id].run_cmd('status_ledboard')
-                                self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, STATUS")
-                    else:
-                        if settings.RFID_DEVICE_ONLY:
-                            if self.controller.rfid:
-                                # if payload['ledboard_state'] == settings.LEDBOARD_RESET:
-                                #     self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, RESET")
-                                # elif payload['ledboard_state'] == settings.LEDBOARD_MODE:
-                                #     self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MODE")
-                                if payload['ledboard_state'] == settings.LEDBOARD_INITIAL:
-                                    self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, STATUS")
-                                    self.controller.rfid.mqtt_publish_status(portno)
-                            if self.controller.rfid_UHF:
-                                # if payload['ledboard_state'] == settings.LEDBOARD_RESET:
-                                #     self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, RESET")
-                                # elif payload['ledboard_state'] == settings.LEDBOARD_MODE:
-                                #     self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MODE")
-                                if payload['ledboard_state'] == settings.LEDBOARD_INITIAL:
-                                    self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, STATUS")
-                                    self.controller.rfid_UHF.mqtt_publish_status(portno)
-                        else:
-                            self.logger.warning('mqtt : {} port_no {} is not a E84 controller.'.format(msg.topic, portno))
-
-            elif msg.topic.endswith("Request"):
-                # Get the response properties, abort if they're not given
-                props = msg.properties
-                if not hasattr(props, 'ResponseTopic') or not hasattr(props, 'CorrelationData'):
-                    self.logger.warning("No reply requested")
-                    return
-
-                corr_id = props.CorrelationData
-                reply_to = props.ResponseTopic
-                payload = json.loads(msg.payload)
-                self.logger.info(f"corr_id={corr_id}, reply_to={reply_to}, payload={payload}")
-                if ('cmd' in payload) and ('port_no' in payload):
-                    port_no = payload['port_no']
-                    # self.uiform.e84[port_no].api_request(payload['cmd'], payload['data'], payload['correlation'])
-                    self.uiform.e84[port_no].api_request(payload['cmd'], payload['data'], props)
-        except Exception as err:
-            self.logger.error(f"mqtt : on_message : {str(err)}")
-
-    def on_publish(self, client, userdata, mid, reason_code, properties):
-        # print("########## mid: " + str(mid))
-        pass
-
-    # # Expected signature for MQTT v3.1.1 and v3.1 is:
-    # def on_subscribe(self, client, userdata, mid, granted_qos):
-    #     print("########## Subscribed: " + str(mid) + " " + str(granted_qos))
-
-    # for MQTT v5.0:
-    def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
-        try:
-            # self.logger.info("########## Subscribed: " + str(mid) + " " + str(properties))
-            # self.logger.info(f"mqtt : on_subscribe mid = {mid}, reason_code_list = {str(reason_code_list)}")
-            self.logger.info(f"mqtt : on_subscribe : mid={mid}")
-            # print(client)
-            # print(userdata)
-            # print(mid)
-            # print(reasonCodes)
-            # print(properties)
-        except Exception as err:
-            # print(str(err))
-            self.logger.error(f"mqtt : on_subscribe : {str(err)}")
-
-    # ## MQTT v5 add 1 parameter compare to MQTT v3xx
-    # def on_subscribe(self, thread, mqttc, obj, mid, granted_qos):
-    #     print("########## Subscribed: " + str(mid) + " " + str(granted_qos))
-
-    # # Expected signature for MQTT v3.1.1 and v3.1 is:
-    # def on_unsubscribe(self, client, userdata, mid):
-    #     pass
-
-    # for MQTT v5.0:
-    def on_unsubscribe(self, client, userdata, mid, reason_code_list, properties):
-        try:
-            self.logger.info(f"mqtt : on_unsubscribe : mid={mid}, reason_code_list={str(reason_code_list)}, properties={str(properties)}")
-            # print(client)
-            # print(userdata)
-            # print(mid)
-            # print(reasonCodes)
-            # print(properties)
-        except Exception as err:
-            # print(str(err))
-            self.logger.error(f"mqtt : on_unsubscribe : {str(err)}")
-
-    def on_log(self, client, userdata, level, buf):
-        # print("########## on_log : " + buf)
-        pass
-
     def __init__(self, controller, logger, uiform=None) -> None:
         super().__init__(name="MQTTSvc")
-        MQTTSvc.__instance=self
-        self.name = "MQTTSvcs"
-        self.svc_name = 'mqtt'
-        self.stop = False
+
+        self.svc_name = "mqtt"
         self.uiform = uiform
         self.controller = controller
         self.logger = logger
         self.logger_heartbeat = LoggerFile("heartbeat", "heartbeat.log")
         self.logger_mqtt = LoggerFile("mqtt", "mqtt.log")
-        self.receive_queue = collections.deque()
-        # self.alarms = {}
+        self.logger_mem = LoggerFile("mqtt_mem", "mqtt_mem.log")
+
         self.svr_enable = settings.MQTT_ENABLE
         self.ip = settings.MQTT_IP
         self.port = settings.MQTT_PORT
@@ -296,338 +66,810 @@ class MQTTSvc(Thread):
         self.topic_server = settings.MQTT_TOPIC_SERVER
         self.heartbeat_enable = settings.MQTT_HEARTBEAT_ENABLE
         self.heartbeat_time = settings.MQTT_HEARTBEAT_TIME
-        self.mqttc = None
-        self.startup_connect = 0
-        self.connect = False
 
-        Thread.__init__(self)
-        self.setDaemon(True)
+        self.receive_queue = collections.deque()
+        self.max_receive_queue_size = max(1, int(getattr(settings, "MQTT_MAX_RECEIVE_QUEUE_SIZE", DEFAULT_MAX_RECEIVE_QUEUE_SIZE)))
+        self.dropped_receive_queue_count = 0
+        self._queue_lock = threading.RLock()
+        self._outbound_failures = 0
+        self._queue_high_warned = False
+        self.mqttc = None
+        self.connect = False
+        self._reconnect_delay = 1
+        self._last_broker_poll_time = {}
+
+        self._stop_requested = False
+        self._stop_lock = threading.Lock()
+        self._loop = None
+        self._receive_event = None
+        self._stop_event = None
+
+        # Sized executor for blocking device calls (see _run_in_cmd_executor).
+        self._thread_executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=CMD_EXECUTOR_MAX_WORKERS,
+            thread_name_prefix="mqtt-cmd",
+        )
+
+        self.daemon = True
         self.start()
 
-    def connect_MQTT_service(self):
+    @property
+    def stop(self):
+        with self._stop_lock:
+            return self._stop_requested
+
+    @stop.setter
+    def stop(self, value):
+        with self._stop_lock:
+            self._stop_requested = bool(value)
+
+        if self._stop_requested:
+            self.connect = False
+            loop = self._loop
+            if loop and loop.is_running():
+                try:
+                    loop.call_soon_threadsafe(self._signal_stop)
+                except RuntimeError:
+                    pass
+
+    def _signal_stop(self):
+        if self._stop_event is not None:
+            self._stop_event.set()
+        if self._receive_event is not None:
+            self._receive_event.set()
+
+    def stop_and_wait(self, timeout=None):
+        if threading.current_thread() is not self:
+            self.stop = True
+            self.join(timeout=timeout)
+            if timeout is not None and self.is_alive():
+                self.logger.warning(
+                    f"mqtt : thread did not exit within {timeout}s during stop_and_wait"
+                )
+        else:
+            self.stop = True
+        self._shutdown_cmd_executor()
+
+    def _run_in_cmd_executor(self, fn, *args):
+        executor = getattr(self, "_thread_executor", None)
+        if executor is None:
+            executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=CMD_EXECUTOR_MAX_WORKERS,
+                thread_name_prefix="mqtt-cmd",
+            )
+            self._thread_executor = executor
+        return asyncio.get_running_loop().run_in_executor(executor, fn, *args)
+
+    def _shutdown_cmd_executor(self):
+        executor = getattr(self, "_thread_executor", None)
+        if executor is None:
+            return
         try:
-            # MQTT_ENABLE=1
-            # MQTT_IP='192.168.0.235'
-            # MQTT_PORT=1883
-            # MQTT_CLIENT_ID='E847-IPC-Full'
-            # MQTT_TOPIC='IPC'
-
-            # self.mqttc = mqtt.Client(self.client_id) # not for MQTT
-            # self.mqttc = mqtt.Client(client_id=self.client_id, protocol=settings.MQTT_PROTOCOL, transport=settings.MQTT_TRANSPORT) # MQTT 5.0
-            self.mqttc = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2, protocol=settings.MQTT_PROTOCOL, transport=settings.MQTT_TRANSPORT)
-            # self.mqttc = mqtt.Client(self.client_id, clean_session=settings.MQTT_CLEAN_SESSION, protocol=settings.MQTT_PROTOCOL, transport=settings.MQTT_TRANSPORT) # Not MQTT 5.0
-            # mqttc = mqtt.Client(args.clientid, clean_session = not args.disable_clean_session, transport='websockets')
-            self.mqttc.username_pw_set(settings.MQTT_USERNAME, settings.MQTT_PASSWORD)
-            
-            # self.mqttc.on_message = on_message
-            # self.mqttc.on_connect = on_connect
-            # self.mqttc.on_publish = on_publish
-            # self.mqttc.on_subscribe = on_subscribe
-            # self.mqttc.on_connect_fail = on_connect_fail
-            # self.mqttc.on_log = on_log
-
-            self.mqttc.on_message = self.on_message
-            self.mqttc.on_connect = self.on_connect
-            self.mqttc.on_publish = self.on_publish
-            self.mqttc.on_subscribe = self.on_subscribe
-            self.mqttc.on_unsubscribe = self.on_unsubscribe
-            self.mqttc.on_disconnect = self.on_disconnect
-            self.mqttc.on_connect_fail = self.on_connect_fail
-            self.mqttc.on_log = self.on_log
-            
-            self.logger.info("mqtt : connecting to "+self.ip+" port:"+str(self.port))
-            # self.mqttc.connect(host=self.ip, port=self.port, keepalive=settings.MQTT_KEEPALIVE, clean_start=settings.MQTT_CLEAN_START_FIRST_ONLY)
-            self.mqttc.connect(host=self.ip, port=self.port, clean_start=True)
-            self.mqttc.subscribe(settings.MQTT_TOPIC, settings.MQTT_QOS)
-            self.mqttc.subscribe(settings.MQTT_TOPIC+'/LEDBoard', settings.MQTT_QOS)
-            # self.mqttc.subscribe(settings.MQTT_TOPIC+'/Request', settings.MQTT_QOS)
-            self.mqttc.subscribe(settings.MQTT_TOPIC_SERVER, settings.MQTT_QOS)
-            self.mqttc.subscribe(settings.MQTT_TOPIC_SERVER+'/Process', settings.MQTT_QOS)
-            self.mqttc.loop_start()
-            
-            
-            # db = next(get_db())
-            # webapi_server = db.query(Server).filter(Server.name == 'WebAPI Server').first()
-            
-            # if webapi_server :
-            #     self.ip = webapi_server.ip
-            #     self.port = webapi_server.port
-            #     self.url = webapi_server.url
-            #     self.svr_enable = webapi_server.svr_enable
-
-
-
-            return True
-
+            executor.shutdown(wait=False, cancel_futures=True)
         except Exception as err:
-            self.logger.error(f"mqtt : connect_MQTT_service : {str(err)}")
+            self.logger.warning(f"mqtt : cmd executor shutdown error : {str(err)}")
+        finally:
+            self._thread_executor = None
+
+    def _is_priority_notification(self, data):
+        return isinstance(data, dict) and data.get("correlation") is not None
+
+    def _drop_oldest_non_priority_notification(self):
+        with self._queue_lock:
+            for index, queued_data in enumerate(self.receive_queue):
+                if not self._is_priority_notification(queued_data):
+                    del self.receive_queue[index]
+                    return True
             return False
-        
-    # def enable_webapi(self, set):
-    #     self.svr_enable = set
-    #     self.logger.info('WebAPI Server enable = {}'.format(set))
-        
-    # def update_webapi(self, ip, port, url):
-    #     if self.ip != ip :
-    #         self.logger.info('WebAPI Server IP change from {} to {}.'.format(self.ip, ip))
-    #         self.ip = ip
-    #     if self.port != port :
-    #         self.logger.info('WebAPI Server Port change from {} to {}.'.format(self.port, port))
-    #         self.port = port
-    #     if self.url != url :
-    #         self.logger.info('WebAPI Server URL change from {} to {}.'.format(self.url, url))
-    #         self.url = url
+
+    def _enqueue_notification(self, data):
+        overflow_log = None
+        with self._queue_lock:
+            if len(self.receive_queue) >= self.max_receive_queue_size:
+                dropped_priority = False
+                if not self._drop_oldest_non_priority_notification():
+                    dropped_priority = self._is_priority_notification(self.receive_queue[0])
+                    self.receive_queue.popleft()
+
+                self.dropped_receive_queue_count += 1
+                if self.dropped_receive_queue_count == 1 or self.dropped_receive_queue_count % 100 == 0:
+                    overflow_log = (
+                        f"mqtt : receive_queue overflow, dropped={self.dropped_receive_queue_count}, "
+                        f"max={self.max_receive_queue_size}, dropped_priority={dropped_priority}"
+                    )
+
+            self.receive_queue.append(data)
+
+        if overflow_log:
+            self.logger.warning(overflow_log)
+
+    def _on_connect(self):
+        self.logger.info(
+            f"mqtt : on_connect : client_id={self.client_id}, topic={self.topic}, topic_server={self.topic_server}"
+        )
+        self.connect = True
+
+    def _on_disconnect(self, reason=None):
+        if self.stop:
+            self.logger.info("mqtt : on_disconnect : shutdown requested")
+        elif reason is not None:
+            self.logger.warning(f"mqtt : on_disconnect : {reason}")
+        else:
+            self.logger.warning("mqtt : on_disconnect")
+        self.connect = False
+
+    def _create_client(self):
+        kwargs = {
+            "hostname": self.ip,
+            "port": self.port,
+            "identifier": self.client_id,
+            "protocol": ProtocolVersion(settings.MQTT_PROTOCOL),
+            "transport": settings.MQTT_TRANSPORT,
+            "timeout": settings.MQTT_TIMEOUT,
+            "keepalive": settings.MQTT_KEEPALIVE,
+            "clean_start": settings.MQTT_CLEAN_START_FIRST_ONLY,
+            "will": Will(
+                self.topic_server,
+                payload=json.dumps({"id": self.client_id, "status": "offline"}),
+                qos=settings.MQTT_QOS,
+                retain=True,
+            ),
+        }
+        if settings.MQTT_USERNAME:
+            kwargs["username"] = settings.MQTT_USERNAME
+        if settings.MQTT_PASSWORD:
+            kwargs["password"] = settings.MQTT_PASSWORD
+        return aiomqtt.Client(**kwargs)
+
+    @asynccontextmanager
+    async def connect_MQTT_service(self):
+        client = self._create_client()
+        self.logger.info("mqtt : connecting to " + self.ip + " port:" + str(self.port))
+        entered = False
+        try:
+            await client.__aenter__()
+            entered = True
+            self.mqttc = client
+            await client.subscribe(self.topic, settings.MQTT_QOS)
+            await client.subscribe(f"{self.topic}/LEDBoard", settings.MQTT_QOS)
+            await client.subscribe(self.topic_server, settings.MQTT_QOS)
+            await client.subscribe(f"{self.topic_server}/Process", settings.MQTT_QOS)
+            await client.subscribe(f"{self.topic_server}/Request", settings.MQTT_QOS)
+            try:
+                await client.subscribe("$SYS/broker/log/N", 0)
+            except Exception as err:
+                self.logger.warning(f"mqtt : subscribe $SYS/broker/log/N failed : {str(err)}")
+            self._on_connect()
+
+            birth_info = {"id": self.client_id, "status": "online"}
+            await client.publish(
+                self.topic_server,
+                json.dumps(birth_info),
+                qos=settings.MQTT_QOS,
+                retain=True,
+                timeout=5,
+            )
+            yield client
+        finally:
+            self.mqttc = None
+            if entered:
+                self._on_disconnect()
+                if self.stop:
+                    # Graceful shutdown: the will is discarded on a clean DISCONNECT,
+                    # so clear the retained "online" birth message explicitly.
+                    try:
+                        await client.publish(
+                            self.topic_server,
+                            json.dumps({"id": self.client_id, "status": "offline"}),
+                            qos=settings.MQTT_QOS,
+                            retain=True,
+                            timeout=5,
+                        )
+                    except Exception as err:
+                        self.logger.warning(f"mqtt : offline publish on shutdown failed : {str(err)}")
+                await client.__aexit__(None, None, None)
 
     def on_notify(self, data):
-        self.receive_queue.append(data)
-        #logger.debug('{}'.format(data))
-        
-    # def superuser_login(self, data):
-    #     message = {}
-    #     message['userid'] = "gyro"
-    #     message['password'] = "gsi5613686"
+        if self.stop:
+            return
 
-    #     response = {}
-    #     response['result'] = 'NG'
-    
-    #     res = None
-    #     # ipc_ip = data['params']['ip']
-    #     # api_port = data['params']['api_port']
-    #     try:
-    #         res = requests.post('http://{}:{}/api/auth/login'.format(self.ip, self.port), json=message, timeout=5)
-    #     except requests.ConnectionError:
-    #         self.logger.error('webapi_svc.py superuser_login error : requests.ConnectionError')
-    #         response['status_code'] = 503
-    #         response['reason'] = 'requests.ConnectionError'
-    #         return response
-    #     except requests.Timeout:
-    #         self.logger.error('webapi_svc.py superuser_login error : requests.Timeout')
-    #         response['status_code'] = 408
-    #         response['reason'] = 'requests.Timeout'
-    #         return response
-    #     except Exception as err:
-    #         self.logger.error('webapi_svc.py superuser_login error : {}'.format(str(err)))
-    #         response['status_code'] = 400
-    #         response['reason'] = str(err)
-    #         return response
-        
-    #     #print('requests.post : [{}] {}'.format(res.status_code, res.text))
-    #     response['status_code'] = res.status_code
-    #     response['reason'] = res.reason
-    #     #print(response)
-        
-    #     if res.status_code == 200 :
-    #         response['result'] = 'success'
-    #         response['access_token'] = json.loads(res.text)['access_token']
-    #         #print(access_token)
-
-    #     return response
-
-    def data_process(self, data):
         try:
-            
-            # print(data)
-            # self.mqtt.publish(settings.MQTT_TOPIC, data)
-            
-            tmp = datetime.now().strftime('%Y-%m-%d %H:%M:%S %f')[:-3]
-            # msg_txt = f"########## {tmp} : {str(data)}"
-            # msg_txt = data
-            # msg_txt = str(data) ## python dictionary format which using single quotes
-            msg_txt = str(data).replace("'",'"') ## json format which using double quotes
-            # print(f"########## Publishing: {tmp} {msg_txt}")
+            data = copy.deepcopy(data)
+        except Exception as err:
+            self.logger.error(f"mqtt : on_notify : deepcopy failed : {str(err)}")
+            return
 
-            if 'cmd' in data:
-                props = mqtt.Properties(PacketTypes.PUBLISH)
-                props.CorrelationData = data['correlation'].CorrelationData
-                reply_to = data['correlation'].ResponseTopic
-                del data['correlation']
-                payload = json.dumps(data)
-                print("Sending response "+str(data['result'])+" on '" + reply_to + "': "+str(props.CorrelationData))
-                if not self.connect:
-                    return False
-                # infot = self.mqttc.publish(self.topic+'/Response', msg_txt, qos=settings.MQTT_QOS)
-                # infot = self.mqttc.publish(self.topic+'/Response', msg_txt, qos=settings.MQTT_QOS)
-                infot = self.mqttc.publish(reply_to, payload, qos=1, properties=props)
-                infot.wait_for_publish(5)
-                return True
-            
-            if 'Server' in data: # publish to Server and IPC
-            # if  data['type'] == 0 and \
-            #     (   data['code_id'] == 5 or \
-            #         data['code_id'] == 113 or \
-            #         data['code_id'] >= 128 ):
-            
-                # msg_txt = str(data).replace("'",'"')
-                # infot = self.mqttc.publish(self.topic_server, msg_txt, qos=settings.MQTT_QOS)
-                # data2 = data
-                # del data2['port_no']
-                # del data2['dual_port']
-                # del data2['type']
-                # del data2['stream']
-                # del data2['function']
-                # del data2['status']
-                # payload = json.dumps(data2)
-                # del data['Server']
-                if settings.WAFER_TYPE:
-                    if 'port_no' in data:
-                        if data['port_no'] != settings.WAFER_TYPE:
-                            return True
-                    
-                payload = json.dumps(data)
-                if not self.connect:
-                    return False
+        self._enqueue_notification(data)
+
+        loop = self._loop
+        event = self._receive_event
+        if loop and event is not None and loop.is_running():
+            try:
+                loop.call_soon_threadsafe(event.set)
+            except RuntimeError:
+                pass
+
+    def _get_correlation(self, properties):
+        if properties is None:
+            return None
+
+        response_topic = getattr(properties, "ResponseTopic", None)
+        correlation_data = getattr(properties, "CorrelationData", None)
+        if response_topic is None or correlation_data is None:
+            return None
+
+        return MQTTCorrelation(
+            ResponseTopic=str(response_topic),
+            CorrelationData=correlation_data,
+        )
+
+    def _build_publish_properties(self, correlation):
+        if correlation is None or correlation.CorrelationData is None:
+            return None
+
+        props = Properties(mqtt.PacketTypes.PUBLISH)
+        props.CorrelationData = correlation.CorrelationData
+        return props
+
+    async def _publish(self, topic, payload, qos=None, properties=None, retain=False, wait_timeout=5):
+        if not self.connect or self.mqttc is None:
+            return False
+
+        publish_qos = settings.MQTT_QOS if qos is None else qos
+
+        try:
+            await self.mqttc.publish(
+                topic,
+                payload,
+                qos=publish_qos,
+                retain=retain,
+                properties=properties,
+                timeout=wait_timeout,
+            )
+            return True
+        except Exception as err:
+            self.logger.error(f"mqtt : publish : topic={topic}, error={str(err)}")
+            self.connect = False
+            return False
+
+    async def _run_e84_cmd(self, controller_id, command):
+        try:
+            await asyncio.wait_for(
+                self._run_in_cmd_executor(self.controller.e84[controller_id].run_cmd, command),
+                timeout=MAX_CMD_WAIT,
+            )
+        except asyncio.TimeoutError:
+            self.logger.error(
+                f"mqtt : timeout : e84 run_cmd : controller_id={controller_id}, command={command}"
+            )
+
+    async def _publish_rfid_status(self, service, portno):
+        try:
+            await asyncio.wait_for(
+                self._run_in_cmd_executor(service.mqtt_publish_status, portno),
+                timeout=MAX_CMD_WAIT,
+            )
+        except asyncio.TimeoutError:
+            self.logger.error(f"mqtt : timeout : mqtt_publish_status : portno={portno}")
+
+    async def _handle_process_message(self, topic, qos, raw_payload):
+        self.logger.info(f"mqtt : on_message topic={topic}, qos={qos}, data={raw_payload}")
+        if not settings.CLAMP_ENABLE:
+            return
+
+        payload = json.loads(raw_payload)
+        portno = payload["port_no"]
+        if portno not in self.controller.loadport:
+            self.logger.warning(f"mqtt : {self.topic_server}/Process port_no {portno} is not exist.")
+            return
+
+        if self.controller.loadport[portno]["com"] != "e84":
+            self.logger.warning(f"mqtt : {self.topic_server}/Process port_no {portno} is not a E84 controller.")
+            return
+
+        controller_id = self.controller.loadport[portno]["id"]
+        if payload["process_state"] == settings.CLAMP_ON:
+            await self._run_e84_cmd(controller_id, "clamp_on")
+            self.logger.info(f"mqtt : port_no={portno}, process_state={payload['process_state']}, CLAMP_ON")
+        elif payload["process_state"] == settings.CLAMP_OFF:
+            await self._run_e84_cmd(controller_id, "clamp_off")
+            self.logger.info(f"mqtt : port_no={portno}, process_state={payload['process_state']}, CLAMP_OFF")
+
+    async def _handle_ledboard_message(self, topic, qos, raw_payload):
+        self.logger.info(f"mqtt : on_message topic={topic}, qos={qos}, data={raw_payload}")
+        if not settings.LEDBOARD_ENABLE:
+            return
+
+        payload = json.loads(raw_payload)
+        if "type" in payload and payload["type"] in [4, 5]:
+            return
+
+        portno = payload["port_no"]
+        if portno not in self.controller.loadport:
+            self.logger.warning(f"mqtt : {topic} port_no {portno} is not exist.")
+            return
+
+        loadport = self.controller.loadport[portno]
+        if loadport["com"] == "e84":
+            controller_id = loadport["id"]
+
+            if payload["ledboard_state"] == settings.LEDBOARD_RESET:
+                self.controller.equipment_state = 3
+                if loadport["dual"] > 0:
+                    await self._run_e84_cmd(controller_id, "reset2")
+                else:
+                    await self._run_e84_cmd(controller_id, "reset")
+                self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, RESET")
+            elif payload["ledboard_state"] == settings.LEDBOARD_MODE:
+                if loadport["dual"] > 0:
+                    if self.controller.e84[controller_id].mode[portno - 1] == 1:
+                        await self._run_e84_cmd(controller_id, "manual2")
+                        self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MANUAL2")
+                    else:
+                        await self._run_e84_cmd(controller_id, "auto2")
+                        self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, AUTO2")
+                else:
+                    if self.controller.e84[controller_id].mode[0] == 1:
+                        await self._run_e84_cmd(controller_id, "manual")
+                        self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, MANUAL")
+                    else:
+                        await self._run_e84_cmd(controller_id, "auto")
+                        self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, AUTO")
+            elif payload["ledboard_state"] == settings.LEDBOARD_INITIAL and loadport["dual"] <= 0:
+                await self._run_e84_cmd(controller_id, "status_ledboard")
+                self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, STATUS")
+            return
+
+        if not settings.RFID_DEVICE_ONLY:
+            self.logger.warning(f"mqtt : {topic} port_no {portno} is not a E84 controller.")
+            return
+
+        if payload["ledboard_state"] != settings.LEDBOARD_INITIAL:
+            return
+
+        if self.controller.rfid:
+            self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, STATUS")
+            await self._publish_rfid_status(self.controller.rfid, portno)
+        if self.controller.rfid_UHF:
+            self.logger.info(f"mqtt : port_no={portno}, ledboard_state={payload['ledboard_state']}, STATUS")
+            await self._publish_rfid_status(self.controller.rfid_UHF, portno)
+
+    async def _handle_request_message(self, raw_payload, properties):
+        correlation = self._get_correlation(properties)
+        if correlation is None:
+            self.logger.warning("No reply requested")
+            return
+
+        payload = json.loads(raw_payload)
+        self.logger.info(
+            f"corr_id={correlation.CorrelationData}, reply_to={correlation.ResponseTopic}, payload={payload}"
+        )
+
+        if ("cmd" not in payload) or ("port_no" not in payload):
+            return
+
+        port_no = payload["port_no"]
+        if port_no not in self.controller.loadport:
+            self.logger.warning(f"mqtt : Request port_no {port_no} is not exist.")
+            return
+        if self.controller.loadport[port_no]["com"] != "e84":
+            self.logger.warning(f"mqtt : Request port_no {port_no} is not a E84 controller.")
+            return
+
+        controller_id = self.controller.loadport[port_no]["id"]
+        try:
+            await asyncio.wait_for(
+                self._run_in_cmd_executor(
+                    self.controller.e84[controller_id].api_request,
+                    payload["cmd"],
+                    payload["data"],
+                    correlation,
+                ),
+                timeout=MAX_CMD_WAIT,
+            )
+        except asyncio.TimeoutError:
+            self.logger.error(
+                f"mqtt : timeout : api_request : port_no={port_no}, cmd={payload['cmd']}"
+            )
+
+    async def _handle_broker_log(self, raw_payload):
+        payload = raw_payload.decode("utf-8")
+
+        if "New client connected from" in payload:
+            pattern = r"as\s+(?P<client_id>.*?)\s+"
+            match = re.search(pattern, payload)
+
+            if not match:
+                self.logger.info("connected No match found.")
+                return
+
+            client_id = match.group("client_id")
+            self.logger.info(f"New client connected from: [{client_id}]")
+            if not client_id.startswith("RPA_"):
+                return
+
+            for portno, loadport in self.controller.loadport.items():
+                if loadport["com"].upper() != "E84":
+                    continue
+
+                now = time.monotonic()
+                if now - self._last_broker_poll_time.get(portno, 0.0) < BROKER_LOG_POLL_DEBOUNCE_SECONDS:
+                    continue
+                self._last_broker_poll_time[portno] = now
+
+                controller_id = loadport["id"]
+                port_id = getattr(settings, f"LOAD_PORT_{portno}_ID", False)
+                self.logger.info(
+                    f"mqtt : broker reconnect sync status for port_no={portno}, "
+                    f"controller_id={controller_id}, port_id={port_id}"
+                )
+                await self._run_e84_cmd(controller_id, "status")
+            return
+
+        if "disconnected" in payload:
+            pattern = r"Client\s+(?P<client_id>.*?)\s+"
+            match = re.search(pattern, payload)
+            if match:
+                self.logger.info(f"Client disconnected from: [{match.group('client_id')}]")
+            else:
+                self.logger.info("disconnected No match found.")
+            return
+
+        if "closed its connection" in payload:
+            pattern = r"Client\s+(?P<client_id>.*?)\s+"
+            match = re.search(pattern, payload)
+            if match:
+                self.logger.info(f"Client closed its connection from: [{match.group('client_id')}]")
+            else:
+                self.logger.info("closed its connection No match found.")
+            return
+
+        self.logger.debug(f"mqtt : broker log unparsed : {payload}")
+
+    async def on_message(self, msg):
+        topic = str(msg.topic)
+        qos = getattr(msg, "qos", None)
+        raw_payload = msg.payload
+        properties = getattr(msg, "properties", None)
+
+        try:
+            if topic.endswith("Process"):
+                await self._handle_process_message(topic, qos, raw_payload)
+            elif topic.endswith("LEDBoard"):
+                await self._handle_ledboard_message(topic, qos, raw_payload)
+            elif topic.endswith("Request"):
+                await self._handle_request_message(raw_payload, properties)
+            elif topic.startswith("$SYS/broker/log/N"):
+                await self._handle_broker_log(raw_payload)
+        except Exception as err:
+            self.logger.error(f"mqtt : on_message : {str(err)}")
+
+    async def data_process(self, data):
+        try:
+            payload_data = copy.copy(data)
+
+            if "topic" in payload_data:
+                # Explicit-topic notifications (e.g. 'Active-E84') are published
+                # to the literal topic carried by the payload.
+                target_topic = payload_data.pop("topic")
+                if target_topic:
+                    payload = json.dumps(payload_data)
+                    if settings.MQTT_DEBUG_ENABLE:
+                        self.logger.info(f"[{target_topic}]:{payload}")
+                    self.logger_mqtt.info(f"[{target_topic}]:{payload}")
+                    return await self._publish(target_topic, payload)
+
+            if "cmd" in payload_data:
+                correlation = payload_data.get("correlation")
+                if correlation is None or not hasattr(correlation, "ResponseTopic"):
+                    self.logger.warning("mqtt : data_process : response dropped, missing correlation")
+                    return True
+                props = self._build_publish_properties(correlation)
+                reply_to = correlation.ResponseTopic
+                del payload_data["correlation"]
+                payload = json.dumps(payload_data)
+                self.logger.info(
+                    f"Sending response {payload_data['result']} on '{reply_to}': {correlation.CorrelationData}"
+                )
+                return await self._publish(reply_to, payload, qos=1, properties=props, wait_timeout=5)
+
+            if "Server" in payload_data:
+                if settings.WAFER_TYPE and ("port_no" in payload_data) and payload_data["port_no"] != settings.WAFER_TYPE:
+                    return True
+
+                payload = json.dumps(payload_data)
                 if settings.MQTT_DEBUG_ENABLE:
-                    print(f"[Server]:{payload}")
+                    self.logger.info(f"[Server]:{payload}")
                 self.logger_mqtt.info(f"[Server]:{payload}")
-                infot = self.mqttc.publish(self.topic_server, payload, qos=settings.MQTT_QOS)
-                infot = self.mqttc.publish(self.topic, payload, qos=settings.MQTT_QOS)
-                # infot.wait_for_publish(5)
-                # del data['device_id']
-            
-            else: # publish to IPC
-                if settings.WAFER_TYPE:
-                    if 'port_no' in data:
-                        if data['port_no'] != settings.WAFER_TYPE:
-                            return True
 
-                # infot = self.mqttc.publish(self.topic, msg_txt, qos=settings.MQTT_QOS)
-                payload = json.dumps(data)
-                # pattern = r'"device_id":\s*".+?",?\s*'
-                # no_deviceid_payload = re.sub(pattern, '', payload)
-                # print(no_deviceid_payload)
-                if not self.connect:
+                published_ipc = await self._publish(self.topic, payload)
+                if not published_ipc:
                     return False
-                if settings.MQTT_DEBUG_ENABLE:
-                    print(f"[IPC]:{payload}")
-                self.logger_mqtt.info(f"[IPC]:{payload}")
-                # infot = self.mqttc.publish(self.topic, no_deviceid_payload, qos=settings.MQTT_QOS)
-                infot = self.mqttc.publish(self.topic, payload, qos=settings.MQTT_QOS)
-                # infot.wait_for_publish(5)
+                # On reconnect this notification is reprocessed from the queue, so
+                # the first publish above may be delivered twice (at-least-once).
 
+                if not settings.SERVER_UPLOAD_ALL and payload_data.get("code_id") not in [113, 32770, 32771, 28]:
+                    return True
+
+                return await self._publish(self.topic_server, payload)
+
+            if settings.WAFER_TYPE and ("port_no" in payload_data) and payload_data["port_no"] != settings.WAFER_TYPE:
+                return True
+
+            payload = json.dumps(payload_data)
+            if settings.MQTT_DEBUG_ENABLE:
+                self.logger.info(f"[IPC]:{payload}")
+            self.logger_mqtt.info(f"[IPC]:{payload}")
+            return await self._publish(self.topic, payload)
         except Exception as err:
             self.logger.error(f"mqtt : data_process : {str(err)}")
             return False
-    
-        return True
-        if 'ALARM' in data['class'] or 'EVENT' in data['class']:
-            res = None
-            
-            # response = self.superuser_login(data)
-            
-            # if response['result'] != 'success' :
-            #     return
-            
-            # header = {}
-            # header['Authorization'] = 'Bearer {}'.format(response['access_token'])
-            
-            #self.logger.debug('requests.post : {}'.format(data))
-            try:
-                # ipc_ip = data['params']['ip']
-                # ipc_port = data['params']['port']
-                # api_port = data['params']['api_port']
-                # ipc_enable = data['params']['ipc_enable']
-                # ftp_enable = data['params']['ftp_enable']
-                payload = json.dumps(data)
-                # print(payload)
-                # url = 'http://{}:{}/api/test{}?payload={}'.format(self.ip, self.port, self.url, payload)
-                url = 'http://{}:{}{}'.format(self.ip, self.port, self.url)
-                # res = requests.post(url, headers=header, json=payload, timeout=5)
-                # res = requests.post(url, headers=header, timeout=5)
-                res = requests.post(url, json=payload, timeout=5)
-                
-            except requests.ConnectionError:
-                self.logger.error('requests.ConnectionError : {}'.format(url))
-                return
-            except requests.Timeout:
-                self.logger.error('requests.Timeout : {}'.format(url))
-                return
-            except:
-                self.logger.error(traceback.format_exc())
-                return
-                
-            #self.logger.debug('requests.post : [{}] {}'.format(res.status_code, res.text))
-            response = json.loads(res.text)
-            response['status_code'] = res.status_code
-            response['reason'] = res.reason
-            #print(response)
-            
-            if res.status_code != 200:
-                pass
-            else:
-                pass
 
-    def memory_check(self):
+    async def memory_check(self):
         if not self.svr_enable:
             return
-        
-        try:
-            receive_queue_size = len(self.receive_queue)
-            
-            stdout_size = sys.getsizeof(sys.stdout)
-            
-            self.logger.info(f"mqtt : memory_check : receive_queue = {receive_queue_size}, stdout = {stdout_size}")
-            # self.logger.info(f"{self.port_id} : stdout = {stdout_size}, logger size = {sys.getsizeof(self.logger)}, logger file = {self.logger.getfilestreamsize()}, logger stream = {self.logger.getstdoutstreamsize()}, logger sql = {self.logger.getsqlstreamsize()}")
-        except Exception as err:
-            self.logger.error(f"mqtt : memory_check : {str(err)}")
 
-    def heartbeat(self):
-        if not self.heartbeat_enable:
-            return
-        
         try:
-            if not self.connect:
-                return False
-            
-            data = {}
-            data['device_id'] = self.device_id
-            data['type'] = 0
-            data['stream'] = 1
-            data['function'] = 1
-            data['occurred_at'] = time.time()
-            
+            with self._queue_lock:
+                queue_len = len(self.receive_queue)
+            self.logger_mem.info(
+                f"mqtt : memory_check : receive_queue = {queue_len}, "
+                f"dropped_receive_queue = {self.dropped_receive_queue_count}, "
+                f"max_receive_queue = {self.max_receive_queue_size}"
+            )
+        except Exception as err:
+            self.logger_mem.error(f"mqtt : memory_check : {str(err)}")
+
+    async def heartbeat(self):
+        with self._queue_lock:
+            queue_depth = len(self.receive_queue)
+        # Edge-triggered so a prolonged outage yields one warning on the way up
+        # and one recovery line, instead of an alert storm every heartbeat cycle.
+        high = queue_depth > 0.8 * self.max_receive_queue_size
+        was_high = getattr(self, "_queue_high_warned", False)
+        if high and not was_high:
+            self._queue_high_warned = True
+            self.logger.warning(
+                f"mqtt : receive_queue depth={queue_depth}/{self.max_receive_queue_size} "
+                f"(>80% full, drops imminent if this keeps growing)"
+            )
+        elif not high and was_high:
+            self._queue_high_warned = False
+            self.logger.info(
+                f"mqtt : receive_queue depth={queue_depth}/{self.max_receive_queue_size} "
+                f"(recovered below 80%)"
+            )
+
+        if not self.heartbeat_enable or not self.connect:
+            return False
+
+        try:
+            data = {
+                "device_id": self.device_id,
+                "type": 0,
+                "stream": 1,
+                "function": 1,
+                "occurred_at": time.time(),
+            }
             payload = json.dumps(data)
-            
-            infot = self.mqttc.publish(self.topic_server, payload, qos=settings.MQTT_QOS)
-            
-            # self.logger.info(f"mqtt : heartbeat")
-            self.logger_heartbeat.info('alive')
+
+            if await self._publish(self.topic_server, payload):
+                self.logger_heartbeat.info("alive")
+                return True
+            return False
         except Exception as err:
             self.logger.error(f"mqtt : heartbeat : {str(err)}")
-            
-    def run(self):
-        
-        if settings.MEMORY_CHECK:
-            schedule.every(5).minutes.do(self.memory_check)
-            
-        if self.heartbeat_enable:
-            schedule.every(self.heartbeat_time).seconds.do(self.heartbeat)
-            
-        # self.logger.error('MqttSvc Starting')
-        self.connect_MQTT_service()
-        
-        while not self.stop :
-            if self.startup_connect < 3:
-                sleep(1)
-                self.startup_connect += 1
-                continue
+            return False
+
+    async def _wait_for_stop(self):
+        while not self.stop:
+            await asyncio.sleep(0.1)
+
+    async def _message_loop(self):
+        try:
+            async for message in self.mqttc.messages:
+                await self.on_message(message)
+        finally:
+            self.connect = False
+
+    async def _watch_connection(self):
+        # Completes when the connection is flagged lost (e.g. a publish failed
+        # while TCP is still alive) so the supervisor can tear down and reconnect.
+        while not self.stop and self.connect:
+            # Runs on the same event loop as _message_loop/_outbound_loop, so a
+            # wedged synchronous call in either of those stalls this too - a
+            # reliable proxy for "is the MQTT event loop still alive at all".
+            # (While disconnected, _run_async keeps the same name alive.)
+            gyro_watchdog.touch("MQTTSvc", max_gap=MQTT_WATCHDOG_MAX_GAP)
+            await asyncio.sleep(0.2)
+
+    async def _outbound_loop(self):
+        while not self.stop:
             if not self.connect:
-                self.connect_MQTT_service()
-                sleep(1)
+                await asyncio.sleep(0.5)
                 continue
-            while self.receive_queue :
+
+            with self._queue_lock:
+                if not self.receive_queue:
+                    empty = True
+                else:
+                    empty = False
+                    data = self.receive_queue.popleft()
+
+            if empty:
+                await self._receive_event.wait()
+                self._receive_event.clear()
+                continue
+
+            requeued = False
+            try:
+                if not self.svr_enable:
+                    await asyncio.sleep(0.1)
+                    continue
+
+                if await self.data_process(data):
+                    self._outbound_failures = 0
+                    continue
+
                 if not self.connect:
-                    break
-                data = self.receive_queue.popleft()
-                # self.logger.debug('inside webapi_svr run = {}'.format(data))
-                # print('inside mqtt_svr run = {}'.format(data))
-                if self.svr_enable :
-                    if not self.data_process(data):
-                        break
-            if settings.MEMORY_CHECK:
-                schedule.run_pending()
-            if self.heartbeat_enable:
-                schedule.run_pending()
-            sleep(0.1)
-            # print('inside mqtt_svr')
-            
-            
+                    with self._queue_lock:
+                        self.receive_queue.appendleft(data)
+                    requeued = True
+                    raise aiomqtt.MqttError("mqtt : connection lost while publishing")
+
+                if self._requeue_failed_notification(data):
+                    requeued = True
+                    await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                # A cancellation inside the pop+process window (e.g. the supervisor
+                # tearing down on a disconnect) must not lose the notification:
+                # put it back at the front of the queue before re-raising.
+                if not requeued:
+                    with self._queue_lock:
+                        self.receive_queue.appendleft(data)
+                raise
+
+    def _requeue_failed_notification(self, data):
+        """Requeue a failed outbound notification or drop it when retries are exhausted.
+
+        Returns True if the notification was requeued, False if it was dropped.
+        """
+        self._outbound_failures += 1
+        if self._outbound_failures >= MAX_OUTBOUND_RETRIES:
+            self._outbound_failures = 0
+            self.dropped_receive_queue_count += 1
+            self.logger.error(
+                f"mqtt : outbound notification dropped after {MAX_OUTBOUND_RETRIES} "
+                "consecutive publish failures"
+            )
+            return False
+        with self._queue_lock:
+            self.receive_queue.append(data)
+        return True
+
+    async def _periodic_task(self, interval, callback):
+        while not self.stop:
+            await asyncio.sleep(interval)
+            if self.stop:
+                return
+
+            try:
+                result = callback()
+                if asyncio.iscoroutine(result):
+                    await result
+            except Exception as err:
+                self.logger.error(f"mqtt : periodic task : {str(err)}")
+
+    def _backoff_wait_seconds(self, delay):
+        # Randomized backoff spreads reconnect attempts after a broker outage
+        # so many devices do not reconnect in lockstep (thundering herd).
+        return min(delay + random.uniform(0, delay), MAX_RECONNECT_DELAY)
+
+    async def _run_async(self):
+        self._stop_event = asyncio.Event()
+        if not self.svr_enable:
+            self.logger.info("mqtt : service is disabled, not connecting")
+            return
+
+        # Periodic tasks (heartbeat, memory_check) are owned by the service
+        # supervisor, not the per-connection block, so a broker reconnect does
+        # not restart their cadence from zero. Their callbacks skip publishing
+        # while self.connect is False (see heartbeat/memory_check), so a flapping
+        # broker cannot starve the heartbeat indefinitely.
+        periodic_tasks = [
+            asyncio.create_task(self._periodic_task(20, self.memory_check))
+        ]
+        if self.heartbeat_enable:
+            periodic_tasks.append(
+                asyncio.create_task(self._periodic_task(self.heartbeat_time, self.heartbeat))
+            )
+
+        attempt = 0
+        down_since = None
+        try:
+            while not self.stop:
+                # Outside the connected phase neither _watch_connection nor any
+                # other task runs, so keep the watchdog alive from the reconnect
+                # loop itself; otherwise a legitimate broker outage would look
+                # like a stalled MQTTSvc thread after MQTT_WATCHDOG_MAX_GAP.
+                gyro_watchdog.touch("MQTTSvc", max_gap=MQTT_WATCHDOG_MAX_GAP)
+                delay = self._reconnect_delay
+                attempt += 1
+                try:
+                    async with self.connect_MQTT_service():
+                        if down_since is not None:
+                            downtime = time.monotonic() - down_since
+                            self.logger.info(
+                                f"mqtt : reconnected to broker after {attempt} attempt(s), "
+                                f"downtime={downtime:.1f}s"
+                            )
+                        attempt = 0
+                        down_since = None
+                        self._reconnect_delay = 1
+                        self._receive_event = asyncio.Event()
+                        with self._queue_lock:
+                            has_pending = bool(self.receive_queue)
+                        if has_pending:
+                            self._receive_event.set()
+
+                        tasks = [
+                            asyncio.create_task(self._wait_for_stop()),
+                            asyncio.create_task(self._message_loop()),
+                            asyncio.create_task(self._outbound_loop()),
+                            asyncio.create_task(self._watch_connection()),
+                        ]
+
+                        done, pending = await asyncio.wait(
+                            tasks,
+                            return_when=asyncio.FIRST_COMPLETED,
+                        )
+
+                        for task in pending:
+                            task.cancel()
+                        await asyncio.gather(*pending, return_exceptions=True)
+
+                        for task in done:
+                            if task.cancelled():
+                                continue
+                            err = task.exception()
+                            if err is not None and not self.stop:
+                                raise err
+                except aiomqtt.MqttError as err:
+                    if down_since is None:
+                        down_since = time.monotonic()
+                    downtime = time.monotonic() - down_since
+                    if attempt in (5, 20, 60) or downtime > 300:
+                        self.logger.error(
+                            f"mqtt : broker still unreachable after {attempt} attempt(s) / "
+                            f"{downtime:.0f}s downtime (ip={self.ip}, port={self.port}): {err}"
+                        )
+                    else:
+                        self.logger.warning(f"mqtt : connect_MQTT_service : attempt={attempt} : {err}")
+                except Exception as err:
+                    self.logger.error(f"mqtt : run : {str(err)}", exc_info=True)
+                finally:
+                    self._receive_event = None
+
+                if not self.stop:
+                    try:
+                        await asyncio.wait_for(self._stop_event.wait(), timeout=self._backoff_wait_seconds(delay))
+                    except asyncio.TimeoutError:
+                        pass
+                    self._reconnect_delay = min(delay * 2, MAX_RECONNECT_DELAY)
+        finally:
+            for task in periodic_tasks:
+                task.cancel()
+            await asyncio.gather(*periodic_tasks, return_exceptions=True)
+
+    def run(self):
+        if hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):
+            self._loop = asyncio.WindowsSelectorEventLoopPolicy().new_event_loop()
+        else:
+            self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
+        try:
+            self._loop.run_until_complete(self._run_async())
+        finally:
+            gyro_watchdog.unregister("MQTTSvc")
+            self._loop.close()
+            self._shutdown_cmd_executor()
