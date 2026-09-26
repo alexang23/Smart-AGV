@@ -970,6 +970,7 @@ class E84Client(AsyncSerialPort):
         Returns:
             (major, minor) 版本號，失敗返回 None
         """
+        # 0x55aa enables 0x0070 sensor event messages from the device
         response = await self._send_e84_command(E84Command.SENSOR_EVENT, 0x55aa, 5)
         if response:
             major = response.data_high
