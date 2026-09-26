@@ -277,8 +277,7 @@ class E84Command:
     READ_CONFIG = 0x0020
     
     # 寫入命令 (80 系列)
-    DB25_PORT = 0x8001        # DB25 Port 控制
-    CHANNEL = 0x8001          # Channel 控制
+    DB25_PORT = 0x8001        # DB25 Port 控制 / Channel 控制 (param = channel number)
     ALARM_RESET = 0x8002      # Alarm Reset
     LOAD_UNLOAD = 0x8003      # Load/Unload
     ARM_BACK = 0x8004         # 手臂回收完成
@@ -1299,8 +1298,8 @@ class E84Client(AsyncSerialPort):
         return False
 
     async def send_CHANNEL_command(self, channel: int = 0) -> bool:
-            """發送 CHANNEL 命令"""
-            response = await self._send_e84_command(E84Command.CHANNEL, channel)
+            """發送 CHANNEL 命令 (0x8001, param = channel number)"""
+            response = await self._send_e84_command(E84Command.DB25_PORT, channel)
             if response:
                 self.logger.info("------------------ CHANNEL 命令已發送")
                 return True
