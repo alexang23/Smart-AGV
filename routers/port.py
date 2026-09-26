@@ -222,21 +222,39 @@ async def api_port_channel(condition: schemas.PortInfo, request: Request, db: Se
                         'Message': msg}
 
             if condition.enable:
-                success = await e84_port.open_RF_channel()
-                if not success:
-                    result = 'NG'
-                    msg = 'E84 RF channel open failed. Device is not connected or did not respond.'
-                    glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
-                            {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                if settings.E84_RF_SENSOR_ENABLE:
+                    success = await e84_port.open_RF_channel()
+                    if not success:
+                        result = 'NG'
+                        msg = 'E84 RF channel open failed. Device is not connected or did not respond.'
+                        glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                                {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                else:
+                    success = True
+                    tsc.e84[id].run_cmd(f'channel {portno}')
+                    if not success:
+                        result = 'NG'
+                        msg = 'E84 channel operation failed. Sensor is not enabled.'
+                        glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                                {'user': '{},{}'.format(login_user.userid, login_user.name)})
             else:
-                success = await e84_port.alarm_reset_async()
-                if not success:
-                    e84_client.rf_channel_opened_success = False
-                    result = 'NG'
-                    msg = 'E84 RF channel reset failed. Device is not connected or did not respond.'
-                    glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
-                            {'user': '{},{}'.format(login_user.userid, login_user.name)})
-    
+                if settings.E84_RF_SENSOR_ENABLE:
+                    success = await e84_port.alarm_reset_async()
+                    if not success:
+                        e84_client.rf_channel_opened_success = False
+                        result = 'NG'
+                        msg = 'E84 RF channel reset failed. Device is not connected or did not respond.'
+                        glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                                {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                else:
+                    success = True
+                    tsc.e84[id].run_cmd(f'channel 0')
+                    if not success:
+                        result = 'NG'
+                        msg = 'E84 channel operation failed. Sensor is not enabled.'
+                        glogger.warning('api_port_channel : port_no {} {}'.format(portno, msg),
+                                {'user': '{},{}'.format(login_user.userid, login_user.name)})
+        
             print(f"api_port_channel : {portno}") 
         else:
             result = 'NG'
@@ -402,14 +420,15 @@ async def api_port_handoff(condition: schemas.Handoff, request: Request, db: Ses
                         'ErrorCode': 500,
                         'Message': msg}
 
-            if not getattr(e84_client, 'rf_channel_opened_success', False):
-                msg = 'E84 handoff failed. RF channel should open successfully before calling /handoff.'
-                glogger.warning('api_port_handoff : port_no {} {}'.format(portno, msg),
-                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
-                return {'Success': False,
-                        'State': 'NG',
-                        'ErrorCode': 500,
-                        'Message': msg}
+            if settings.E84_RF_SENSOR_ENABLE:
+                if not getattr(e84_client, 'rf_channel_opened_success', False):
+                    msg = 'E84 handoff failed. RF channel should open successfully before calling /handoff.'
+                    glogger.warning('api_port_handoff : port_no {} {}'.format(portno, msg),
+                            {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                    return {'Success': False,
+                            'State': 'NG',
+                            'ErrorCode': 500,
+                            'Message': msg}
 
             e84_port.run_cmd(f'handoff {condition.cs} {condition.task}')
 

@@ -278,6 +278,7 @@ class E84Command:
     
     # 寫入命令 (80 系列)
     DB25_PORT = 0x8001        # DB25 Port 控制
+    CHANNEL = 0x8001          # Channel 控制
     ALARM_RESET = 0x8002      # Alarm Reset
     LOAD_UNLOAD = 0x8003      # Load/Unload
     ARM_BACK = 0x8004         # 手臂回收完成
@@ -970,7 +971,7 @@ class E84Client(AsyncSerialPort):
         Returns:
             (major, minor) 版本號，失敗返回 None
         """
-        response = await self._send_e84_command(E84Command.SENSOR_EVENT, 0x0001, 5)
+        response = await self._send_e84_command(E84Command.SENSOR_EVENT, 0x55aa, 5)
         if response:
             major = response.data_high
             minor = response.data_low
@@ -1297,6 +1298,14 @@ class E84Client(AsyncSerialPort):
             return True
         return False
 
+    async def send_CHANNEL_command(self, channel: int = 0) -> bool:
+            """發送 CHANNEL 命令"""
+            response = await self._send_e84_command(E84Command.CHANNEL, channel)
+            if response:
+                self.logger.info("------------------ CHANNEL 命令已發送")
+                return True
+            return False
+    
     async def send_CONT_command(self, cont: int = 0) -> bool:
         """發送 CONT 命令"""
         response = await self._send_e84_command(E84Command.CONTINUE, cont)
@@ -1835,6 +1844,18 @@ class E84Client(AsyncSerialPort):
         except Exception as e:
             self.logger.error(f"CS 流程異常: {e}", exc_info=True)
             return False
+
+    async def channel_async(self, channel: int = 0, timeout_per_step: float = 5.0) -> bool:
+            try:
+                self.logger.info("------------------ 發送 CHANNEL 命令")
+                if not await self.send_CHANNEL_command(channel = channel):
+                    self.logger.error("------------------ CHANNEL 命令失敗")
+                    return False
+                await asyncio.sleep(0.2)
+                
+            except Exception as e:
+                self.logger.error(f"CHANNEL 流程異常: {e}", exc_info=True)
+                return False
 
     async def cobot_load_async(self, timeout_per_step: float = 5.0) -> bool:
         try:

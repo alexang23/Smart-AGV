@@ -998,6 +998,10 @@ class E84(threading.Thread):
                 # asyncio.run(self.open_RF_channel())
                 # await self.open_RF_channel()
                 self._run_coro(self.open_RF_channel())
+            elif cmd.find('channel') >= 0:
+                print('run_cmd : channel')
+                channel = int(cmd.split()[1])
+                self._run_coro(self.channel_async(channel))
             # elif cmd == 'close_RF_channel':
             #     print('run_cmd : close_RF_channel')
             elif cmd == 'continue':
@@ -1115,6 +1119,28 @@ class E84(threading.Thread):
         finally:
             if self.e84._state.value == "connected":
                 await self.e84.disconnect_async()
+
+    async def channel_async(self, channel: int = 0):
+        if self.e84 == None:
+            return False
+        self.e84.rf_channel_opened_success = False
+        if self.e84._state.value != "connected":
+            connected = False
+            for attempt in range(1, 4):
+                self.logger.info(f"open_RF_channel connect attempt {attempt}/3")
+                await self.e84.connect_async()
+                if self.e84._state.value == "connected":
+                    connected = True
+                    break
+                if attempt < 3:
+                    await asyncio.sleep(1)
+            if not connected:
+                print("❌ 連線失敗，可能原因：")
+                print("   1. 串口不存在或已被占用")
+                print("   2. 串口權限不足")
+                print("   3. 波特率不正確")
+                return False
+        success = await self.e84.channel_async(channel)
 
     async def cs_async(self, cs: int = 0):
         if self.e84 == None:
