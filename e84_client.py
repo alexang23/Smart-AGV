@@ -638,9 +638,7 @@ class E84Client(AsyncSerialPort):
             self.send_event(
                 type=0, stream=-1, function=-1,
                 code=message.command, subcode=message.data,
-                msg_text=f"E84 recv 0x{message.command:04X}",
-                direction='recv', command=message.command, param=message.data,
-                raw=message.raw_bytes.hex().upper()
+                msg_text=f"E84 recv 0x{message.command:04X}"
             )
 
         # 處理事件訊息 (70/71/80 系列)
@@ -697,9 +695,7 @@ class E84Client(AsyncSerialPort):
         self.send_event(
             type=0, stream=-1, function=-1, code=0x70, subcode=code,
             msg_text=f"{signal_name} {'ON' if state else 'OFF'}",
-            signal_name=signal_name, alarm_type='',
-            direction='recv', command=message.command, param=message.data,
-            raw=message.raw_bytes.hex().upper(), with_status=True
+            with_status=True
         )
         
         # 1. Callback 立即執行
@@ -762,9 +758,7 @@ class E84Client(AsyncSerialPort):
         self.send_event(
             type=0, stream=-1, function=-1, code=0x71, subcode=code,
             msg_text=description,
-            signal_name="STATE", alarm_type='',
-            direction='recv', command=message.command, param=message.data,
-            raw=message.raw_bytes.hex().upper(), with_status=True
+            with_status=True
         )
         
         # 1. Callback 立即執行
@@ -827,9 +821,7 @@ class E84Client(AsyncSerialPort):
         self.send_event(
             type=0, stream=-1, function=-1, code=0x80, subcode=alarm_code,
             msg_text=description,
-            signal_name="ALARM", alarm_type=alarm_type,
-            direction='recv', command=message.command, param=message.data,
-            raw=message.raw_bytes.hex().upper(), with_status=True
+            with_status=True
         )
         
         # 1. Callback 立即執行
@@ -927,13 +919,11 @@ class E84Client(AsyncSerialPort):
 
     # 合併 GYRO-300 e84.py send_event()/send_event2()
     def send_event(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
-                   msg_text=None, direction='', command=None, param=None, raw='',
-                   signal_name=None, alarm_type=None, with_status=False):
+                   msg_text=None, with_status=False):
         """
         E84 事件通知，發佈至 MQTT topic 'Active-E84'
 
         參數說明：
-        - signal_name / alarm_type：None 時不加入 payload（單一訊息通知用）；
         - with_status=True：附加目前訊號狀態快照（70/71/80 系列事件用）
         """
         try:
@@ -951,14 +941,6 @@ class E84Client(AsyncSerialPort):
             data['code_id'] = code
             data['sub_id'] = subcode
             data['msg_text'] = msg_text
-            if signal_name is not None:
-                data['signal_name'] = signal_name
-            if alarm_type is not None:
-                data['alarm_type'] = alarm_type
-            data['direction'] = direction
-            data['command'] = command
-            data['param'] = param
-            data['raw'] = raw
             if with_status:
                 data['status'] = json.dumps(self._current_signals)
             data['occurred_at'] = time.time()
@@ -997,9 +979,7 @@ class E84Client(AsyncSerialPort):
         self.send_event(
             type=0, stream=-1, function=-1,
             code=command, subcode=param,
-            msg_text=f"E84 send 0x{command:04X}",
-            direction='send', command=command, param=param,
-            raw=message.hex().upper()
+            msg_text=f"E84 send 0x{command:04X}"
         )
         
         try:
