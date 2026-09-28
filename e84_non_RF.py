@@ -341,6 +341,7 @@ class E84(threading.Thread):
         self.lastTime = time.time()
         self.count = 0
         self.e84 = None
+        self._polling = False
         self.logger = Logger("e84_{}".format(port_id), "e84_{}.log".format(port_id))
 
         self.rfid = rfid
@@ -570,6 +571,11 @@ class E84(threading.Thread):
             if not message:
                 return
 
+            # 依秒輪詢的讀值回應（0010/0011/0012）不由 e84_message 重複發佈，
+            # 變更事件由 response loop 的 0010/0011/0012 handlers 發佈
+            if message.command in (0x0010, 0x0011, 0x0012):
+                return
+
             if message.command == 0x70:
                 # 70 系列感測器事件
                 code = message.data_low
@@ -771,17 +777,27 @@ class E84(threading.Thread):
         self.event_mgr.on_notify(data)
 
     def e84_cmd(self, data):
-        # SmartIO-AGV comment out
-        return
-
+        """發送 E84 命令 frame（fire-and-forget，經由 E84Client async serial）"""
         if self.e84 == None:
             return
-            
-        data = list(data)
-        data.append(sum(data)%256)
-        # self.e84_queue.append(struct.pack('>BBBBBBB', *data))
-        # #e84.write(struct.pack('>BBBBBBB', *data))
-        self.e84.write(struct.pack('>BBBBBBB', *data))
+
+        self._run_coro(self.e84_cmd_async(bytes(data)))
+
+    async def e84_cmd_async(self, frame: bytes):
+        if self.e84 == None:
+            return
+
+        if self.e84._state.value != "connected":
+            self.logger.info(f"e84_cmd skipped: {self.port_id[0]} not connected")
+            return
+
+        try:
+            cmd = bytearray(frame)
+            cmd.append(sum(cmd) % 256)
+            command_id = f"E84_CMD_{time.time_ns():019d}"
+            await self.e84.send_command_async(command_id=command_id, data=bytes(cmd), expect_response=False)
+        except Exception as err:
+            self.logger.error(f"e84_cmd failed: {err}\n{traceback.format_exc()}")
 
     def run_cmd2(self, cs, cmd, data):
         
@@ -950,26 +966,45 @@ class E84(threading.Thread):
             self.logger.info(str(err))
     
     def update_state(self):
-        
+
         if not self.enable:
             return
 
-        self.e84_cmd(last_error)
+        self._run_coro(self.update_state_async())
+
+    async def update_state_async(self):
+        """每秒輪詢 E84 IO 暫存器（0010 OUT / 0011 IN / 0012 SMG）"""
+        if self.e84 == None:
+            return
+        if self._polling:
+            return
+        self._polling = True
+        try:
+            if not await self._ensure_e84_connected("update_state", attempts=1):
+                return
+
+            await self.e84_cmd_async(bytes(e84_out))
+            await asyncio.sleep(0.15)
+            await self.e84_cmd_async(bytes(e84_in))
+            await asyncio.sleep(0.15)
+            await self.e84_cmd_async(bytes(e84_smg))
+            await asyncio.sleep(0.15)
+
+        except Exception as err:
+            self.logger.error(f"update_state failed: {err}\n{traceback.format_exc()}")
+        finally:
+            self._polling = False
+
+        # self.e84_cmd(last_error)  # 0x0049
         # self.e84_cmd(link) # don't get any response
         # self.e84_cmd(test2)
-
-        # self.e84_cmd(version)   # check e84 is connecting
-        self.e84_cmd(e84_out) 
-        self.e84_cmd(e84_in)
-        self.e84_cmd(e84_smg)
-        self.e84_cmd(pspl)
-        self.e84_cmd(mode_state)
-        self.e84_cmd(sensor_elce)
-        self.e84_cmd(test3)
-        self.e84_cmd(test4)
-        self.e84_cmd(test5)
+        # self.e84_cmd(pspl)
+        # self.e84_cmd(mode_state)
+        # self.e84_cmd(sensor_elce)
+        # self.e84_cmd(test3)
+        # self.e84_cmd(test4)
+        # self.e84_cmd(test5)
         # self.e84_cmd(link_reset)
-
         # self.e84_cmd(sensor_use)
         # self.e84_cmd(sensor_set)
         # self.e84_cmd(mode)
@@ -1338,7 +1373,7 @@ class E84(threading.Thread):
 
         try:
             # schedule.every(10).seconds.do(self.check_connection)
-            # schedule.every(1).seconds.do(self.update_state)
+            schedule.every(1).seconds.do(self.update_state)
             # if self.rfid:
             #     schedule.every(1).seconds.do(self.update_rfid_data)
             if settings.CLAMP_TEST:
@@ -1505,7 +1540,7 @@ class E84(threading.Thread):
                 #         self.daily_reconnect = True
 
                 # if len(self.e84_queue) < 1:
-                #     schedule.run_pending()
+                schedule.run_pending()
 
                 # e84 write
                 # if len(self.e84_queue) > 0:
@@ -1912,6 +1947,47 @@ class E84(threading.Thread):
                         
                     continue
 
+                elif cmd == '0010':
+                    data2 = int(data[2:4], 16)
+                    self.led['l_req'] = 1 if data2&0x01 else 0
+                    self.led['u_req'] = 1 if data2&0x02 else 0
+                    self.led['va'] = 1 if data2&0x04 else 0
+                    self.led['ready'] = 1 if data2&0x08 else 0
+                    self.led['vs_0'] = 1 if data2&0x10 else 0
+                    self.led['vs_1'] = 1 if data2&0x20 else 0
+                    self.led['ho_avbl'] = 1 if data2&0x40 else 0
+                    self.led['es'] = 1 if data2&0x80 else 0
+                    if self.e84_out != data2:
+                        self.e84_out = data2
+                        msg = cmd + ':' + data[2:4] + f"   OUT : ES: {self.led['es']}  HO_AVBL: {self.led['ho_avbl']}  VS_1: {self.led['vs_1']}  VS_0: {self.led['vs_0']}  READY: {self.led['ready']}  VA: {self.led['va']}  U_REQ: {self.led['u_req']}  L_REQ: {self.led['l_req']} "
+                        self.send_event(True, int(cmd, 16), data2, msg)
+                    continue
+                elif cmd == '0011':
+                    data2 = int(data[2:4], 16)
+                    self.led['valid'] = 1 if data2&0x01 else 0
+                    self.led['cs_0'] = 1 if data2&0x02 else 0
+                    self.led['cs_1'] = 1 if data2&0x04 else 0
+                    self.led['am_avbl'] = 1 if data2&0x08 else 0
+                    self.led['tr_req'] = 1 if data2&0x10 else 0
+                    self.led['busy'] = 1 if data2&0x20 else 0
+                    self.led['compt'] = 1 if data2&0x40 else 0
+                    self.led['cont'] = 1 if data2&0x80 else 0
+                    if self.e84_in != data2:
+                        self.e84_in = data2
+                        msg = cmd + ':' + data[2:4] + f"   IN : CONT: {self.led['cont']}  COMPT: {self.led['compt']}  BUSY: {self.led['busy']}  TR_REQ: {self.led['tr_req']}  AM_AVBL: {self.led['am_avbl']}  CS_1: {self.led['cs_1']}  CS_0: {self.led['cs_0']}  VALID: {self.led['valid']} "
+                        self.send_event(True, int(cmd, 16), data2, msg)
+                    continue
+                elif cmd == '0012':
+                    data2 = int(data[2:4], 16)
+                    self.gpio1['go'] = 1 if data2&0x01 else 0
+                    self.gpio1['mode'] = 1 if data2&0x02 else 0
+                    self.gpio1['select'] = 1 if data2&0x04 else 0
+                    if self.e84_smg != data2:
+                        self.e84_smg = data2
+                        msg = cmd + ':' + data[2:4] + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']} "
+                        self.send_event(True, int(cmd, 16), data2, msg)
+                    continue
+
                 elif cmd == '0030':
                     self.logger.info(f"{self.port_id[m]} : cmd={cmd}, data={data}")
 
@@ -1972,61 +2048,7 @@ class E84(threading.Thread):
                     # elif cmd == '001c':
                     #     msg = cmd + ':' + data + ' IO Action for Relay Output'
 
-                    # elif cmd == '0010':
-                    #     data2 = int(data[2:4], 16)
-                    #     self.led['l_req'] = 1 if data2&0x01 else 0
-                    #     self.led['u_req'] = 1 if data2&0x02 else 0
-                    #     self.led['va'] = 1 if data2&0x04 else 0
-                    #     self.led['ready'] = 1 if data2&0x08 else 0
-                    #     self.led['vs_0'] = 1 if data2&0x10 else 0
-                    #     self.led['vs_1'] = 1 if data2&0x20 else 0
-                    #     self.led['ho_avbl'] = 1 if data2&0x40 else 0
-                    #     self.led['es'] = 1 if data2&0x80 else 0
-                    #     if self.e84_out != data2:
-                    #         self.e84_out = data2
-                    #         msg = cmd + ':' + data[2:4] + f"   OUT : ES: {self.led['es']}  HO_AVBL: {self.led['ho_avbl']}  VS_1: {self.led['vs_1']}  VS_0: {self.led['vs_0']}  READY: {self.led['ready']}  VA: {self.led['va']}  U_REQ: {self.led['u_req']}  L_REQ: {self.led['l_req']} "
-                    #         # self.logger.info(f"{self.port_id} {msg}")
-                    #         self.send_event(True, int(cmd, 16), data2, msg)
-                    #         # self.mqtt_publish(int(cmd, 16), data2, 'E84 output')
-                    #     # print('0010:', data[2:4], 'OUT : ES, HO_AVBL, VS_1, VS_0, READY, VA, U_REQ, L_REQ')
-                    #     # continue
-                    #     # msg = cmd + ':' + data[2:4] + f"   OUT : ES: {self.led['es']}  HO_AVBL: {self.led['ho_avbl']}  VS_1: {self.led['vs_1']}  VS_0: {self.led['vs_0']}  READY: {self.led['ready']}  VA: {self.led['va']}  U_REQ: {self.led['u_req']}  L_REQ: {self.led['l_req']} "
-                    #     continue
-                    # elif cmd == '0011':
-                    #     data2 = int(data[2:4], 16)
-                    #     self.led['valid'] = 1 if data2&0x01 else 0
-                    #     self.led['cs_0'] = 1 if data2&0x02 else 0
-                    #     self.led['cs_1'] = 1 if data2&0x04 else 0
-                    #     self.led['am_avbl'] = 1 if data2&0x08 else 0
-                    #     self.led['tr_req'] = 1 if data2&0x10 else 0
-                    #     self.led['busy'] = 1 if data2&0x20 else 0
-                    #     self.led['compt'] = 1 if data2&0x40 else 0
-                    #     self.led['cont'] = 1 if data2&0x80 else 0
-                    #     if self.e84_in != data2:
-                    #         self.e84_in = data2
-                    #         msg = cmd + ':' + data[2:4] + f"   IN : CONT: {self.led['cont']}  COMPT: {self.led['compt']}  BUSY: {self.led['busy']}  TR_REQ: {self.led['tr_req']}  AM_AVBL: {self.led['am_avbl']}  CS_1: {self.led['cs_1']}  CS_0: {self.led['cs_0']}  VALID: {self.led['valid']} "
-                    #         # self.logger.info(f"{self.port_id} {msg}")
-                    #         self.send_event(True, int(cmd, 16), data2, msg)
-                    #         # self.mqtt_publish(int(cmd, 16), data2, 'E84 input')
-                    #     # print('0011:', data[2:4], 'IN : CONT, COMPT, BUSY, TR_REQ, AM_AVBL, CS_1, CS_0, VALID')
-                    #     # continue
-                    #     # msg = cmd + ':' + data[2:4] + f"   IN : CONT: {self.led['cont']}  COMPT: {self.led['compt']}  BUSY: {self.led['busy']}  TR_REQ: {self.led['tr_req']}  AM_AVBL: {self.led['am_avbl']}  CS_1: {self.led['cs_1']}  CS_0: {self.led['cs_0']}  VALID: {self.led['valid']} "
-                    #     continue
-                    # elif cmd == '0012':
-                    #     data2 = int(data[2:4], 16)
-                    #     self.gpio1['go'] = 1 if data2&0x01 else 0
-                    #     self.gpio1['mode'] = 1 if data2&0x02 else 0
-                    #     self.gpio1['select'] = 1 if data2&0x04 else 0
-                    #     if self.e84_smg != data2:
-                    #         self.e84_smg = data2
-                    #         msg = cmd + ':' + data[2:4] + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']} "
-                    #         # self.logger.info(f"{self.port_id} {msg}")
-                    #         self.send_event(True, int(cmd, 16), data2, msg)
-                    #         # self.mqtt_publish(int(cmd, 16), data2, 'SELECT, MODE, GO')
-                    #     # print('0012:', data[2:4], 'SELECT, MODE, GO')
-                    #     # continue
-                    #     # msg = cmd + ':' + data[2:4] + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']} "
-                    #     continue
+
                 else:
                     for m in range(self.dual+1):
                         self.send_event(server=True, code=int(cmd, 16), subcode=int(data,16), msg_text='Unknown cmd', cs=m)
