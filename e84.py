@@ -273,7 +273,7 @@ class E84(threading.Thread):
 
     async def init_e84(self):
         try:
-            self.e84 = E84Client(self.devPath, f"COM{settings.E84_RF_SENSOR_COM}", baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=1000, glogger=self.logger, event_mgr=self.event_mgr, port_no=self.port_no[0], port_id=self.port_id[0])
+            self.e84 = E84Client(self.devPath, f"COM{settings.E84_RF_SENSOR_COM}", baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=1000, glogger=self.logger)
             await self.e84.connect_async()
 
             # self.handler_task = asyncio.create_task(self.complex_event_handler())

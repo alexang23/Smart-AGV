@@ -16,11 +16,15 @@ from global_log import Logger
 # from global_variables import ftp_alarmlist
 from global_variables import alarm_code
 import sys
+import json
 #from config import e84_errorCode
 from collections import OrderedDict
 import queue
 import asyncio
-from e84_client import E84Client
+from e84_client import E84Client, E84Protocol, E84Signal, E84StateEvent, E84AlarmEvent
+
+# 所有 E84CommandSeries 訊息對應的 MQTT topic
+MQTT_TOPIC_ACTIVE_E84 = 'Active-E84'
 
 #e84Path = '/dev/ttyS5'
 #e84Path = '/dev/ttyUSB0'
@@ -439,9 +443,9 @@ class E84(threading.Thread):
     async def init_e84(self):
         try:
             if settings.E84_RF_SENSOR_ENABLE:
-                self.e84 = E84Client(self.devPath, f"COM{settings.E84_RF_SENSOR_COM}", baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100, event_mgr=self.event_mgr, port_no=self.port_no[0], port_id=self.port_id[0])
+                self.e84 = E84Client(self.devPath, f"COM{settings.E84_RF_SENSOR_COM}", baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100, on_send_message_event=self.e84_send_message)
             else:
-                self.e84 = E84Client(self.devPath, baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100, event_mgr=self.event_mgr, port_no=self.port_no[0], port_id=self.port_id[0])
+                self.e84 = E84Client(self.devPath, baudrate=115200, on_message_event=self.e84_message, on_sensor_event=self.quick_monitor, on_alarm_event=self.on_alarm, event_queue_size=100, on_send_message_event=self.e84_send_message)
 
             await self.e84.connect_async()
 
@@ -458,6 +462,110 @@ class E84(threading.Thread):
             if self.e84._state.value == "connected":
                 await self.e84.disconnect_async()
 
+    def _notify_active_e84(self, data: 'OrderedDict') -> None:
+        """推送至 EventMgr（由 MQTTSvc 發佈到 MQTT topic 'Active-E84'）"""
+        try:
+            if self.event_mgr:
+                self.event_mgr.on_notify(data)
+        except Exception as err:
+            self.logger.error(f"Active-E84 notify 錯誤: {err}")
+
+    # do not support status compare with send_event
+    def send_event2(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
+                    msg_text=None, cs=0, direction='', command=None, param=None, raw=''):
+        """
+        單一 E84 訊息（任意 E84CommandSeries 系列）通知，無狀態快照
+        </br>參考 GYRO-300 e84.py send_event2()
+        </br>發佈至 MQTT topic 'Active-E84'
+        """
+        try:
+            data = OrderedDict()
+
+            if server:
+                data['Server'] = True
+
+            data['device_id'] = self.controller.device_id if self.controller else settings.DEVICE_ID
+            data['port_no'] = self.port_no[cs]
+            data['port_id'] = self.port_id[cs]
+            data['port_state'] = self.port_status[cs]
+            data['carrier_id'] = self.rfid_data[cs]
+            data['dual_port'] = cs
+            data['mode'] = self.mode[cs] # Access Mode 0: Unknown, 1: Auto, 2: Manual
+            data['load'] = self.load[cs]  # 0071 status
+            data['alarm_id'] = self.alarm_id[cs]
+            data['alarm_text'] = self.alarm_text[cs]
+            data['type'] = type
+            data['stream'] = stream
+            data['function'] = function
+            data['code_id'] = code
+            data['sub_id'] = subcode
+            data['msg_text'] = msg_text
+            data['direction'] = direction
+            data['command'] = command
+            data['param'] = param
+            data['raw'] = raw
+            data['occurred_at'] = time.time()
+            data['sw_version'] = settings.SW_VERSION
+            data['topic'] = MQTT_TOPIC_ACTIVE_E84
+            self._notify_active_e84(data)
+        except Exception as err:
+            self.logger.error(f"Active-E84 send_event2 錯誤: {err}")
+
+    # support status
+    def send_event(self, server=False, code=0, subcode=-1, msg_text=None, cs=0,
+                   type=0, stream=-1, function=-1, signal_name='', alarm_type='',
+                   direction='', command=None, param=None, raw=''):
+        """
+        E84 事件（70/71/80 系列或狀態事件）通知，含狀態快照
+        </br>參考 GYRO-300 e84.py send_event()
+        </br>發佈至 MQTT topic 'Active-E84'
+        """
+        try:
+            status = OrderedDict()
+            status['P'] = self.pspl # PSPL
+            status['I'] = self.e84_in       # E84 Input
+            status['O'] = self.e84_out      # E84 output
+            status['G'] = self.e84_smg      # Select, Mode, GO
+            status['E'] = self.sensor_elce  # EQ_ER, Light, CLAMP, ES
+            e84_signals = getattr(self.e84, '_current_signals', None) if self.e84 else None
+            if e84_signals:
+                status['S'] = e84_signals   # E84 signal states (Active E84)
+
+            data = OrderedDict()
+
+            if server:
+                data['Server'] = True
+
+            data['device_id'] = self.controller.device_id if self.controller else settings.DEVICE_ID
+            data['port_no'] = self.port_no[cs]
+            data['port_id'] = self.port_id[cs]
+            data['port_state'] = self.port_status[cs]
+            data['carrier_id'] = self.rfid_data[cs]
+            data['dual_port'] = cs
+            data['mode'] = self.mode[cs] # Access Mode 0: Unknown, 1: Auto, 2: Manual
+            data['load'] = self.load[cs]  # 0071 status
+            data['alarm_id'] = self.alarm_id[cs]
+            data['alarm_text'] = self.alarm_text[cs]
+            data['type'] = type
+            data['stream'] = stream
+            data['function'] = function
+            data['code_id'] = code
+            data['sub_id'] = subcode
+            data['msg_text'] = msg_text
+            data['signal_name'] = signal_name
+            data['alarm_type'] = alarm_type
+            data['direction'] = direction
+            data['command'] = command
+            data['param'] = param
+            data['raw'] = raw
+            data['status'] = json.dumps(status)
+            data['occurred_at'] = time.time()
+            data['sw_version'] = settings.SW_VERSION
+            data['topic'] = MQTT_TOPIC_ACTIVE_E84
+            self._notify_active_e84(data)
+        except Exception as err:
+            self.logger.error(f"Active-E84 send_event 錯誤: {err}")
+
     # Callback for E84 message
     def e84_message(self, data: str):
         # 20260127 SmartIO-AGV
@@ -466,6 +574,80 @@ class E84(threading.Thread):
             self.incoming_queue.put_nowait(data)
         except queue.Full:
             self.logger.info(f"{self.port_id} {self.port} serial port incoming queue full, dropping valid frame: {data.hex()}")
+
+        # 所有已接收的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'
+        try:
+            message = E84Protocol.parse_message(data)
+            if not message:
+                return
+
+            if message.command == 0x70:
+                # 70 系列感測器事件
+                code = message.data_low
+                signal_name = E84Signal.get_signal_name(code)
+                state = E84Signal.is_signal_on(code)
+                self.send_event(
+                    type=0, stream=-1, function=-1, code=0x70, subcode=code,
+                    msg_text=f"{signal_name} {'ON' if state else 'OFF'}",
+                    signal_name=signal_name,
+                    direction='recv', command=message.command, param=message.data,
+                    raw=message.raw_bytes.hex().upper()
+                )
+            elif message.command == 0x71:
+                # 71 系列狀態事件
+                code = message.data
+                description = E84StateEvent.get_description(code)
+                self.send_event(
+                    type=0, stream=-1, function=-1, code=0x71, subcode=code,
+                    msg_text=description,
+                    signal_name="STATE",
+                    direction='recv', command=message.command, param=message.data,
+                    raw=message.raw_bytes.hex().upper()
+                )
+            elif message.command == 0x80:
+                # 0x0080 系列警報事件
+                alarm_code = message.data
+                alarm_type = E84AlarmEvent.get_alarm_type(alarm_code)
+                description = E84AlarmEvent.get_description(alarm_code)
+                self.send_event(
+                    type=0, stream=-1, function=-1, code=0x80, subcode=alarm_code,
+                    msg_text=description,
+                    signal_name="ALARM", alarm_type=alarm_type,
+                    direction='recv', command=message.command, param=message.data,
+                    raw=message.raw_bytes.hex().upper()
+                )
+            else:
+                self.send_event2(
+                    type=0, stream=-1, function=-1,
+                    code=message.command, subcode=message.data,
+                    msg_text=f"E84 recv 0x{message.command:04X}",
+                    direction='recv', command=message.command, param=message.data,
+                    raw=message.raw_bytes.hex().upper()
+                )
+        except Exception as err:
+            self.logger.error(f"Active-E84 e84_message 錯誤: {err}")
+
+    def e84_send_message(self, data: bytes):
+        """Callback for E84 sent message（所有已發送的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'）"""
+        try:
+            message = E84Protocol.parse_message(data)
+            if not message:
+                self.send_event2(
+                    type=0, stream=-1, function=-1,
+                    msg_text=f"E84 send raw {data.hex().upper()}",
+                    direction='send', raw=data.hex().upper()
+                )
+                return
+
+            self.send_event2(
+                type=0, stream=-1, function=-1,
+                code=message.command, subcode=message.data,
+                msg_text=f"E84 send 0x{message.command:04X}",
+                direction='send', command=message.command, param=message.data,
+                raw=message.raw_bytes.hex().upper()
+            )
+        except Exception as err:
+            self.logger.error(f"Active-E84 e84_send_message 錯誤: {err}")
 
     def read(self, block=True, timeout=None):
         """Read a line from incoming queue."""
@@ -598,87 +780,6 @@ class E84(threading.Thread):
             data['version'] = f"{self.fw_version}"
             self.event_mgr.on_notify(data)
             
-        except Exception as err:
-            self.logger.info(str(err))
-
-    def send_event2(self, server=False, stream=-1, function=-1, code=-1, subcode=-1, msg_text=None, cs=0):
-        try:
-            data = OrderedDict()
-            
-            if server:
-                data['Server'] = True
-                
-            data['device_id'] = self.controller.device_id
-            data['port_no'] = self.port_no[cs]
-            data['port_id'] = self.port_id[cs]
-            data['port_state'] = self.port_status[cs]
-            data['carrier_id'] = self.rfid_data[cs]
-            data['dual_port'] = cs
-            data['mode'] = self.mode[cs] # Access Mode 0: Unknown, 1: Auto, 2: Manual
-            data['load'] = self.load[cs]  # 0071 status
-            data['alarm_id'] = self.alarm_id[cs]
-            data['alarm_text'] = self.alarm_text[cs]
-            data['type'] = 0
-            data['stream'] = stream
-            data['function'] = function
-            data['code_id'] = code
-            data['sub_id'] = subcode
-            data['msg_text'] = msg_text
-            data['status'] = ''
-            data['occurred_at'] = time.time()
-            data['version'] = f"{self.fw_version}"
-            self.event_mgr.on_notify(data)
-        except Exception as err:
-            self.logger.info(str(err))
-
-    def send_event(self, server=False, code=0, subcode=-1, msg_text=None, cs=0):
-        try:
-            # self.rfid_type = 0
-            # self.rfid_port = 0
-            # self.rfid_dual = 0
-            # self.rfid_page = 1
-            # self.rfid_data = None
-            
-            # rfid = {}
-            # if not (self.rfid == None):
-            #     rfid['T'] = self.rfid.type
-            #     rfid['G'] = self.rfid.page_num
-            # rfid['P'] = self.port_no
-            # rfid['V'] = self.rfid_data
-            # status['R'] = json.dumps(rfid) # RFID
-            
-            status = OrderedDict()
-            status['P'] = self.pspl # PSPL
-            status['I'] = self.e84_in       # E84 Input
-            status['O'] = self.e84_out      # E84 output
-            status['G'] = self.e84_smg      # Select, Mode, GO
-            status['E'] = self.sensor_elce  # EQ_ER, Light, CLAMP, ES
-
-            data = OrderedDict()
-
-            if server:
-                data['Server'] = True
-            data['device_id'] = self.controller.device_id
-            data['port_no'] = self.port_no[cs]
-            data['port_id'] = self.port_id[cs]
-            data['port_state'] = self.port_status[cs]
-            data['carrier_id'] = self.rfid_data[cs]
-            data['dual_port'] = cs
-            data['mode'] = self.mode[cs] # Access Mode 0: Unknown, 1: Auto, 2: Manual
-            data['load'] = self.load[cs]  # 0071 status
-            data['alarm_id'] = self.alarm_id[cs]
-            data['alarm_text'] = self.alarm_text[cs]
-            data['type'] = 0
-            data['stream'] = -1
-            data['function'] = -1
-            data['code_id'] = code
-            data['sub_id'] = subcode
-            data['msg_text'] = msg_text
-            data['status'] = json.dumps(status)
-            data['occurred_at'] = time.time()
-            data['version'] = f"{self.fw_version}"
-            self.event_mgr.on_notify(data)
-
         except Exception as err:
             self.logger.info(str(err))
 
