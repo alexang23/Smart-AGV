@@ -342,6 +342,8 @@ class E84(threading.Thread):
         self.count = 0
         self.e84 = None
         self._polling = False
+        self._serial_loop = None
+        self._serial_thread = None
         self.logger = Logger("e84_{}".format(port_id), "e84_{}.log".format(port_id))
 
         self.rfid = rfid
@@ -619,6 +621,11 @@ class E84(threading.Thread):
                     type=0, stream=-1, function=-1,
                     msg_text=f"E84 send raw {data.hex().upper()}"
                 )
+                return
+
+            # 依秒輪詢的讀值命令（0010/0011/0012）不重複發佈 TX 通知，
+            # 變更事件由 response loop 的 0010/0011/0012 handlers 發佈
+            if message.command in (0x0010, 0x0011, 0x0012):
                 return
 
             self.send_event2(
@@ -983,12 +990,11 @@ class E84(threading.Thread):
             if not await self._ensure_e84_connected("update_state", attempts=1):
                 return
 
-            await self.e84_cmd_async(bytes(e84_out))
-            await asyncio.sleep(0.15)
-            await self.e84_cmd_async(bytes(e84_in))
-            await asyncio.sleep(0.15)
-            await self.e84_cmd_async(bytes(e84_smg))
-            await asyncio.sleep(0.15)
+            # matched-response sends: parser correlates 'E84_0010'/'0011'/'0012'
+            # and the wrapper response handlers publish change events
+            await self.e84._send_e84_command(0x0010, 0x0000, timeout=1.0)
+            await self.e84._send_e84_command(0x0011, 0x0000, timeout=1.0)
+            await self.e84._send_e84_command(0x0012, 0x0000, timeout=1.0)
 
         except Exception as err:
             self.logger.error(f"update_state failed: {err}\n{traceback.format_exc()}")
@@ -1139,41 +1145,24 @@ class E84(threading.Thread):
             self.logger.error(str(err))
 
     def _run_coro(self, coro):
-        """Run coro safely: schedule as task when a loop is running, otherwise run to completion."""
+        """Submit a coroutine to the wrapper's persistent E84 serial event loop.
+
+        The AsyncSerialPort transports (serial_asyncio) must be created, used and
+        closed on the same event loop. A per-call asyncio.run() closes the loop
+        while the connection stays open, which crashes the next writer with
+        'Event loop is closed'. A single persistent loop keeps the connection
+        valid across poll cycles and on-demand flows.
+        """
         try:
-            # 20260127 SmartIO-AGV
-            # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Before get_running_loop")
-            loop = asyncio.get_running_loop()
-            # 20260127 SmartIO-AGV
-            # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ After get_running_loop succeeded")
-        except RuntimeError:
-            loop = None
-            # 20260127 SmartIO-AGV
-            # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ loop is None")
-        
-        if loop and loop.is_running():
-            # 20260127 SmartIO-AGV
-            # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Before create_task")
-            try:
-                loop.create_task(coro)
-                # 20260127 SmartIO-AGV
-                # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ After create_task succeeded")
-            except Exception as err:
-                # fallback: try thread-safe submission, or as last resort run in new loop
-                # 20260127 SmartIO-AGV
-                # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ create_task failed, falling back:", err)
-                try:
-                    asyncio.run_coroutine_threadsafe(coro, loop)
-                except Exception:
-                    # 20260127 SmartIO-AGV
-                    # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ create_task failed again, falling back to new loop")
-                    asyncio.run(coro)
-        else:
-            # 20260127 SmartIO-AGV
-            # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Before use asyncio.run")
-            asyncio.run(coro)
-            # 20260127 SmartIO-AGV
-            # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ After use asyncio.run succeeded")
+            if self._serial_loop is None or not self._serial_loop.is_running():
+                self._serial_loop = asyncio.new_event_loop()
+                self._serial_thread = threading.Thread(
+                    target=self._serial_loop.run_forever, name='e84_serial_loop', daemon=True)
+                self._serial_thread.start()
+                self.logger.info('e84 serial loop started')
+            return asyncio.run_coroutine_threadsafe(coro, self._serial_loop)
+        except Exception as err:
+            self.logger.error(f"_run_coro failed: {err}\n{traceback.format_exc()}")
 
     async def _task_runner(self, coro_func, name, *args, **kwargs):
         """Run coro_func in a loop and restart it if it raises (logs traceback)."""
