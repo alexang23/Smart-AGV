@@ -472,7 +472,7 @@ class E84(threading.Thread):
 
     # do not support status compare with send_event
     def send_event2(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
-                    msg_text=None, cs=0, direction='', command=None, param=None, raw=''):
+                    msg_text=None, cs=0):
         """
         單一 E84 訊息（任意 E84CommandSeries 系列）通知，無狀態快照
         </br>參考 GYRO-300 e84.py send_event2()
@@ -500,10 +500,6 @@ class E84(threading.Thread):
             data['code_id'] = code
             data['sub_id'] = subcode
             data['msg_text'] = msg_text
-            data['direction'] = direction
-            data['command'] = command
-            data['param'] = param
-            data['raw'] = raw
             data['occurred_at'] = time.time()
             data['sw_version'] = settings.SW_VERSION
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
@@ -513,8 +509,7 @@ class E84(threading.Thread):
 
     # support status
     def send_event(self, server=False, code=0, subcode=-1, msg_text=None, cs=0,
-                   type=0, stream=-1, function=-1, signal_name='', alarm_type='',
-                   direction='', command=None, param=None, raw=''):
+                   type=0, stream=-1, function=-1):
         """
         E84 事件（70/71/80 系列或狀態事件）通知，含狀態快照
         </br>參考 GYRO-300 e84.py send_event()
@@ -552,12 +547,6 @@ class E84(threading.Thread):
             data['code_id'] = code
             data['sub_id'] = subcode
             data['msg_text'] = msg_text
-            data['signal_name'] = signal_name
-            data['alarm_type'] = alarm_type
-            data['direction'] = direction
-            data['command'] = command
-            data['param'] = param
-            data['raw'] = raw
             data['status'] = json.dumps(status)
             data['occurred_at'] = time.time()
             data['sw_version'] = settings.SW_VERSION
@@ -588,10 +577,7 @@ class E84(threading.Thread):
                 state = E84Signal.is_signal_on(code)
                 self.send_event(
                     type=0, stream=-1, function=-1, code=0x70, subcode=code,
-                    msg_text=f"{signal_name} {'ON' if state else 'OFF'}",
-                    signal_name=signal_name,
-                    direction='recv', command=message.command, param=message.data,
-                    raw=message.raw_bytes.hex().upper()
+                    msg_text=f"{signal_name} {'ON' if state else 'OFF'}"
                 )
             elif message.command == 0x71:
                 # 71 系列狀態事件
@@ -599,30 +585,21 @@ class E84(threading.Thread):
                 description = E84StateEvent.get_description(code)
                 self.send_event(
                     type=0, stream=-1, function=-1, code=0x71, subcode=code,
-                    msg_text=description,
-                    signal_name="STATE",
-                    direction='recv', command=message.command, param=message.data,
-                    raw=message.raw_bytes.hex().upper()
+                    msg_text=description
                 )
             elif message.command == 0x80:
                 # 0x0080 系列警報事件
                 alarm_code = message.data
-                alarm_type = E84AlarmEvent.get_alarm_type(alarm_code)
                 description = E84AlarmEvent.get_description(alarm_code)
                 self.send_event(
                     type=0, stream=-1, function=-1, code=0x80, subcode=alarm_code,
-                    msg_text=description,
-                    signal_name="ALARM", alarm_type=alarm_type,
-                    direction='recv', command=message.command, param=message.data,
-                    raw=message.raw_bytes.hex().upper()
+                    msg_text=description
                 )
             else:
                 self.send_event2(
                     type=0, stream=-1, function=-1,
                     code=message.command, subcode=message.data,
-                    msg_text=f"E84 recv 0x{message.command:04X}",
-                    direction='recv', command=message.command, param=message.data,
-                    raw=message.raw_bytes.hex().upper()
+                    msg_text=f"E84 recv 0x{message.command:04X}"
                 )
         except Exception as err:
             self.logger.error(f"Active-E84 e84_message 錯誤: {err}")
@@ -634,17 +611,14 @@ class E84(threading.Thread):
             if not message:
                 self.send_event2(
                     type=0, stream=-1, function=-1,
-                    msg_text=f"E84 send raw {data.hex().upper()}",
-                    direction='send', raw=data.hex().upper()
+                    msg_text=f"E84 send raw {data.hex().upper()}"
                 )
                 return
 
             self.send_event2(
                 type=0, stream=-1, function=-1,
                 code=message.command, subcode=message.data,
-                msg_text=f"E84 send 0x{message.command:04X}",
-                direction='send', command=message.command, param=message.data,
-                raw=message.raw_bytes.hex().upper()
+                msg_text=f"E84 send 0x{message.command:04X}"
             )
         except Exception as err:
             self.logger.error(f"Active-E84 e84_send_message 錯誤: {err}")
