@@ -188,7 +188,7 @@ class E84StateEvent:
     UNLOAD_COMPLETE = 0x1003  # 設備已取貨
     
     STATE_DESCRIPTIONS = {
-        0x01: "設備 Auto Online",
+        0x01: "Device Auto Online",
         0x02: "可伸出手臂放貨",
         0x03: "設備已接收貨（手臂回收的時機）",
         0x04: "E84 Handoff Complete",
