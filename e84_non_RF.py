@@ -972,6 +972,46 @@ class E84(threading.Thread):
         except Exception as err:
             self.logger.info(str(err))
     
+    def process_e84_out(self, cmd: str, data2: int):
+        """0010 OUT 訊號處理：更新 LED 狀態並在變更時發佈事件"""
+        self.led['l_req'] = 1 if data2&0x01 else 0
+        self.led['u_req'] = 1 if data2&0x02 else 0
+        self.led['va'] = 1 if data2&0x04 else 0
+        self.led['ready'] = 1 if data2&0x08 else 0
+        self.led['vs_0'] = 1 if data2&0x10 else 0
+        self.led['vs_1'] = 1 if data2&0x20 else 0
+        self.led['ho_avbl'] = 1 if data2&0x40 else 0
+        self.led['es'] = 1 if data2&0x80 else 0
+        if self.e84_out != data2:
+            self.e84_out = data2
+            msg = cmd + ':' + f"{data2:02x}" + f"   OUT : ES: {self.led['es']}  HO_AVBL: {self.led['ho_avbl']}  VS_1: {self.led['vs_1']}  VS_0: {self.led['vs_0']}  READY: {self.led['ready']}  VA: {self.led['va']}  U_REQ: {self.led['u_req']}  L_REQ: {self.led['l_req']} "
+            self.send_event(True, int(cmd, 16), data2, msg)
+
+    def process_e84_in(self, cmd: str, data2: int):
+        """0011 IN 訊號處理：更新 LED 狀態並在變更時發佈事件"""
+        self.led['valid'] = 1 if data2&0x01 else 0
+        self.led['cs_0'] = 1 if data2&0x02 else 0
+        self.led['cs_1'] = 1 if data2&0x04 else 0
+        self.led['am_avbl'] = 1 if data2&0x08 else 0
+        self.led['tr_req'] = 1 if data2&0x10 else 0
+        self.led['busy'] = 1 if data2&0x20 else 0
+        self.led['compt'] = 1 if data2&0x40 else 0
+        self.led['cont'] = 1 if data2&0x80 else 0
+        if self.e84_in != data2:
+            self.e84_in = data2
+            msg = cmd + ':' + f"{data2:02x}" + f"   IN : CONT: {self.led['cont']}  COMPT: {self.led['compt']}  BUSY: {self.led['busy']}  TR_REQ: {self.led['tr_req']}  AM_AVBL: {self.led['am_avbl']}  CS_1: {self.led['cs_1']}  CS_0: {self.led['cs_0']}  VALID: {self.led['valid']} "
+            self.send_event(True, int(cmd, 16), data2, msg)
+
+    def process_e84_smg(self, cmd: str, data2: int):
+        """0012 SMG (Select/Mode/GO) 處理：更新 GPIO 狀態並在變更時發佈事件"""
+        self.gpio1['go'] = 1 if data2&0x01 else 0
+        self.gpio1['mode'] = 1 if data2&0x02 else 0
+        self.gpio1['select'] = 1 if data2&0x04 else 0
+        if self.e84_smg != data2:
+            self.e84_smg = data2
+            msg = cmd + ':' + f"{data2:02x}" + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']} "
+            self.send_event(True, int(cmd, 16), data2, msg)
+
     def update_state(self):
 
         if not self.enable:
@@ -991,10 +1031,18 @@ class E84(threading.Thread):
                 return
 
             # matched-response sends: parser correlates 'E84_0010'/'0011'/'0012'
-            # and the wrapper response handlers publish change events
-            await self.e84._send_e84_command(0x0010, 0x0000, timeout=1.0)
-            await self.e84._send_e84_command(0x0011, 0x0000, timeout=1.0)
-            await self.e84._send_e84_command(0x0012, 0x0000, timeout=1.0)
+            # and the response handlers below update state and publish change events
+            response = await self.e84._send_e84_command(0x0010, 0x0000, timeout=1.0)
+            if response and response.command == 0x0010:
+                self.process_e84_out('0010', response.data_low)
+
+            response = await self.e84._send_e84_command(0x0011, 0x0000, timeout=1.0)
+            if response and response.command == 0x0011:
+                self.process_e84_in('0011', response.data_low)
+
+            response = await self.e84._send_e84_command(0x0012, 0x0000, timeout=1.0)
+            if response and response.command == 0x0012:
+                self.process_e84_smg('0012', response.data_low)
 
         except Exception as err:
             self.logger.error(f"update_state failed: {err}\n{traceback.format_exc()}")
@@ -1964,44 +2012,13 @@ class E84(threading.Thread):
                     continue
 
                 elif cmd == '0010':
-                    data2 = int(data[2:4], 16)
-                    self.led['l_req'] = 1 if data2&0x01 else 0
-                    self.led['u_req'] = 1 if data2&0x02 else 0
-                    self.led['va'] = 1 if data2&0x04 else 0
-                    self.led['ready'] = 1 if data2&0x08 else 0
-                    self.led['vs_0'] = 1 if data2&0x10 else 0
-                    self.led['vs_1'] = 1 if data2&0x20 else 0
-                    self.led['ho_avbl'] = 1 if data2&0x40 else 0
-                    self.led['es'] = 1 if data2&0x80 else 0
-                    if self.e84_out != data2:
-                        self.e84_out = data2
-                        msg = cmd + ':' + data[2:4] + f"   OUT : ES: {self.led['es']}  HO_AVBL: {self.led['ho_avbl']}  VS_1: {self.led['vs_1']}  VS_0: {self.led['vs_0']}  READY: {self.led['ready']}  VA: {self.led['va']}  U_REQ: {self.led['u_req']}  L_REQ: {self.led['l_req']} "
-                        self.send_event(True, int(cmd, 16), data2, msg)
+                    self.process_e84_out(cmd, int(data[2:4], 16))
                     continue
                 elif cmd == '0011':
-                    data2 = int(data[2:4], 16)
-                    self.led['valid'] = 1 if data2&0x01 else 0
-                    self.led['cs_0'] = 1 if data2&0x02 else 0
-                    self.led['cs_1'] = 1 if data2&0x04 else 0
-                    self.led['am_avbl'] = 1 if data2&0x08 else 0
-                    self.led['tr_req'] = 1 if data2&0x10 else 0
-                    self.led['busy'] = 1 if data2&0x20 else 0
-                    self.led['compt'] = 1 if data2&0x40 else 0
-                    self.led['cont'] = 1 if data2&0x80 else 0
-                    if self.e84_in != data2:
-                        self.e84_in = data2
-                        msg = cmd + ':' + data[2:4] + f"   IN : CONT: {self.led['cont']}  COMPT: {self.led['compt']}  BUSY: {self.led['busy']}  TR_REQ: {self.led['tr_req']}  AM_AVBL: {self.led['am_avbl']}  CS_1: {self.led['cs_1']}  CS_0: {self.led['cs_0']}  VALID: {self.led['valid']} "
-                        self.send_event(True, int(cmd, 16), data2, msg)
+                    self.process_e84_in(cmd, int(data[2:4], 16))
                     continue
                 elif cmd == '0012':
-                    data2 = int(data[2:4], 16)
-                    self.gpio1['go'] = 1 if data2&0x01 else 0
-                    self.gpio1['mode'] = 1 if data2&0x02 else 0
-                    self.gpio1['select'] = 1 if data2&0x04 else 0
-                    if self.e84_smg != data2:
-                        self.e84_smg = data2
-                        msg = cmd + ':' + data[2:4] + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']} "
-                        self.send_event(True, int(cmd, 16), data2, msg)
+                    self.process_e84_smg(cmd, int(data[2:4], 16))
                     continue
 
                 elif cmd == '0030':
