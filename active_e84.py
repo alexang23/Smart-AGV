@@ -191,16 +191,16 @@ class E84StateEvent:
     
     STATE_DESCRIPTIONS = {
         0x01: "Device Auto Online",
-        0x02: "可伸出手臂放貨",
-        0x03: "設備已接收貨（手臂回收的時機）",
-        0x1002: "可伸出手臂取貨",
-        0x1003: "設備已取貨（手臂回收的時機）",
+        0x02: "Ready to Load (arm can extend to place carrier)",
+        0x03: "Load Complete (carrier received; time to retract arm)",
+        0x1002: "Ready to Unload (arm can extend to pick carrier)",
+        0x1003: "Unload Complete (carrier picked; time to retract arm)",
     }
     
     @staticmethod
     def get_description(code: int) -> str:
         """取得狀態描述"""
-        return E84StateEvent.STATE_DESCRIPTIONS.get(code, f"未知狀態 0x{code:04X}")
+        return E84StateEvent.STATE_DESCRIPTIONS.get(code, f"Unknown state 0x{code:04X}")
 
 
 class E84AlarmEvent:
@@ -224,12 +224,12 @@ class E84AlarmEvent:
     
     # 警報描述對照表
     ALARM_DESCRIPTIONS = {
-        0x0000: "E84 Off-line（設備離線）",
+        0x0000: "E84 Off-line (device offline)",
         0x4000: "TA1 timeout",
         0x4001: "TA2 timeout",
         0x4002: "TA3 timeout",
         0x4003: "TA4 timeout",
-        0x4004: "Link timeout（連線超時）",
+        0x4004: "Link timeout (connection timeout)",
         0x5000: "TP3 timeout",
     }
     
@@ -266,7 +266,7 @@ class E84AlarmEvent:
         Returns:
             警報描述字串
         """
-        return E84AlarmEvent.ALARM_DESCRIPTIONS.get(code, f"未知警報 0x{code:04X}")
+        return E84AlarmEvent.ALARM_DESCRIPTIONS.get(code, f"Unknown alarm 0x{code:04X}")
 
 
 # ==================== E84 命令定義 ====================
@@ -370,7 +370,7 @@ class E84Protocol:
             E84Message 物件，解析失敗返回 None
         """
         if len(data) < 7:
-            logger.warning(f"訊息長度不足: {len(data)} bytes")
+            logger.warning(f"Message length insufficient: {len(data)} bytes")
             return None
         
         # 判斷訊息類型
@@ -397,7 +397,7 @@ class E84Protocol:
             checksum = data[7]
             
         else:
-            logger.warning(f"未知的訊息頭: {data[0]:02X} {data[1]:02X}")
+            logger.warning(f"Unknown message header: {data[0]:02X} {data[1]:02X}")
             return None
         
         # 驗證 checksum
@@ -407,7 +407,7 @@ class E84Protocol:
             expected_checksum = E84Protocol.calculate_checksum(data[0:7])
         
         if checksum != expected_checksum:
-            logger.warning(f"Checksum 錯誤: 期望 0x{expected_checksum:02X}, 收到 0x{checksum:02X}")
+            logger.warning(f"Checksum error: expected 0x{expected_checksum:02X}, got 0x{checksum:02X}")
             # 不返回 None，僅警告，因為有些設備可能 checksum 不正確
         
         return E84Message(
@@ -517,7 +517,7 @@ class ActiveE84(SyncSerialPort):
         self._current_signals: Dict[str, bool] = {}  # 當前訊號狀態
         self._last_message: Optional[E84Message] = None
         
-        logger.info(f"ActiveE84 初始化: {port} @ {baudrate}")
+        logger.info(f"ActiveE84 init: {port} @ {baudrate}")
     
     def _e84_response_parser(self, data: bytes) -> Tuple[Optional[str], bytes]:
         """
@@ -538,24 +538,24 @@ class ActiveE84(SyncSerialPort):
         """
         # FRAME 模式：data 已經是完整且驗證過的幀
         if len(data) < 8:
-            logger.warning(f"收到不完整的幀: {len(data)} bytes - {data.hex()}")
+            logger.warning(f"Received incomplete frame: {len(data)} bytes - {data.hex()}")
             return (None, b'')
         
         # 驗證 header（雙重檢查）
         if data[0:2] != E84Protocol.HEADER_READ:
-            logger.warning(f"收到非 READ 訊息頭: {data[0:2].hex()}")
+            logger.warning(f"Received non-READ message header: {data[0:2].hex()}")
             return (None, b'')
         
         # 解析 E84 訊息
         message = E84Protocol.parse_message(data)
         
         if not message:
-            logger.warning(f"無法解析 E84 訊息: {data.hex()}")
+            logger.warning(f"Failed to parse E84 message: {data.hex()}")
             return (None, b'')
         
         self._last_message = message
-        logger.debug(f"解析 E84 訊息: {message}")
-        logger.info(f"DEBUG: _e84_response_parser 解析 E84 訊息: {message}")
+        logger.debug(f"Parsed E84 message: {message}")
+        logger.info(f"DEBUG: _e84_response_parser parsed E84 message: {message}")
 
         # 所有已接收的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'
         # (70/71/80 系列由各事件處理函式另行 send_event 發佈)
@@ -607,7 +607,7 @@ class ActiveE84(SyncSerialPort):
             description=f"{signal_name} {'ON' if state else 'OFF'}"
         )
         
-        logger.debug(f"感測器事件: {signal_name} = {state}")
+        logger.debug(f"Sensor event: {signal_name} = {state}")
 
         # 70 系列訊號事件 → MQTT topic 'Active-E84'
         self.send_event(
@@ -623,14 +623,14 @@ class ActiveE84(SyncSerialPort):
             try:
                 self._on_sensor_event(signal_name, state)
             except Exception as e:
-                logger.error(f"感測器事件回調錯誤: {e}")
+                logger.error(f"Sensor event callback error: {e}")
         
         # 2. 放入事件佇列
         if self._event_queue:
             try:
                 self._event_queue.put(event, block=False)
             except queue.Full:
-                logger.warning("事件佇列已滿，丟棄舊事件")
+                logger.warning("Event queue full, dropping old event")
     
     def _handle_state_event(self, message: E84Message) -> None:
         """處理狀態事件 (71 系列)"""
@@ -648,7 +648,7 @@ class ActiveE84(SyncSerialPort):
             description=description
         )
         
-        logger.info(f"狀態事件: {description}")
+        logger.info(f"State event: {description}")
 
         # 71 系列狀態事件 → MQTT topic 'Active-E84'
         self.send_event(
@@ -662,18 +662,18 @@ class ActiveE84(SyncSerialPort):
         # 1. Callback 立即執行
         if self._on_state_event:
             try:
-                logger.info(f"狀態事件: _on_state_event {description}")
+                logger.info(f"State event: _on_state_event {description}")
                 self._on_state_event(code, description)
             except Exception as e:
-                logger.error(f"狀態事件回調錯誤: {e}")
+                logger.error(f"State event callback error: {e}")
         
         # 2. 放入事件佇列
         if self._event_queue:
             try:
-                logger.info(f"狀態事件: _event_queue {description}")
+                logger.info(f"State event: _event_queue {description}")
                 self._event_queue.put(event, block=False)
             except queue.Full:
-                logger.warning("事件佇列已滿，丟棄舊事件")
+                logger.warning("Event queue full, dropping old event")
     
     def _handle_alarm_event(self, message: E84Message) -> None:
         """處理警報事件 (80 系列)"""
@@ -693,7 +693,7 @@ class ActiveE84(SyncSerialPort):
             alarm_type=alarm_type
         )
         
-        logger.error(f"⚠️ E84 警報事件: {description} (類型: {alarm_type}, 代碼: 0x{alarm_code:04X})")
+        logger.error(f"⚠️ E84 alarm event: {description} (type: {alarm_type}, code: 0x{alarm_code:04X})")
 
         # 0x0080 系列警報事件 → MQTT topic 'Active-E84'
         self.send_event(
@@ -709,14 +709,14 @@ class ActiveE84(SyncSerialPort):
             try:
                 self._on_alarm_event(alarm_type, alarm_code, description)
             except Exception as e:
-                logger.error(f"警報事件回調錯誤: {e}")
+                logger.error(f"Alarm event callback error: {e}")
         
         # 2. 放入事件佇列
         if self._event_queue:
             try:
                 self._event_queue.put(event, block=False)
             except queue.Full:
-                logger.warning("事件佇列已滿，丟棄舊事件")
+                logger.warning("Event queue full, dropping old event")
     
     def get_event(self, timeout: Optional[float] = None) -> E84Event:
         """
@@ -733,7 +733,7 @@ class ActiveE84(SyncSerialPort):
             queue.Empty: 超時
         """
         if not self._event_queue:
-            raise RuntimeError("事件佇列未啟用，請在初始化時設定 event_queue_size")
+            raise RuntimeError("Event queue not enabled; set event_queue_size at init")
         
         return self._event_queue.get(timeout=timeout)
     
@@ -747,7 +747,7 @@ class ActiveE84(SyncSerialPort):
             if self.event_mgr:
                 self.event_mgr.on_notify(data)
         except Exception as err:
-            logger.error(f"Active-E84 notify 錯誤: {err}")
+            logger.error(f"Active-E84 notify error: {err}")
 
     # do not support status compare with send_event
     def send_event2(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
@@ -781,7 +781,7 @@ class ActiveE84(SyncSerialPort):
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
             self._notify(data)
         except Exception as err:
-            logger.error(f"Active-E84 send_event2 錯誤: {err}")
+            logger.error(f"Active-E84 send_event2 error: {err}")
 
     # support status
     def send_event(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
@@ -819,7 +819,7 @@ class ActiveE84(SyncSerialPort):
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
             self._notify(data)
         except Exception as err:
-            logger.error(f"Active-E84 send_event 錯誤: {err}")
+            logger.error(f"Active-E84 send_event error: {err}")
 
     # ==================== 基本 E84 命令 ====================
     
@@ -844,7 +844,7 @@ class ActiveE84(SyncSerialPort):
         message = E84Protocol.build_write_message(command, param)
         command_id = f"E84_{command:04X}"
 
-        logger.debug(f"發送命令: {command:04X}, 參數: {param:04X}")
+        logger.debug(f"Send command: {command:04X}, param: {param:04X}")
 
         # 所有已發送的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'
         self.send_event2(
@@ -871,10 +871,10 @@ class ActiveE84(SyncSerialPort):
             return None
             
         except TimeoutError:
-            logger.warning(f"命令 0x{command:04X} 超時")
+            logger.warning(f"Command 0x{command:04X} timeout")
             return None
         except Exception as e:
-            logger.error(f"發送命令錯誤: {e}")
+            logger.error(f"Send command error: {e}")
             return None
     
     def read_firmware_version(self) -> Optional[Tuple[int, int]]:
@@ -888,7 +888,7 @@ class ActiveE84(SyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            logger.info(f"韌體版本: {major}.{minor}")
+            logger.info(f"Firmware version: {major}.{minor}")
             return (major, minor)
         return None
     
@@ -918,7 +918,7 @@ class ActiveE84(SyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            logger.info(f"設定 0x8067 參數: {major}.{minor}")
+            logger.info(f"Set 0x8067 param: {major}.{minor}")
             return (major, minor)
         return None
     
@@ -933,7 +933,7 @@ class ActiveE84(SyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            logger.info(f"設定 sensor event 參數: {major}.{minor}")
+            logger.info(f"Set sensor event param: {major}.{minor}")
             return (major, minor)
         return None
 
@@ -948,7 +948,7 @@ class ActiveE84(SyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            logger.info(f"設定 input timeout 參數: {major}.{minor}")
+            logger.info(f"Set input timeout param: {major}.{minor}")
             return (major, minor)
         return None
 
@@ -963,7 +963,7 @@ class ActiveE84(SyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            logger.info(f"設定 alarm mode 參數: {major}.{minor}")
+            logger.info(f"Set alarm mode param: {major}.{minor}")
             return (major, minor)
         return None
     
@@ -979,7 +979,7 @@ class ActiveE84(SyncSerialPort):
             是否成功
         """
         if not (1 <= ta_number <= 16):
-            logger.error(f"TA 編號錯誤: {ta_number}，必須在 1-16 之間")
+            logger.error(f"Invalid TA number: {ta_number}, must be between 1-16")
             return False
         
         # TA 命令對照
@@ -994,7 +994,7 @@ class ActiveE84(SyncSerialPort):
         response = self._send_e84_command(command, value)
         
         if response and response.data == value:
-            logger.info(f"設定 TA{ta_number} = 0x{value:04X} ({value * 0.1:.1f} 秒)")
+            logger.info(f"Set TA{ta_number} = 0x{value:04X} ({value * 0.1:.1f} seconds)")
             return True
         return False
     
@@ -1005,7 +1005,7 @@ class ActiveE84(SyncSerialPort):
         Returns:
             是否全部成功
         """
-        logger.info("初始化 TA 參數...")
+        logger.info("Initializing TA parameters...")
         success_count = 0
         
         for i in range(1, 17):
@@ -1015,7 +1015,7 @@ class ActiveE84(SyncSerialPort):
                 success_count += 1
             time.sleep(0.05)  # 小延遲避免命令過快
         
-        logger.info(f"TA 參數初始化完成: {success_count}/16")
+        logger.info(f"TA parameters initialized: {success_count}/16")
         return success_count == 16
     
     def initialize_device(self, timeout_per_step: float = 5.0) -> bool:
@@ -1045,77 +1045,77 @@ class ActiveE84(SyncSerialPort):
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
         logger.info("=" * 60)
-        logger.info("開始 E84 Initialize 流程")
+        logger.info("Starting E84 Initialize flow")
         logger.info("=" * 60)
         
         try:
             logger.info("[0/10] read_firmware_version")
             if not self.read_firmware_version():
-                logger.error("read_firmware_version 失敗")
+                logger.error("read_firmware_version failed")
                 return False
             time.sleep(0.2)
 
             logger.info("[1/10] read_config")
             if not self.read_config():
-                logger.error("read_config 失敗")
+                logger.error("read_config failed")
                 return False
             time.sleep(0.2)
 
             logger.info("[2/10] initialize_timeout_params")
             if not self.initialize_timeout_params():
-                logger.error("initialize_timeout_params 失敗")
+                logger.error("initialize_timeout_params failed")
                 return False
             time.sleep(0.2)
 
             logger.info("[3/10] set_unknown_0x8067")
             if not self.set_unknown_0x8067():
-                logger.error("set_unknown_0x8067 失敗")
+                logger.error("set_unknown_0x8067 failed")
                 return False
             time.sleep(0.2)
 
             logger.info("[4/10] set_sensor_event")
             if not self.set_sensor_event():
-                logger.error("set_sensor_event 失敗")
+                logger.error("set_sensor_event failed")
                 return False
             time.sleep(0.2)
 
             logger.info("[5/10] set_input_timeout")
             if not self.set_input_timeout():
-                logger.error("set_input_timeout 失敗")
+                logger.error("set_input_timeout failed")
                 return False
             time.sleep(0.2)
 
             logger.info("[6/10] set_alarm_mode")
             if not self.set_alarm_mode():
-                logger.error("set_alarm_mode 失敗")
+                logger.error("set_alarm_mode failed")
                 return False
             time.sleep(0.2)
 
             # Step 1: DB25 Port Open
             logger.info("[7/10] DB25 Port Open")
             if not self.db25_port_control(open=True):
-                logger.error("DB25 Port Open 失敗")
+                logger.error("DB25 Port Open failed")
                 return False
             time.sleep(0.2)
             
             # Step 2: SELECT ON
             logger.info("[8/10] SELECT ON")
             if not self.select_control(select_on=True):
-                logger.error("SELECT ON 失敗")
+                logger.error("SELECT ON failed")
                 return False
             time.sleep(0.2)
             
             # Step 2-1: SET RF Sensor
             logger.info("[9/10] set_RF_sensor")
             if not self.set_RF_sensor():
-                logger.error("set_RF_sensor 失敗")
+                logger.error("set_RF_sensor failed")
                 return False
             time.sleep(0.2)
             
             # Step 3: SELECT OFF
             logger.info("[10/10] SELECT OFF")
             if not self.select_control(select_on=False):
-                logger.error("SELECT OFF 失敗")
+                logger.error("SELECT OFF failed")
                 return False
             time.sleep(0.2)
 
@@ -1128,16 +1128,16 @@ class ActiveE84(SyncSerialPort):
             
             for signal_name, state in signals:
                 if not self._wait_for_signal(signal_name, state, timeout_per_step):
-                    logger.error(f"等待 {signal_name} 超時")
+                    logger.error(f"Waiting for {signal_name} timeout")
                     return False
             
             logger.info("=" * 60)
-            logger.info("✅ Initialize 流程完成")
+            logger.info("✅ Initialize flow complete")
             logger.info("=" * 60)
             return True
 
         except Exception as e:
-            logger.error(f"initialize_device 流程異常: {e}", exc_info=True)
+            logger.error(f"initialize_device flow exception: {e}", exc_info=True)
             return False
 
     def db25_port_control(self, open: bool = True) -> bool:
@@ -1153,7 +1153,7 @@ class ActiveE84(SyncSerialPort):
         param = 0x0001 if open else 0x0000
         response = self._send_e84_command(E84Command.DB25_PORT, param)
         if response:
-            logger.info(f"DB25 Port {'打開' if open else '關閉'}")
+            logger.info(f"DB25 Port {'open' if open else 'close'}")
             return True
         return False
     
@@ -1188,7 +1188,7 @@ class ActiveE84(SyncSerialPort):
         """發送 CONT 命令"""
         response = self._send_e84_command(E84Command.CONTINUE, cont)
         if response:
-            logger.info("CONT 命令已發送")
+            logger.info("CONT command sent")
             return True
         return False
 
@@ -1196,7 +1196,7 @@ class ActiveE84(SyncSerialPort):
         """發送 CS 命令"""
         response = self._send_e84_command(E84Command.CS_SELECT, cs)
         if response:
-            logger.info("CS 命令已發送")
+            logger.info("CS command sent")
             return True
         return False
     
@@ -1204,7 +1204,7 @@ class ActiveE84(SyncSerialPort):
         """發送 LOAD 命令"""
         response = self._send_e84_command(E84Command.LOAD_UNLOAD, 0x0000)
         if response:
-            logger.info("LOAD 命令已發送")
+            logger.info("LOAD command sent")
             return True
         return False
     
@@ -1212,7 +1212,7 @@ class ActiveE84(SyncSerialPort):
         """發送 UNLOAD 命令"""
         response = self._send_e84_command(E84Command.LOAD_UNLOAD, 0x0001)
         if response:
-            logger.info("UNLOAD 命令已發送")
+            logger.info("UNLOAD command sent")
             return True
         return False
     
@@ -1229,7 +1229,7 @@ class ActiveE84(SyncSerialPort):
         param = 0x0001 if is_unload else 0x0001  # 根據協議，兩者都是 0x0001
         response = self._send_e84_command(E84Command.ARM_BACK, param)
         if response:
-            logger.info("手臂回收完成")
+            logger.info("ARM back complete")
             return True
         return False
     
@@ -1314,15 +1314,15 @@ class ActiveE84(SyncSerialPort):
                 
         except ConnectionError as e:
             print(f"✗ Connection error: {e}")
-            logger.error(f"RF Sensor 連線錯誤: {e}")
+            logger.error(f"RF Sensor connection error: {e}")
             return False
         except TimeoutError as e:
             print(f"✗ Timeout error: {e}")
-            logger.error(f"RF Sensor 超時錯誤: {e}")
+            logger.error(f"RF Sensor timeout error: {e}")
             return False
         except Exception as e:
             print(f"✗ Error: {e}")
-            logger.error(f"RF Sensor 錯誤: {e}")
+            logger.error(f"RF Sensor error: {e}")
             return False
 
         return False
@@ -1346,14 +1346,14 @@ class ActiveE84(SyncSerialPort):
         Returns:
             是否收到期望狀態
         """
-        logger.debug(f"等待訊號: {signal_name} = {expected_state}")
+        logger.debug(f"Waiting for signal: {signal_name} = {expected_state}")
         start_time = time.time()
         
         while time.time() - start_time < timeout:
             # 檢查當前狀態
             current_state = self.get_signal_state(signal_name)
             if current_state == expected_state:
-                logger.debug(f"訊號達成: {signal_name} = {expected_state}")
+                logger.debug(f"Signal achieved: {signal_name} = {expected_state}")
                 return True
             
             # 如果有事件佇列，從佇列等待
@@ -1372,7 +1372,7 @@ class ActiveE84(SyncSerialPort):
                 # 沒有佇列，短暫等待
                 time.sleep(0.1)
         
-        logger.warning(f"等待訊號超時: {signal_name} = {expected_state}")
+        logger.warning(f"Waiting for signal timeout: {signal_name} = {expected_state}")
         return False
 
     def load(self, timeout_per_step: float = 5.0) -> bool:
@@ -1400,32 +1400,32 @@ class ActiveE84(SyncSerialPort):
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
         logger.info("=" * 60)
-        logger.info("開始 Load 流程")
+        logger.info("Starting Load flow")
         logger.info("=" * 60)
         
         try:
             # Step 1: 發送 CONT 命令
-            logger.info("[1/8] 發送 CONT 命令")
+            logger.info("[1/8] Sending CONT command")
             if not self.send_CONT_command(cont=0):
-                logger.error("CONT 命令失敗")
+                logger.error("CONT command failed")
                 return False
             time.sleep(0.2)
             
-            logger.info("[2/8] 發送 CS 命令")
+            logger.info("[2/8] Sending CS command")
             if not self.send_CS_command(cs=0):
-                logger.error("CS 命令失敗")
+                logger.error("CS command failed")
                 return False
             time.sleep(0.2)
             
             # Step 2: 發送 LOAD 命令
-            logger.info("[3/8] 發送 LOAD 命令")
+            logger.info("[3/8] Sending LOAD command")
             if not self.send_load_command():
-                logger.error("LOAD 命令失敗")
+                logger.error("LOAD command failed")
                 return False
             time.sleep(0.2)
             
             # Step 3: 等待訊號序列
-            logger.info("[4/8] 等待設備回應訊號...")
+            logger.info("[4/8] Waiting for device response signal...")
             signals = [
                 # ("GO", True),
                 ("CS_0", True),
@@ -1438,27 +1438,27 @@ class ActiveE84(SyncSerialPort):
             
             for signal_name, state in signals:
                 if not self._wait_for_signal(signal_name, state, timeout_per_step):
-                    logger.error(f"等待 {signal_name} 超時")
+                    logger.error(f"Waiting for {signal_name} timeout")
                     return False
             
             # Step 4: 等待 L_REQ OFF（可伸出手臂）
-            logger.info("[5/8] 等待 L_REQ OFF（可伸出手臂放貨）")
+            logger.info("[5/8] Waiting for L_REQ OFF (ready to place carrier)")
             if not self._wait_for_signal("L_REQ", False, timeout_per_step):
-                logger.error("等待 L_REQ OFF 超時")
+                logger.error("Waiting for L_REQ OFF timeout")
                 return False
             
-            logger.info(">>> 現在可以伸出手臂放貨 <<<")
+            logger.info(">>> Ready to extend arm to place carrier <<<")
             # 這裡可以加入實際的手臂控制邏輯
             time.sleep(1.0)  # 模擬手臂動作時間
             
             # Step 5: 手臂回收完成
-            logger.info("[6/8] 通知手臂回收完成")
+            logger.info("[6/8] Notifying ARM back complete")
             if not self.arm_back_complete(is_unload=False):
-                logger.error("ARM Back Complete 失敗")
+                logger.error("ARM Back Complete failed")
                 return False
             
             # Step 6: 等待完成訊號
-            logger.info("[7/8] 等待完成訊號...")
+            logger.info("[7/8] Waiting for completion signal...")
             completion_signals = [
                 ("BUSY", False),
                 ("TR_REQ", False),
@@ -1471,7 +1471,7 @@ class ActiveE84(SyncSerialPort):
             
             for signal_name, state in completion_signals:
                 if not self._wait_for_signal(signal_name, state, timeout_per_step):
-                    logger.warning(f"等待 {signal_name} 超時（可能不影響流程）")
+                    logger.warning(f"Waiting for {signal_name} timeout (may not affect the flow)")
                     # 不返回 False，繼續流程
             
             # Step 7: Alarm Reset
@@ -1479,12 +1479,12 @@ class ActiveE84(SyncSerialPort):
             self.alarm_reset()
             
             logger.info("=" * 60)
-            logger.info("✅ Load 流程完成")
+            logger.info("✅ Load flow complete")
             logger.info("=" * 60)
             return True
             
         except Exception as e:
-            logger.error(f"Load 流程異常: {e}", exc_info=True)
+            logger.error(f"Load flow exception: {e}", exc_info=True)
             return False
     
     def unload(self, timeout_per_step: float = 5.0) -> bool:
@@ -1509,39 +1509,39 @@ class ActiveE84(SyncSerialPort):
             是否成功完成
         """
         logger.info("=" * 60)
-        logger.info("開始 Unload 流程")
+        logger.info("Starting Unload flow")
         logger.info("=" * 60)
         
         try:
             # Step 1: DB25 Port Open
             logger.info("[1/9] DB25 Port Open")
             if not self.db25_port_control(open=True):
-                logger.error("DB25 Port Open 失敗")
+                logger.error("DB25 Port Open failed")
                 return False
             time.sleep(0.2)
             
             # Step 2: SELECT ON
             logger.info("[2/9] SELECT ON")
             if not self.select_control(select_on=True):
-                logger.error("SELECT ON 失敗")
+                logger.error("SELECT ON failed")
                 return False
             time.sleep(0.2)
             
             # Step 3: SELECT OFF
             logger.info("[3/9] SELECT OFF")
             if not self.select_control(select_on=False):
-                logger.error("SELECT OFF 失敗")
+                logger.error("SELECT OFF failed")
                 return False
             time.sleep(0.2)
             
             # Step 4: 發送 UNLOAD 命令
-            logger.info("[4/9] 發送 UNLOAD 命令")
+            logger.info("[4/9] Sending UNLOAD command")
             if not self.send_unload_command():
-                logger.error("UNLOAD 命令失敗")
+                logger.error("UNLOAD command failed")
                 return False
             
             # Step 5: 等待訊號序列
-            logger.info("[5/9] 等待設備回應訊號...")
+            logger.info("[5/9] Waiting for device response signal...")
             signals = [
                 ("CS_0", True),
                 ("VALID", True),
@@ -1553,27 +1553,27 @@ class ActiveE84(SyncSerialPort):
             
             for signal_name, state in signals:
                 if not self._wait_for_signal(signal_name, state, timeout_per_step):
-                    logger.error(f"等待 {signal_name} 超時")
+                    logger.error(f"Waiting for {signal_name} timeout")
                     return False
             
             # Step 6: 等待 U_REQ OFF（可伸出手臂）
-            logger.info("[6/9] 等待 U_REQ OFF（可伸出手臂取貨）")
+            logger.info("[6/9] Waiting for U_REQ OFF (ready to pick carrier)")
             if not self._wait_for_signal("U_REQ", False, timeout_per_step):
-                logger.error("等待 U_REQ OFF 超時")
+                logger.error("Waiting for U_REQ OFF timeout")
                 return False
             
-            logger.info(">>> 現在可以伸出手臂取貨 <<<")
+            logger.info(">>> Ready to extend arm to pick carrier <<<")
             # 這裡可以加入實際的手臂控制邏輯
             time.sleep(1.0)  # 模擬手臂動作時間
             
             # Step 7: 手臂回收完成
-            logger.info("[7/9] 通知手臂回收完成")
+            logger.info("[7/9] Notifying ARM back complete")
             if not self.arm_back_complete(is_unload=True):
-                logger.error("ARM Back Complete 失敗")
+                logger.error("ARM Back Complete failed")
                 return False
             
             # Step 8: 等待完成訊號
-            logger.info("[8/9] 等待完成訊號...")
+            logger.info("[8/9] Waiting for completion signal...")
             completion_signals = [
                 ("BUSY", False),
                 ("TR_REQ", False),
@@ -1586,7 +1586,7 @@ class ActiveE84(SyncSerialPort):
             
             for signal_name, state in completion_signals:
                 if not self._wait_for_signal(signal_name, state, timeout_per_step):
-                    logger.warning(f"等待 {signal_name} 超時（可能不影響流程）")
+                    logger.warning(f"Waiting for {signal_name} timeout (may not affect the flow)")
                     # 不返回 False，繼續流程
             
             # Step 9: Alarm Reset
@@ -1594,12 +1594,12 @@ class ActiveE84(SyncSerialPort):
             self.alarm_reset()
             
             logger.info("=" * 60)
-            logger.info("✅ Unload 流程完成")
+            logger.info("✅ Unload flow complete")
             logger.info("=" * 60)
             return True
             
         except Exception as e:
-            logger.error(f"Unload 流程異常: {e}", exc_info=True)
+            logger.error(f"Unload flow exception: {e}", exc_info=True)
             return False
 
 
@@ -1615,7 +1615,7 @@ def main():
     
     # Callback 用於即時監控
     def quick_monitor(signal: str, state: bool):
-        print(f"[即時] {signal}: {'ON' if state else 'OFF'}")
+        print(f"[Live] {signal}: {'ON' if state else 'OFF'}")
     
     # 配置 logging
     logging.basicConfig(
@@ -1633,30 +1633,30 @@ def main():
             print("="*60 + "\n")
             
             # 初始化設備
-            print("Step 1: 初始化設備...")
+            print("Step 1: Initializing device...")
             success = e84.initialize_device(timeout_per_step=5.0)
-            print(f"Initialize 結果: {'成功 ✓' if success else '失敗 ✗'}\n")
+            print(f"Initialize result: {'success ✓' if success else 'failed ✗'}\n")
             
             if not success:
-                print("初始化失敗，退出程式")
+                print("Initialization failed, exiting program")
                 return
             
             # 執行 Load
-            print("Step 2: 執行 Load 流程...")
+            print("Step 2: Running Load flow...")
             success = e84.load(timeout_per_step=5.0)
-            print(f"Load 結果: {'成功 ✓' if success else '失敗 ✗'}\n")
+            print(f"Load result: {'success ✓' if success else 'failed ✗'}\n")
             
             if success:
-                print("\n✅ Load 流程成功完成！")
-                print("可以進行下一步操作...")
+                print("\n✅ Load flow completed successfully!")
+                print("Ready for next step...")
             else:
-                print("\n❌ Load 流程失敗！")
-                print("請檢查設備狀態和日誌")
+                print("\n❌ Load flow failed!")
+                print("Please check device status and logs")
     
     except KeyboardInterrupt:
-        print("\n\n程式已中止")
+        print("\n\nProgram aborted")
     except Exception as e:
-        print(f"\n執行錯誤: {e}")
+        print(f"\nExecution error: {e}")
         import traceback
         traceback.print_exc()
 

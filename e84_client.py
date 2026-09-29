@@ -189,17 +189,17 @@ class E84StateEvent:
     
     STATE_DESCRIPTIONS = {
         0x01: "Device Auto Online",
-        0x02: "可伸出手臂放貨",
-        0x03: "設備已接收貨（手臂回收的時機）",
+        0x02: "Ready to Load (arm can extend to place carrier)",
+        0x03: "Load Complete (carrier received; time to retract arm)",
         0x04: "E84 Handoff Complete",
-        0x1002: "可伸出手臂取貨",
-        0x1003: "設備已取貨（手臂回收的時機）",
+        0x1002: "Ready to Unload (arm can extend to pick carrier)",
+        0x1003: "Unload Complete (carrier picked; time to retract arm)",
     }
     
     @staticmethod
     def get_description(code: int) -> str:
         """取得狀態描述"""
-        return E84StateEvent.STATE_DESCRIPTIONS.get(code, f"未知狀態 0x{code:04X}")
+        return E84StateEvent.STATE_DESCRIPTIONS.get(code, f"Unknown state 0x{code:04X}")
 
 
 class E84AlarmEvent:
@@ -223,12 +223,12 @@ class E84AlarmEvent:
     
     # 警報描述對照表
     ALARM_DESCRIPTIONS = {
-        0x0000: "E84 Off-line（設備離線）",
+        0x0000: "E84 Off-line (device offline)",
         0x4000: "TA1 timeout",
         0x4001: "TA2 timeout",
         0x4002: "TA3 timeout",
         0x4003: "TA4 timeout",
-        0x4004: "Link timeout（連線超時）",
+        0x4004: "Link timeout (connection timeout)",
         0x5000: "TP3 timeout",
     }
     
@@ -265,7 +265,7 @@ class E84AlarmEvent:
         Returns:
             警報描述字串
         """
-        return E84AlarmEvent.ALARM_DESCRIPTIONS.get(code, f"未知警報 0x{code:04X}")
+        return E84AlarmEvent.ALARM_DESCRIPTIONS.get(code, f"Unknown alarm 0x{code:04X}")
 
 
 # ==================== E84 命令定義 ====================
@@ -370,7 +370,7 @@ class E84Protocol:
             E84Message 物件，解析失敗返回 None
         """
         if len(data) < 7:
-            self.logger.warning(f"訊息長度不足: {len(data)} bytes")
+            self.logger.warning(f"Message length insufficient: {len(data)} bytes")
             return None
         
         # 判斷訊息類型
@@ -397,7 +397,7 @@ class E84Protocol:
             checksum = data[7]
             
         else:
-            logger.warning(f"未知的訊息頭: {data[0]:02X} {data[1]:02X}")
+            logger.warning(f"Unknown message header: {data[0]:02X} {data[1]:02X}")
             return None
         
         # 驗證 checksum
@@ -407,7 +407,7 @@ class E84Protocol:
             expected_checksum = E84Protocol.calculate_checksum(data[0:7])
         
         if checksum != expected_checksum:
-            logger.warning(f"Checksum 錯誤: 期望 0x{expected_checksum:02X}, 收到 0x{checksum:02X}")
+            logger.warning(f"Checksum error: expected 0x{expected_checksum:02X}, got 0x{checksum:02X}")
             # 不返回 None，僅警告，因為有些設備可能 checksum 不正確
         
         return E84Message(
@@ -565,7 +565,7 @@ class E84Client(AsyncSerialPort):
         self._sensor_RF = None
         self.rf_channel_opened_success = False
         
-        self.logger.info(f"E84Client 初始化: {port} @ {baudrate}")
+        self.logger.info(f"E84Client init: {port} @ {baudrate}")
 
     async def connect_async(self, *args, **kwargs):
         """
@@ -575,7 +575,7 @@ class E84Client(AsyncSerialPort):
         if connected and self._event_queue_size and self._event_queue is None:
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
-            self.logger.info(f"事件佇列建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+            self.logger.info(f"Event queue created: size={self._event_queue_size} (loop={self._event_queue_loop})")
         return connected
 
     def _e84_response_parser(self, data: bytes) -> Tuple[Optional[str], bytes]:
@@ -597,12 +597,12 @@ class E84Client(AsyncSerialPort):
         """
         # FRAME 模式：data 已經是完整且驗證過的幀
         if len(data) < 8:
-            self.logger.warning(f"收到不完整的幀: {len(data)} bytes - {data.hex()}")
+            self.logger.warning(f"Received incomplete frame: {len(data)} bytes - {data.hex()}")
             return (None, b'')
         
         # 驗證 header（雙重檢查）
         if data[0:2] != E84Protocol.HEADER_READ:
-            self.logger.warning(f"收到非 READ 訊息頭: {data[0:2].hex()}")
+            self.logger.warning(f"Received non-READ message header: {data[0:2].hex()}")
             return (None, b'')
         
         # 解析 E84 訊息
@@ -612,10 +612,10 @@ class E84Client(AsyncSerialPort):
             try:
                 self._on_message_event(data)
             except Exception as e:
-                self.logger.error(f"E84 MESSAGE RECEIVED 回調錯誤: {e}")
+                self.logger.error(f"E84 MESSAGE RECEIVED callback error: {e}")
         
         if not message:
-            self.logger.warning(f"無法解析 E84 訊息: {data.hex()}")
+            self.logger.warning(f"Failed to parse E84 message: {data.hex()}")
             return (None, b'')
         
         self._last_message = message
@@ -649,7 +649,7 @@ class E84Client(AsyncSerialPort):
         try:
             queue.put_nowait(event)
         except asyncio.QueueFull:
-            self.logger.warning("事件佇列已滿，丟棄舊事件 (threadsafe)")
+            self.logger.warning("Event queue full, dropping old event (threadsafe)")
     
     async def _handle_sensor_event(self, message: E84Message) -> None:
         """處理感測器事件 (70 系列)"""
@@ -670,20 +670,20 @@ class E84Client(AsyncSerialPort):
             description=f"{signal_name} {'ON' if state else 'OFF'}"
         )
         
-        self.logger.debug(f"感測器事件: {signal_name} = {state}")
+        self.logger.debug(f"Sensor event: {signal_name} = {state}")
 
         # 1. Callback 立即執行
         if self._on_sensor_event:
             try:
                 self._on_sensor_event(signal_name, state)
             except Exception as e:
-                self.logger.error(f"感測器事件回調錯誤: {e}")
+                self.logger.error(f"Sensor event callback error: {e}")
 
         # Lazy-create queue if user asked for it (binds to running loop)
         if self._event_queue is None and getattr(self, "_event_queue_size", None):
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
-            self.logger.info(f"事件佇列延後建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+            self.logger.info(f"Event queue created lazily: size={self._event_queue_size} (loop={self._event_queue_loop})")
 
         # 2. 放入事件佇列
         if self._event_queue:
@@ -705,7 +705,7 @@ class E84Client(AsyncSerialPort):
                 else:
                     await self._event_queue.put(event)
             except asyncio.QueueFull:
-                self.logger.warning("事件佇列已滿，丟棄舊事件")
+                self.logger.warning("Event queue full, dropping old event")
     
     async def _handle_state_event(self, message: E84Message) -> None:
         """處理狀態事件 (71 系列)"""
@@ -726,26 +726,26 @@ class E84Client(AsyncSerialPort):
             description=description
         )
         
-        self.logger.info(f"狀態事件: {description}")
+        self.logger.info(f"State event: {description}")
 
         # 1. Callback 立即執行
         if self._on_state_event:
             try:
-                self.logger.info(f"狀態事件: _on_state_event {description}")
+                self.logger.info(f"State event: _on_state_event {description}")
                 self._on_state_event(code, description)
             except Exception as e:
-                self.logger.error(f"狀態事件回調錯誤: {e}")
+                self.logger.error(f"State event callback error: {e}")
 
         # Lazy-create queue if user asked for it (binds to running loop)
         if self._event_queue is None and getattr(self, "_event_queue_size", None):
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
-            self.logger.info(f"事件佇列延後建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+            self.logger.info(f"Event queue created lazily: size={self._event_queue_size} (loop={self._event_queue_loop})")
 
         # 2. 放入事件佇列
         if self._event_queue:
             try:
-                self.logger.info(f"狀態事件: _event_queue {description}")
+                self.logger.info(f"State event: _event_queue {description}")
                 current_loop = None
                 try:
                     current_loop = asyncio.get_running_loop()
@@ -762,7 +762,7 @@ class E84Client(AsyncSerialPort):
                 else:
                     await self._event_queue.put(event)
             except asyncio.QueueFull:
-                self.logger.warning("事件佇列已滿，丟棄舊事件")
+                self.logger.warning("Event queue full, dropping old event")
     
     async def _handle_alarm_event(self, message: E84Message) -> None:
         """處理警報事件 (80 系列)"""
@@ -782,20 +782,20 @@ class E84Client(AsyncSerialPort):
             alarm_type=alarm_type
         )
         
-        self.logger.error(f"⚠️ E84 警報事件: {description} (類型: {alarm_type}, 代碼: 0x{alarm_code:04X})")
+        self.logger.error(f"⚠️ E84 alarm event: {description} (type: {alarm_type}, code: 0x{alarm_code:04X})")
 
         # 1. Callback 立即執行
         if self._on_alarm_event:
             try:
                 self._on_alarm_event(alarm_type, alarm_code, description)
             except Exception as e:
-                self.logger.error(f"警報事件回調錯誤: {e}")
+                self.logger.error(f"Alarm event callback error: {e}")
 
         # Lazy-create queue if user asked for it (binds to running loop)
         if self._event_queue is None and getattr(self, "_event_queue_size", None):
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
-            self.logger.info(f"事件佇列延後建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+            self.logger.info(f"Event queue created lazily: size={self._event_queue_size} (loop={self._event_queue_loop})")
         
         # 2. 放入事件佇列
         if self._event_queue:
@@ -816,7 +816,7 @@ class E84Client(AsyncSerialPort):
                 else:
                     await self._event_queue.put(event)
             except asyncio.QueueFull:
-                self.logger.warning("事件佇列已滿，丟棄舊事件")
+                self.logger.warning("Event queue full, dropping old event")
     
     async def get_event(self, timeout: Optional[float] = None) -> E84Event:
         """
@@ -839,7 +839,7 @@ class E84Client(AsyncSerialPort):
         if self._event_queue is None and getattr(self, "_event_queue_size", None):
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
-            self.logger.info(f"事件佇列延後建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+            self.logger.info(f"Event queue created lazily: size={self._event_queue_size} (loop={self._event_queue_loop})")
         
         if timeout:
             return await asyncio.wait_for(self._event_queue.get(), timeout=timeout)
@@ -892,14 +892,14 @@ class E84Client(AsyncSerialPort):
         message = E84Protocol.build_write_message(command, param)
         command_id = f"E84_{command:04X}"
 
-        self.logger.debug(f"發送命令: {command:04X}, 參數: {param:04X}")
+        self.logger.debug(f"Send command: {command:04X}, param: {param:04X}")
 
         # 已發送 E84 訊息（任意 E84CommandSeries 系列）通知 wrapper
         if getattr(self, "_on_send_message_event", None):
             try:
                 self._on_send_message_event(message)
             except Exception as e:
-                self.logger.error(f"E84 MESSAGE SENT 回調錯誤: {e}")
+                self.logger.error(f"E84 MESSAGE SENT callback error: {e}")
 
         try:
             # 發送並等待回應
@@ -923,10 +923,10 @@ class E84Client(AsyncSerialPort):
             return None
              
         except asyncio.TimeoutError:
-            self.logger.warning(f"命令 0x{command:04X} 超時")
+            self.logger.warning(f"Command 0x{command:04X} timeout")
             return None
         except Exception as e:
-            self.logger.error(f"發送命令錯誤: {e}")
+            self.logger.error(f"Send command error: {e}")
             return None
     
     async def read_firmware_version(self) -> Optional[Tuple[int, int]]:
@@ -940,7 +940,7 @@ class E84Client(AsyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            self.logger.info(f"韌體版本: {major}.{minor}")
+            self.logger.info(f"Firmware version: {major}.{minor}")
             return (major, minor)
         return None
     
@@ -970,7 +970,7 @@ class E84Client(AsyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            self.logger.info(f"設定 0x8067 參數: {major}.{minor}")
+            self.logger.info(f"Set 0x8067 param: {major}.{minor}")
             return (major, minor)
         return None
     
@@ -986,7 +986,7 @@ class E84Client(AsyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            self.logger.info(f"設定 sensor event 參數: {major}.{minor}")
+            self.logger.info(f"Set sensor event param: {major}.{minor}")
             return (major, minor)
         return None
 
@@ -1001,7 +1001,7 @@ class E84Client(AsyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            self.logger.info(f"設定 input timeout 參數: {major}.{minor}")
+            self.logger.info(f"Set input timeout param: {major}.{minor}")
             return (major, minor)
         return None
 
@@ -1016,7 +1016,7 @@ class E84Client(AsyncSerialPort):
         if response:
             major = response.data_high
             minor = response.data_low
-            self.logger.info(f"設定 alarm mode 參數: {major}.{minor}")
+            self.logger.info(f"Set alarm mode param: {major}.{minor}")
             return (major, minor)
         return None
     
@@ -1032,7 +1032,7 @@ class E84Client(AsyncSerialPort):
             是否成功
         """
         if not (1 <= ta_number <= 16):
-            self.logger.error(f"------------------ TA 編號錯誤: {ta_number}，必須在 1-16 之間")
+            self.logger.error(f"------------------ Invalid TA number: {ta_number}, must be between 1-16")
             return False
         
         # TA 命令對照
@@ -1047,7 +1047,7 @@ class E84Client(AsyncSerialPort):
         response = await self._send_e84_command(command, value)
         
         if response and response.data == value:
-            self.logger.info(f"------------------ 設定 TA{ta_number} = 0x{value:04X} ({value * 0.1:.1f} 秒)")
+            self.logger.info(f"------------------ Set TA{ta_number} = 0x{value:04X} ({value * 0.1:.1f} seconds)")
             return True
         return False
     
@@ -1058,7 +1058,7 @@ class E84Client(AsyncSerialPort):
         Returns:
             是否全部成功
         """
-        self.logger.info("------------------ 初始化 TA 參數...")
+        self.logger.info("------------------ Initializing TA parameters...")
         success_count = 0
         
         for i in range(1, 17):
@@ -1068,7 +1068,7 @@ class E84Client(AsyncSerialPort):
                 success_count += 1
             await asyncio.sleep(0.05)  # 小延遲避免命令過快
         
-        self.logger.info(f"------------------ TA 參數初始化完成: {success_count}/16")
+        self.logger.info(f"------------------ TA parameters initialized: {success_count}/16")
         return success_count == 16
     
     async def initialize_device(self, timeout_per_step: float = 5.0) -> bool:
@@ -1097,50 +1097,50 @@ class E84Client(AsyncSerialPort):
         #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         # )
         self.logger.info("=" * 60)
-        self.logger.info("開始 E84 Initialize 流程")
+        self.logger.info("Starting E84 Initialize flow")
         self.logger.info("=" * 60)
         
         try:
             self.logger.info("------------------ read_firmware_version")
             if not await self.read_firmware_version():
-                self.logger.error("------------------ read_firmware_version 失敗")
+                self.logger.error("------------------ read_firmware_version failed")
                 return False
             await asyncio.sleep(0.2)
 
             self.logger.info("------------------ set_sensor_event")
             if not await self.set_sensor_event():
-                self.logger.error("------------------ set_sensor_event 失敗")
+                self.logger.error("------------------ set_sensor_event failed")
                 return False
             await asyncio.sleep(0.2)
 
             if self.RF_port:
                 self.logger.info("------------------ read_config")
                 if not await self.read_config():
-                    self.logger.error("------------------ read_config 失敗")
+                    self.logger.error("------------------ read_config failed")
                     return False
                 await asyncio.sleep(0.2)
 
                 self.logger.info("------------------ initialize_timeout_params")
                 if not await self.initialize_timeout_params():
-                    self.logger.error("------------------ initialize_timeout_params 失敗")
+                    self.logger.error("------------------ initialize_timeout_params failed")
                     return False
                 await asyncio.sleep(0.2)
 
                 self.logger.info("------------------ set_unknown_0x8067")
                 if not await self.set_unknown_0x8067():
-                    self.logger.error("------------------ set_unknown_0x8067 失敗")
+                    self.logger.error("------------------ set_unknown_0x8067 failed")
                     return False
                 await asyncio.sleep(0.2)
 
                 self.logger.info("------------------ set_input_timeout")
                 if not await self.set_input_timeout():
-                    self.logger.error("------------------ set_input_timeout 失敗")
+                    self.logger.error("------------------ set_input_timeout failed")
                     return False
                 await asyncio.sleep(0.2)
 
                 self.logger.info("------------------ set_alarm_mode")
                 if not await self.set_alarm_mode():
-                    self.logger.error("------------------ set_alarm_mode 失敗")
+                    self.logger.error("------------------ set_alarm_mode failed")
                     return False
                 await asyncio.sleep(0.2)
 
@@ -1152,7 +1152,7 @@ class E84Client(AsyncSerialPort):
 
             return True
         except Exception as e:
-            self.logger.error(f"============================== initialize_device 流程異常: {e}", exc_info=True)
+            self.logger.error(f"============================== initialize_device flow exception: {e}", exc_info=True)
             return False
 
     async def initialize_COMport_RFsensor(self, timeout_per_step: float = 5.0) -> bool:
@@ -1176,7 +1176,7 @@ class E84Client(AsyncSerialPort):
         #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         # )
         self.logger.info("=" * 60)
-        self.logger.info("######################## 開始 E84 Initialize COMport RF Sensor 流程 ########################")
+        self.logger.info("######################## Starting E84 Initialize COMport RF Sensor flow ########################")
         self.logger.info("=" * 60)
         
         try:
@@ -1192,14 +1192,14 @@ class E84Client(AsyncSerialPort):
                     # self.logger.info("------------------ DB25 Port Open 成功")
                     break
             if not success:
-                self.logger.error("------------------ DB25 Port Open 失敗")
+                self.logger.error("------------------ DB25 Port Open failed")
                 return False
             await asyncio.sleep(0.2)
             
             # Step 2: SELECT ON
             self.logger.info("------------------ SELECT ON")
             if not await self.select_control(select_on=True):
-                self.logger.error("------------------ SELECT ON 失敗")
+                self.logger.error("------------------ SELECT ON failed")
                 return False
             await asyncio.sleep(0.2)
 
@@ -1221,7 +1221,7 @@ class E84Client(AsyncSerialPort):
                     self.logger.error("------------------ ,")
                     await asyncio.sleep(0.2)
                 else:
-                    self.logger.info("------------------ set_RF_sensor 成功")
+                    self.logger.info("------------------ set_RF_sensor succeeded")
                     break
             await asyncio.sleep(0.2)
 
@@ -1235,7 +1235,7 @@ class E84Client(AsyncSerialPort):
             # Step 4: SELECT OFF
             self.logger.info("------------------ SELECT OFF")
             if not await self.select_control(select_on=False):
-                self.logger.error("------------------ SELECT OFF 失敗")
+                self.logger.error("------------------ SELECT OFF failed")
                 return False
             await asyncio.sleep(0.2)
 
@@ -1251,7 +1251,7 @@ class E84Client(AsyncSerialPort):
             #         return False
             return rf_sensor_configured
         except Exception as e:
-            self.logger.error(f"######################## initialize_COMport_RFsensor 流程異常: {e}", exc_info=True)
+            self.logger.error(f"######################## initialize_COMport_RFsensor flow exception: {e}", exc_info=True)
             return False
 
     async def close_RF_sensor(self) -> bool:
@@ -1262,7 +1262,7 @@ class E84Client(AsyncSerialPort):
                 self._sensor_RF = None
             return True
         except Exception as e:
-            self.logger.error(f"關閉 RF Sensor 串口時發生錯誤: {e}")
+            self.logger.error(f"Error closing RF Sensor serial port: {e}")
             return False
 
     async def db25_port_control(self, open: bool = True) -> bool:
@@ -1313,7 +1313,7 @@ class E84Client(AsyncSerialPort):
             """發送 CHANNEL 命令 (0x8001, param = channel number)"""
             response = await self._send_e84_command(E84Command.DB25_PORT, channel)
             if response:
-                self.logger.info("------------------ CHANNEL 命令已發送")
+                self.logger.info("------------------ CHANNEL command sent")
                 return True
             return False
     
@@ -1321,7 +1321,7 @@ class E84Client(AsyncSerialPort):
         """發送 CONT 命令"""
         response = await self._send_e84_command(E84Command.CONTINUE, cont)
         if response:
-            self.logger.info("------------------ CONT 命令已發送")
+            self.logger.info("------------------ CONT command sent")
             return True
         return False
 
@@ -1329,7 +1329,7 @@ class E84Client(AsyncSerialPort):
         """發送 CS 命令"""
         response = await self._send_e84_command(E84Command.CS_SELECT, cs)
         if response:
-            self.logger.info("------------------ CS 命令已發送")
+            self.logger.info("------------------ CS command sent")
             return True
         return False
     
@@ -1337,7 +1337,7 @@ class E84Client(AsyncSerialPort):
         """發送 LOAD 命令"""
         response = await self._send_e84_command(E84Command.LOAD_UNLOAD, 0x0000)
         if response:
-            self.logger.info("------------------ LOAD 命令已發送")
+            self.logger.info("------------------ LOAD command sent")
             return True
         return False
     
@@ -1345,7 +1345,7 @@ class E84Client(AsyncSerialPort):
         """發送 UNLOAD 命令"""
         response = await self._send_e84_command(E84Command.LOAD_UNLOAD, 0x0001)
         if response:
-            self.logger.info("------------------ UNLOAD 命令已發送")
+            self.logger.info("------------------ UNLOAD command sent")
             return True
         return False
     
@@ -1371,7 +1371,7 @@ class E84Client(AsyncSerialPort):
         param = 0x0001 if is_unload else 0x0001  # 根據協議，兩者都是 0x0001
         response = await self._send_e84_command(E84Command.ARM_BACK, param)
         if response:
-            self.logger.info("------------------ 手臂回收完成")
+            self.logger.info("------------------ ARM back complete")
             return True
         return False
     
@@ -1402,20 +1402,20 @@ class E84Client(AsyncSerialPort):
         Returns:
             是否收到期望狀態
         """
-        self.logger.debug(f"等待訊號: {signal_name} = {expected_state}")
+        self.logger.debug(f"Waiting for signal: {signal_name} = {expected_state}")
         start_time = time.time()
 
         # Lazy-create event queue bound to the current running loop if requested
         if self._event_queue is None and getattr(self, "_event_queue_size", None):
             self._event_queue = asyncio.Queue(maxsize=self._event_queue_size)
             self._event_queue_loop = asyncio.get_running_loop()
-            self.logger.info(f"事件佇列延後建立: size={self._event_queue_size} (loop={self._event_queue_loop})")
+            self.logger.info(f"Event queue created lazily: size={self._event_queue_size} (loop={self._event_queue_loop})")
 
         while time.time() - start_time < timeout:
             # 檢查當前狀態
             current_state = self.get_signal_state(signal_name)
             if current_state == expected_state:
-                self.logger.debug(f"訊號達成: {signal_name} = {expected_state}")
+                self.logger.debug(f"Signal achieved: {signal_name} = {expected_state}")
                 return True
             
             # 如果有事件佇列，從佇列等待
@@ -1433,7 +1433,7 @@ class E84Client(AsyncSerialPort):
                 # 沒有佇列，短暫等待
                 await asyncio.sleep(0.1)
         
-        self.logger.warning(f"等待訊號超時: {signal_name} = {expected_state}")
+        self.logger.warning(f"Waiting for signal timeout: {signal_name} = {expected_state}")
         return False
 
     async def set_RF_sensor(self):
@@ -1583,15 +1583,15 @@ class E84Client(AsyncSerialPort):
                 
         except ConnectionError as e:
             print(f"✗ Connection error: {e}")
-            self.logger.error(f"RF Sensor 連線錯誤: {e}")
+            self.logger.error(f"RF Sensor connection error: {e}")
             return False
         except TimeoutError as e:
             print(f"✗ Timeout error: {e}")
-            self.logger.error(f"RF Sensor 超時錯誤: {e}")
+            self.logger.error(f"RF Sensor timeout error: {e}")
             return False
         except Exception as e:
             print(f"✗ Error: {e}")
-            self.logger.error(f"RF Sensor 錯誤: {e}")
+            self.logger.error(f"RF Sensor error: {e}")
             return False
 
         return False
@@ -1623,32 +1623,32 @@ class E84Client(AsyncSerialPort):
         #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         # )
         self.logger.info("=" * 60)
-        self.logger.info("開始 Load 流程")
+        self.logger.info("Starting Load flow")
         self.logger.info("=" * 60)
         
         try:
             # Step 4: 發送 CONT 命令
-            self.logger.info("------------------ 發送 CONT 命令")
+            self.logger.info("------------------ Sending CONT command")
             if not await self.send_CONT_command(cont = 0):
-                self.logger.error("------------------ CONT 命令失敗")
+                self.logger.error("------------------ CONT command failed")
                 return False
             await asyncio.sleep(0.2)
             
-            self.logger.info("------------------ 發送 CS 命令")
+            self.logger.info("------------------ Sending CS command")
             if not await self.send_CS_command(cs = 0):
-                self.logger.error("------------------ CS 命令失敗")
+                self.logger.error("------------------ CS command failed")
                 return False
             await asyncio.sleep(0.2)
             
             # Step 4: 發送 LOAD 命令s
-            self.logger.info("------------------ 發送 LOAD 命令")
+            self.logger.info("------------------ Sending LOAD command")
             if not await self.send_load_command():
-                self.logger.error("------------------ LOAD 命令失敗")
+                self.logger.error("------------------ LOAD command failed")
                 return False
             await asyncio.sleep(0.2)
             
             # Step 5: 等待訊號序列
-            self.logger.info("------------------ 等待設備回應訊號...")
+            self.logger.info("------------------ Waiting for device response signal...")
             signals = [
                 # ("GO", True),
                 ("CS_0", True),
@@ -1665,28 +1665,28 @@ class E84Client(AsyncSerialPort):
             #         self.logger.error(f"------------------ 等待 {signal_name} 超時")
             #         return False
 
-            self.logger.info("------------------ 現在可以伸出手臂放貨")
+            self.logger.info("------------------ Ready to extend arm to place carrier")
             # 這裡可以加入實際的手臂控制邏輯
             await asyncio.sleep(1.0)  # 模擬手臂動作時間
             
             # Step 6: 等待 L_REQ OFF（可伸出手臂）
-            self.logger.info("------------------ 等待 L_REQ OFF（可伸出手臂放貨）")
+            self.logger.info("------------------ Waiting for L_REQ OFF (ready to place carrier)")
             # 20260127 SmartIO-AGV
             # if not await self._wait_for_signal("L_REQ", False, timeout_per_step*6):
             #     self.logger.error("------------------ 等待 L_REQ OFF 超時")
             #     return False
             
             # Step 7: 手臂回收完成
-            self.logger.info("------------------ 發送 ARM Back Complete")
+            self.logger.info("------------------ Sending ARM Back Complete")
             if not await self.arm_back_complete(
                 is_unload=False,
                 ready_timeout=max(timeout_per_step * 6, timeout_per_step),
             ):
-                self.logger.error("------------------ ARM Back Complete 失敗")
+                self.logger.error("------------------ ARM Back Complete failed")
                 return False
             
             # Step 8: 等待完成訊號
-            self.logger.info("------------------ 等待完成訊號...")
+            self.logger.info("------------------ Waiting for completion signal...")
             completion_signals = [
                 ("BUSY", False),
                 ("TR_REQ", False),
@@ -1708,12 +1708,12 @@ class E84Client(AsyncSerialPort):
             # await self.alarm_reset()
             
             self.logger.info("=" * 60)
-            self.logger.info("✅ Load 流程完成")
+            self.logger.info("✅ Load flow complete")
             self.logger.info("=" * 60)
             return True
             
         except Exception as e:
-            self.logger.error(f"############################## Load 流程異常: {e}", exc_info=True)
+            self.logger.error(f"############################## Load flow exception: {e}", exc_info=True)
             return False
     
     async def unload_async(self, timeout_per_step: float = 5.0) -> bool:
@@ -1738,31 +1738,31 @@ class E84Client(AsyncSerialPort):
             是否成功完成
         """
         self.logger.info("=" * 60)
-        self.logger.info("開始 Unload 流程")
+        self.logger.info("Starting Unload flow")
         self.logger.info("=" * 60)
         
         try:
             # Step 4: 發送 CONT 命令
-            self.logger.info("------------------ 發送 CONT 命令")
+            self.logger.info("------------------ Sending CONT command")
             if not await self.send_CONT_command(cont = 0):
-                self.logger.error("------------------ CONT 命令失敗")
+                self.logger.error("------------------ CONT command failed")
                 return False
             await asyncio.sleep(0.2)
 
-            self.logger.info("------------------ 發送 CS 命令")
+            self.logger.info("------------------ Sending CS command")
             if not await self.send_CS_command(cs = 0):
-                self.logger.error("------------------ CS 命令失敗")
+                self.logger.error("------------------ CS command failed")
                 return False
             await asyncio.sleep(0.2)
             
             # Step 4: 發送 UNLOAD 命令
-            self.logger.info("------------------ 發送 UNLOAD 命令")
+            self.logger.info("------------------ Sending UNLOAD command")
             if not await self.send_unload_command():
-                self.logger.error("------------------ UNLOAD 命令失敗")
+                self.logger.error("------------------ UNLOAD command failed")
                 return False
             
             # Step 5: 等待訊號序列
-            self.logger.info("------------------ 等待設備回應訊號...")
+            self.logger.info("------------------ Waiting for device response signal...")
             signals = [
                 # ("CS_0", True),
                 ("VALID", True),
@@ -1778,7 +1778,7 @@ class E84Client(AsyncSerialPort):
             #         self.logger.error(f"------------------ 等待 {signal_name} 超時")
             #         return False
 
-            self.logger.info("------------------ 現在可以伸出手臂取貨")
+            self.logger.info("------------------ Ready to extend arm to pick carrier")
             # 這裡可以加入實際的手臂控制邏輯
             await asyncio.sleep(1.0)  # 模擬手臂動作時間
             
@@ -1790,16 +1790,16 @@ class E84Client(AsyncSerialPort):
             #     return False
             
             # Step 7: 手臂回收完成
-            self.logger.info("------------------ 發送 ARM Back Complete")
+            self.logger.info("------------------ Sending ARM Back Complete")
             if not await self.arm_back_complete(
                 is_unload=True,
                 ready_timeout=max(timeout_per_step * 6, timeout_per_step),
             ):
-                self.logger.error("------------------ ARM Back Complete 失敗")
+                self.logger.error("------------------ ARM Back Complete failed")
                 return False
             
             # Step 8: 等待完成訊號
-            self.logger.info("------------------ 等待完成訊號...")
+            self.logger.info("------------------ Waiting for completion signal...")
             completion_signals = [
                 ("BUSY", False),
                 ("TR_REQ", False),
@@ -1821,65 +1821,65 @@ class E84Client(AsyncSerialPort):
             # await self.alarm_reset()
             
             self.logger.info("=" * 60)
-            self.logger.info("✅ Unload 流程完成")
+            self.logger.info("✅ Unload flow complete")
             self.logger.info("=" * 60)
             return True
             
         except Exception as e:
-            self.logger.error(f"Unload 流程異常: {e}", exc_info=True)
+            self.logger.error(f"Unload flow exception: {e}", exc_info=True)
             return False
 
     async def cobot_alarm_reset_async(self, timeout_per_step: float = 5.0) -> bool:
         try:
-            self.logger.info("------------------ 發送 Alarm Reset 命令")
+            self.logger.info("------------------ Sending Alarm Reset command")
             await e84.alarm_reset()
         except Exception as e:
-            self.logger.error(f"Alarm Reset 流程異常: {e}", exc_info=True)
+            self.logger.error(f"Alarm Reset flow exception: {e}", exc_info=True)
             return False
 
     async def cobot_cs_async(self, cs: int = 0, timeout_per_step: float = 5.0) -> bool:
         try:
             # Step 4: 發送 CONT 命令
-            self.logger.info("------------------ 發送 CONT 命令")
+            self.logger.info("------------------ Sending CONT command")
             if not await self.send_CONT_command(cont = 0):
-                self.logger.error("------------------ CONT 命令失敗")
+                self.logger.error("------------------ CONT command failed")
                 return False
             await asyncio.sleep(0.2)
 
-            self.logger.info("------------------ 發送 CS 命令")
+            self.logger.info("------------------ Sending CS command")
             if not await self.send_CS_command(cs = cs):
-                self.logger.error("------------------ CS 命令失敗")
+                self.logger.error("------------------ CS command failed")
                 return False
             await asyncio.sleep(0.2)
             
         except Exception as e:
-            self.logger.error(f"CS 流程異常: {e}", exc_info=True)
+            self.logger.error(f"CS flow exception: {e}", exc_info=True)
             return False
 
     async def channel_async(self, channel: int = 0, timeout_per_step: float = 5.0) -> bool:
             try:
-                self.logger.info("------------------ 發送 CHANNEL 命令")
+                self.logger.info("------------------ Sending CHANNEL command")
                 if not await self.send_CHANNEL_command(channel = channel):
-                    self.logger.error("------------------ CHANNEL 命令失敗")
+                    self.logger.error("------------------ CHANNEL command failed")
                     return False
                 await asyncio.sleep(0.2)
                 return True
 
             except Exception as e:
-                self.logger.error(f"CHANNEL 流程異常: {e}", exc_info=True)
+                self.logger.error(f"CHANNEL flow exception: {e}", exc_info=True)
                 return False
 
     async def cobot_load_async(self, timeout_per_step: float = 5.0) -> bool:
         try:
             # Step 4: 發送 LOAD 命令s
-            self.logger.info("------------------ 發送 LOAD 命令")
+            self.logger.info("------------------ Sending LOAD command")
             if not await self.send_load_command():
-                self.logger.error("------------------ LOAD 命令失敗")
+                self.logger.error("------------------ LOAD command failed")
                 return False
             await asyncio.sleep(0.2)
             
             # Step 5: 等待訊號序列
-            self.logger.info("------------------ 等待設備回應訊號...")
+            self.logger.info("------------------ Waiting for device response signal...")
             signals = [
                 # ("GO", True),
                 ("CS_0", True),
@@ -1896,31 +1896,31 @@ class E84Client(AsyncSerialPort):
             #         self.logger.error(f"------------------ 等待 {signal_name} 超時")
             #         return False
 
-            self.logger.info("------------------ 現在可以伸出手臂放貨")
+            self.logger.info("------------------ Ready to extend arm to place carrier")
             # 這裡可以加入實際的手臂控制邏輯
             await asyncio.sleep(1.0)  # 模擬手臂動作時間
             
             # Step 6: 等待 L_REQ OFF（可伸出手臂）
-            self.logger.info("------------------ 等待 L_REQ OFF（可伸出手臂放貨）")
+            self.logger.info("------------------ Waiting for L_REQ OFF (ready to place carrier)")
             # 20260127 SmartIO-AGV
             # if not await self._wait_for_signal("L_REQ", False, timeout_per_step*6):
             #     self.logger.error("------------------ 等待 L_REQ OFF 超時")
             #     return False
             
         except Exception as e:
-            self.logger.error(f"############################## Load 流程異常: {e}", exc_info=True)
+            self.logger.error(f"############################## Load flow exception: {e}", exc_info=True)
             return False
 
     async def cobot_unload_async(self, timeout_per_step: float = 5.0) -> bool:
         try:
             # Step 4: 發送 UNLOAD 命令
-            self.logger.info("------------------ 發送 UNLOAD 命令")
+            self.logger.info("------------------ Sending UNLOAD command")
             if not await self.send_unload_command():
-                self.logger.error("------------------ UNLOAD 命令失敗")
+                self.logger.error("------------------ UNLOAD command failed")
                 return False
             
             # Step 5: 等待訊號序列
-            self.logger.info("------------------ 等待設備回應訊號...")
+            self.logger.info("------------------ Waiting for device response signal...")
             signals = [
                 # ("CS_0", True),
                 ("VALID", True),
@@ -1936,12 +1936,12 @@ class E84Client(AsyncSerialPort):
             #         self.logger.error(f"------------------ 等待 {signal_name} 超時")
             #         return False
 
-            self.logger.info("------------------ 現在可以伸出手臂取貨")
+            self.logger.info("------------------ Ready to extend arm to pick carrier")
             # 這裡可以加入實際的手臂控制邏輯
             await asyncio.sleep(1.0)  # 模擬手臂動作時間
             
             # Step 6: 等待 U_REQ OFF（可伸出手臂）
-            self.logger.info("------------------ 等待 U_REQ OFF（可伸出手臂取貨）")
+            self.logger.info("------------------ Waiting for U_REQ OFF (ready to pick carrier)")
             # 20260127 SmartIO-AGV
             # if not await self._wait_for_signal("U_REQ", False, timeout_per_step*6):
             #     self.logger.error("------------------ 等待 U_REQ OFF 超時")
@@ -1950,22 +1950,22 @@ class E84Client(AsyncSerialPort):
             return True
             
         except Exception as e:
-            self.logger.error(f"Unload 流程異常: {e}", exc_info=True)
+            self.logger.error(f"Unload flow exception: {e}", exc_info=True)
             return False
 
     async def cobot_arm_back_complete_async(self, timeout_per_step: float = 5.0) -> bool:
         try:
             # Step 7: 手臂回收完成
-            self.logger.info("------------------ 發送 ARM Back Complete")
+            self.logger.info("------------------ Sending ARM Back Complete")
             if not await self.arm_back_complete(
                 is_unload=True,
                 ready_timeout=max(timeout_per_step * 6, timeout_per_step),
             ):
-                self.logger.error("------------------ ARM Back Complete 失敗")
+                self.logger.error("------------------ ARM Back Complete failed")
                 return False
             
             # Step 8: 等待完成訊號
-            self.logger.info("------------------ 等待完成訊號...")
+            self.logger.info("------------------ Waiting for completion signal...")
             completion_signals = [
                 ("BUSY", False),
                 ("TR_REQ", False),
@@ -1987,12 +1987,12 @@ class E84Client(AsyncSerialPort):
             # await self.alarm_reset()
             
             self.logger.info("=" * 60)
-            self.logger.info("✅ Unload 流程完成")
+            self.logger.info("✅ Unload flow complete")
             self.logger.info("=" * 60)
             return True
             
         except Exception as e:
-            self.logger.error(f"Unload 流程異常: {e}", exc_info=True)
+            self.logger.error(f"Unload flow exception: {e}", exc_info=True)
             return False
 
 COM_PORT = "COM14"  # 根據實際情況修改
@@ -2001,7 +2001,7 @@ BAUDRATE = 115200
 
 # Callback 用於即時監控
 def quick_monitor(signal: str, state: bool):
-    print(f"[即時] {signal}: {'ON' if state else 'OFF'}")
+    print(f"[Live] {signal}: {'ON' if state else 'OFF'}")
 
 # 複雜的事件處理邏輯
 async def complex_event_handler():
@@ -2010,11 +2010,11 @@ async def complex_event_handler():
     while True:
         try:
             event = await e84.get_event(timeout=1.0)
-            print(f"[即時] {event.signal_name}: {event.description}")
+            print(f"[Live] {event.signal_name}: {event.description}")
             # 複雜的狀態機處理
             if event.signal_name == "L_REQ":
                 l_req_count += 1
-                print(f"[分析] L_REQ 觸發次數: {l_req_count}")
+                print(f"[Analysis] L_REQ trigger count: {l_req_count}")
             
             # 其他複雜邏輯...
             
@@ -2026,11 +2026,11 @@ def on_alarm(alarm_type: str, alarm_code: int, description: str):
     print(f"⚠️ Alarm: {description}")
     if alarm_type == "offline":
         # Handle device offline
-        print("設備離線，檢查連線")
+        print("Device offline, checking connection")
     elif alarm_type == "ta_timeout":
         # Handle TA timeout
         ta_num = (alarm_code & 0x00FF) + 1
-        print(f"TA{ta_num} 超時，檢查參數設定")
+        print(f"TA{ta_num} timeout, check parameter settings")
 
 # ==================== 主程式 ====================
 
@@ -2044,20 +2044,20 @@ async def main():
         handler_task = asyncio.create_task(complex_event_handler())
 
         success = await e84.initialize_device()
-        print(f"Initialize E84 結果: {'成功' if success else '失敗'}")
+        print(f"Initialize E84 result: {'success' if success else 'failed'}")
 
         success = await e84.initialize_COMport_RFsensor()
-        print(f"######################## Initialize COMport RF Sensor 結果: {'成功' if success else '失敗'} ########################")
+        print(f"######################## Initialize COMport RF Sensor result: {'success' if success else 'failed'} ########################")
         
         if success:
         # 執行 Load
             # success = await e84.load_async(timeout_per_step=5.0)
             # print(f"Load 結果: {'成功' if success else '失敗'}")
             success = await e84.unload_async(timeout_per_step=5.0)
-            print(f"Unload 結果: {'成功' if success else '失敗'}")
+            print(f"Unload result: {'success' if success else 'failed'}")
             if not success:
                 await e84.alarm_reset()
-                print(f"Alarm Reset 執行完成")
+                print(f"Alarm Reset completed")
         
         # await asyncio.sleep(1.0)
         # # success = await e84.close_RF_sensor()
@@ -2095,4 +2095,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n\n程式已中止")
+        print("\n\nProgram aborted")
