@@ -525,9 +525,9 @@ class E84(threading.Thread):
             status['O'] = self.e84_out      # E84 output
             status['G'] = self.e84_smg      # Select, Mode, GO
             status['E'] = self.sensor_elce  # EQ_ER, Light, CLAMP, ES
-            e84_signals = getattr(self.e84, '_current_signals', None) if self.e84 else None
-            if e84_signals:
-                status['S'] = e84_signals   # E84 signal states (Active E84)
+            # e84_signals = getattr(self.e84, '_current_signals', None) if self.e84 else None
+            # if e84_signals:
+            #     status['S'] = e84_signals   # E84 signal states (Active E84)
 
             data = OrderedDict()
 
@@ -1034,11 +1034,11 @@ class E84(threading.Thread):
             # and the response handlers below update state and publish change events
             response = await self.e84._send_e84_command(0x0010, 0x0000, timeout=1.0)
             if response and response.command == 0x0010:
-                self.process_e84_out('0010', response.data_low)
+                self.process_e84_in('0010', response.data_low)
 
             response = await self.e84._send_e84_command(0x0011, 0x0000, timeout=1.0)
             if response and response.command == 0x0011:
-                self.process_e84_in('0011', response.data_low)
+                self.process_e84_out('0011', response.data_low)
 
             response = await self.e84._send_e84_command(0x0012, 0x0000, timeout=1.0)
             if response and response.command == 0x0012:
@@ -2012,10 +2012,10 @@ class E84(threading.Thread):
                     continue
 
                 elif cmd == '0010':
-                    self.process_e84_out(cmd, int(data[2:4], 16))
+                    self.process_e84_in(cmd, int(data[2:4], 16))
                     continue
                 elif cmd == '0011':
-                    self.process_e84_in(cmd, int(data[2:4], 16))
+                    self.process_e84_out(cmd, int(data[2:4], 16))
                     continue
                 elif cmd == '0012':
                     self.process_e84_smg(cmd, int(data[2:4], 16))
