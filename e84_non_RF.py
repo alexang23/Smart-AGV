@@ -456,7 +456,7 @@ class E84(threading.Thread):
             # Run handler in a resilient runner that restarts on unexpected exceptions
             self.handler_task = asyncio.create_task(self._task_runner(self.complex_event_handler, "complex_event_handler"))
             success = await self.e84.initialize_device()
-            print("=" * 30 + f" E84 Initialize 結果: {'成功' if success else '失敗'} " + "=" * 30)
+            print("=" * 30 + f" E84 Initialize result: {'success' if success else 'failed'} " + "=" * 30)
 
         except Exception as err:
             # print(str(err))
@@ -471,7 +471,7 @@ class E84(threading.Thread):
             if self.event_mgr:
                 self.event_mgr.on_notify(data)
         except Exception as err:
-            self.logger.error(f"Active-E84 notify 錯誤: {err}")
+            self.logger.error(f"Active-E84 notify error: {err}")
 
     # do not support status compare with send_event
     def send_event2(self, server=False, type=0, stream=-1, function=-1, code=-1, subcode=-1,
@@ -508,7 +508,7 @@ class E84(threading.Thread):
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
             self._notify_active_e84(data)
         except Exception as err:
-            self.logger.error(f"Active-E84 send_event2 錯誤: {err}")
+            self.logger.error(f"Active-E84 send_event2 error: {err}")
 
     # support status
     def send_event(self, server=False, code=0, subcode=-1, msg_text=None, cs=0,
@@ -556,7 +556,7 @@ class E84(threading.Thread):
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
             self._notify_active_e84(data)
         except Exception as err:
-            self.logger.error(f"Active-E84 send_event 錯誤: {err}")
+            self.logger.error(f"Active-E84 send_event error: {err}")
 
     # Callback for E84 message
     def e84_message(self, data: str):
@@ -610,7 +610,7 @@ class E84(threading.Thread):
                     msg_text=f"E84 recv 0x{message.command:04X}"
                 )
         except Exception as err:
-            self.logger.error(f"Active-E84 e84_message 錯誤: {err}")
+            self.logger.error(f"Active-E84 e84_message error: {err}")
 
     def e84_send_message(self, data: bytes):
         """Callback for E84 sent message（所有已發送的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'）"""
@@ -634,7 +634,7 @@ class E84(threading.Thread):
                 msg_text=f"E84 send 0x{message.command:04X}"
             )
         except Exception as err:
-            self.logger.error(f"Active-E84 e84_send_message 錯誤: {err}")
+            self.logger.error(f"Active-E84 e84_send_message error: {err}")
 
     def read(self, block=True, timeout=None):
         """Read a line from incoming queue."""
@@ -675,10 +675,10 @@ class E84(threading.Thread):
                 event = await self.e84.get_event(timeout=1.0)
                 if event is None:
                     continue
-                print(f"****************************** [即時] {event.signal_name}: {event.description}")
+                print(f"****************************** [Live] {event.signal_name}: {event.description}")
                 if event.signal_name == "L_REQ":
                     l_req_count += 1
-                    print(f"[分析] L_REQ 觸發次數: {l_req_count}")
+                    print(f"[Analysis] L_REQ trigger count: {l_req_count}")
                 # other complex logic...
             except asyncio.TimeoutError:
                 continue
@@ -693,11 +693,11 @@ class E84(threading.Thread):
         print(f"⚠️ Alarm: {description}")
         if alarm_type == "offline":
             # Handle device offline
-            print("設備離線，檢查連線")
+            print("Device offline, checking connection")
         elif alarm_type == "ta_timeout":
             # Handle TA timeout
             ta_num = (alarm_code & 0x00FF) + 1
-            print(f"TA{ta_num} 超時，檢查參數設定")
+            print(f"TA{ta_num} timeout, check parameter settings")
 
 
     def mqtt_publish_response(self, cmd, res=None, correlation=None):
@@ -1264,10 +1264,10 @@ class E84(threading.Thread):
                 if attempt < 3:
                     await asyncio.sleep(1)
             if not connected:
-                print("❌ 連線失敗，可能原因：")
-                print("   1. 串口不存在或已被占用")
-                print("   2. 串口權限不足")
-                print("   3. 波特率不正確")
+                print("❌ Connection failed, possible causes:")
+                print("   1. Serial port does not exist or is occupied")
+                print("   2. Insufficient serial port permissions")
+                print("   3. Incorrect baud rate")
                 return False
 
         try:
@@ -1276,7 +1276,7 @@ class E84(threading.Thread):
                 self.e84.rf_channel_opened_success = bool(success)
             else:
                 self.e84.rf_channel_opened_success = True
-            print(f"######################## initialize E84 RF Sensor 結果: {'成功' if self.e84.rf_channel_opened_success else '失敗'} ########################")
+            print(f"######################## initialize E84 RF Sensor result: {'success' if self.e84.rf_channel_opened_success else 'failed'} ########################")
             return self.e84.rf_channel_opened_success
         finally:
             if self.e84._state.value == "connected":
@@ -1293,7 +1293,7 @@ class E84(threading.Thread):
             return False
         try:
             success = await self.e84.channel_async(channel)
-            print(f"######################## CHANNEL 結果: {'成功' if success else '失敗'} ########################")
+            print(f"######################## CHANNEL result: {'success' if success else 'failed'} ########################")
             return success
         finally:
             if self.e84._state.value == "connected":
@@ -1333,10 +1333,10 @@ class E84(threading.Thread):
                 if attempt < 3:
                     await asyncio.sleep(1)
             if not connected:
-                print("❌ 連線失敗，可能原因：")
-                print("   1. 串口不存在或已被占用")
-                print("   2. 串口權限不足")
-                print("   3. 波特率不正確")
+                print("❌ Connection failed, possible causes:")
+                print("   1. Serial port does not exist or is occupied")
+                print("   2. Insufficient serial port permissions")
+                print("   3. Incorrect baud rate")
                 return
         
         success = await self.e84.cobot_cs_async(cs)
