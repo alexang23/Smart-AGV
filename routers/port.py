@@ -501,7 +501,7 @@ async def api_port_arm_back(condition: schemas.Port, request: Request, db: Sessi
                     result = 'NG'
                     msg = 'E84 arm back failed. Wait for Load Complete or Unload Complete before calling /arm-back.'
                 else:
-                    success = await e84_client.arm_back_complete(is_unload=True, ready_timeout=0.0)
+                    success = await e84_port.arm_back_async()
                     if not success:
                         result = 'NG'
                         msg = 'E84 arm back failed. Device is not connected or did not respond.'

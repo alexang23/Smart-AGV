@@ -987,7 +987,7 @@ class E84(threading.Thread):
             return
         self._polling = True
         try:
-            if not await self._ensure_e84_connected("update_state", attempts=1):
+            if not await self._ensure_e84_connected_impl("update_state", attempts=1):
                 return
 
             # matched-response sends: parser correlates 'E84_0010'/'0011'/'0012'
@@ -1154,7 +1154,8 @@ class E84(threading.Thread):
         valid across poll cycles and on-demand flows.
         """
         try:
-            if self._serial_loop is None or not self._serial_loop.is_running():
+            loop = getattr(self, '_serial_loop', None)
+            if loop is None or not loop.is_running():
                 self._serial_loop = asyncio.new_event_loop()
                 self._serial_thread = threading.Thread(
                     target=self._serial_loop.run_forever, name='e84_serial_loop', daemon=True)
@@ -1186,7 +1187,21 @@ class E84(threading.Thread):
                 continue
             break
 
+    async def _await_on_serial_loop(self, coro):
+        """在 persistent serial loop 上執行 serial op，並將結果橋接回呼叫者的 loop。
+
+        AsyncSerialPort 的 transport/task/future 皆與建立它的 event loop 綁定，
+        同一個 client 物件不可跨 loop 使用（routers 的 FastAPI loop 亦是）。
+        """
+        fut = self._run_coro(coro)
+        if fut is None:
+            raise RuntimeError("e84 serial loop is not running")
+        return await asyncio.wrap_future(fut)
+
     async def open_RF_channel(self):
+        return await self._await_on_serial_loop(self._open_RF_channel_impl())
+
+    async def _open_RF_channel_impl(self):
         if self.e84 == None:
             return False
         self.e84.rf_channel_opened_success = False
@@ -1220,10 +1235,13 @@ class E84(threading.Thread):
                 await self.e84.disconnect_async()
 
     async def channel_async(self, channel: int = 0):
+        return await self._await_on_serial_loop(self._channel_impl(channel))
+
+    async def _channel_impl(self, channel: int = 0):
         if self.e84 == None:
             return False
         self.e84.rf_channel_opened_success = False
-        if not await self._ensure_e84_connected("channel_async"):
+        if not await self._ensure_e84_connected_impl("channel_async"):
             return False
         try:
             success = await self.e84.channel_async(channel)
@@ -1287,6 +1305,9 @@ class E84(threading.Thread):
             # print(f"######################## unload_async 結果: {'成功' if success else '失敗'} ########################")
 
     async def arm_back_async(self):
+        return await self._await_on_serial_loop(self._arm_back_impl())
+
+    async def _arm_back_impl(self):
         if self.e84 == None:
             return False
         success = await self.e84.cobot_arm_back_complete_async()
@@ -1294,6 +1315,9 @@ class E84(threading.Thread):
         return success
 
     async def _ensure_e84_connected(self, operation_name: str, attempts: int = 3):
+        return await self._await_on_serial_loop(self._ensure_e84_connected_impl(operation_name, attempts))
+
+    async def _ensure_e84_connected_impl(self, operation_name: str, attempts: int = 3):
         if self.e84 == None:
             return False
 
@@ -1317,10 +1341,13 @@ class E84(threading.Thread):
         return False
 
     async def alarm_reset_async(self):
+        return await self._await_on_serial_loop(self._alarm_reset_impl())
+
+    async def _alarm_reset_impl(self):
         if self.e84 == None:
             return False
 
-        if not await self._ensure_e84_connected("alarm_reset_async"):
+        if not await self._ensure_e84_connected_impl("alarm_reset_async"):
             return False
 
         success = await self.e84.alarm_reset()
