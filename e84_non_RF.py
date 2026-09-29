@@ -320,7 +320,7 @@ class E84(threading.Thread):
             'power':False, 'go':False
         }
         self.gpio1 = {
-            'go':False, 'mode':False, 'select':False
+            'go':False, 'mode':False, 'select':False, 'power':False
         }
         self.gpio2 = {
             'es':False, 'clamp':False, 'light':False, 'eq_er':False
@@ -1007,9 +1007,10 @@ class E84(threading.Thread):
         self.gpio1['go'] = 1 if data2&0x01 else 0
         self.gpio1['mode'] = 1 if data2&0x02 else 0
         self.gpio1['select'] = 1 if data2&0x04 else 0
+        self.gpio1['power'] = 1 if data2&0x08 else 0
         if self.e84_smg != data2:
             self.e84_smg = data2
-            msg = cmd + ':' + f"{data2:02x}" + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']} "
+            msg = cmd + ':' + f"{data2:02x}" + f"   SELECT: {self.gpio1['select']}  MODE: {self.gpio1['mode']}  GO: {self.gpio1['go']}  POWER: {self.gpio1['power']} "
             self.send_event(True, int(cmd, 16), data2, msg)
 
     def update_state(self):
