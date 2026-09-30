@@ -22,7 +22,7 @@ from collections import OrderedDict
 import queue
 import asyncio
 from typing import Optional
-from e84_client import E84Client, E84Protocol, E84Signal, E84StateEvent, E84AlarmEvent
+from e84_client import E84Client, E84Protocol
 
 # 所有 E84CommandSeries 訊息對應的 MQTT topic
 MQTT_TOPIC_ACTIVE_E84 = 'Active-E84'
@@ -568,7 +568,8 @@ class E84(threading.Thread):
         except queue.Full:
             self.logger.info(f"{self.port_id} {self.port} serial port incoming queue full, dropping valid frame: {data.hex()}")
 
-        # 所有已接收的 E84CommandSeries 訊息 → MQTT topic 'Active-E84'
+        # 所有已接收的 E84CommandSeries 訊息 → 交由 run() loop 的對應分支處理狀態更新並發佈，
+        # e84_message 僅負責將 frame 排入 incoming_queue，避免同一 frame 被重複發佈
         try:
             message = E84Protocol.parse_message(data)
             if not message:
@@ -576,40 +577,9 @@ class E84(threading.Thread):
 
             # 依秒輪詢的讀值回應（0010/0011/0012）不由 e84_message 重複發佈，
             # 變更事件由 response loop 的 0010/0011/0012 handlers 發佈
-            if message.command in (0x0010, 0x0011, 0x0012):
+            if message.command in (0x0010, 0x0011, 0x0012, 0x0070, 0x0071, 0x0080):
                 return
 
-            if message.command == 0x70:
-                # 70 系列感測器事件
-                code = message.data_low
-                signal_name = E84Signal.get_signal_name(code)
-                state = E84Signal.is_signal_on(code)
-                self.send_event(
-                    type=0, stream=-1, function=-1, code=0x70, subcode=code,
-                    msg_text=f"{signal_name} {'ON' if state else 'OFF'}"
-                )
-            elif message.command == 0x71:
-                # 71 系列狀態事件
-                code = message.data
-                description = E84StateEvent.get_description(code)
-                self.send_event(
-                    type=0, stream=-1, function=-1, code=0x71, subcode=code,
-                    msg_text=description
-                )
-            elif message.command == 0x80:
-                # 0x0080 系列警報事件
-                alarm_code = message.data
-                description = E84AlarmEvent.get_description(alarm_code)
-                self.send_event(
-                    type=0, stream=-1, function=-1, code=0x80, subcode=alarm_code,
-                    msg_text=description
-                )
-            else:
-                self.send_event2(
-                    type=0, stream=-1, function=-1,
-                    code=message.command, subcode=message.data,
-                    msg_text=f"E84 recv 0x{message.command:04X}"
-                )
         except Exception as err:
             self.logger.error(f"Active-E84 e84_message error: {err}")
 
