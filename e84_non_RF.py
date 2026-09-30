@@ -459,6 +459,11 @@ class E84(threading.Thread):
             success = await self.e84.initialize_device()
             print("=" * 30 + f" E84 Initialize result: {'success' if success else 'failed'} " + "=" * 30)
 
+            # 參考 GYRO-300：啟動時以 cmd=0x0000 讀取韌體版本存入 self.fw_version
+            fw = await self.e84.read_firmware_version()
+            if fw:
+                self.fw_version = f"{fw[0]:02x}.{fw[1]:02x}"
+
         except Exception as err:
             # print(str(err))
             self.logger.error(f"init_e84 failed: {err}\n{traceback.format_exc()}")
