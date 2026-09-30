@@ -4,6 +4,7 @@ import types
 import e84_client as e84_client_module
 from e84_client import E84Client, E84Command, E84Protocol, E84StateEvent
 from e84 import E84
+from e84_non_RF import E84 as NonRfE84
 from RF_sensor import RFSensorProtocol
 from serial_gyro import AsyncSerialPort
 from smart_e84 import SmartE84
@@ -631,6 +632,43 @@ def test_legacy_e84_alarm_reset_async_returns_bool_and_clears_rf_channel_flag():
         assert legacy.e84.alarm_reset_calls == 1
 
     asyncio.run(run_test())
+
+
+def test_non_rf_e84_receive_alarm_reset_clears_alarm_state_for_active_ports():
+    e84 = object.__new__(NonRfE84)
+    e84.dual = 1
+    e84.alarm_id = [0x80, 0x81]
+    e84.alarm_text = ["Alarm 0", "Alarm 1"]
+    e84.errorCode = 0x000C
+    e84.errorMsg = "E84 alarm"
+    send_events = []
+    e84.send_event = lambda *args, **kwargs: send_events.append((args, kwargs))
+
+    msg = NonRfE84._handle_command_ack(e84, '8002', '0000')
+
+    assert e84.alarm_id == [0, 0]
+    assert e84.alarm_text == ['', '']
+    assert e84.errorCode == 0
+    assert e84.errorMsg == ''
+    assert msg == '8002:0000 Alarm Reset'
+    assert len(send_events) == 1
+    assert send_events[0][0] == (True, 0x8002, 0, 'Alarm Reset')
+
+
+def test_non_rf_e84_command_ack_returns_none_for_other_commands():
+    e84 = object.__new__(NonRfE84)
+    e84.dual = 0
+    e84.alarm_id = [0x80]
+    e84.alarm_text = ["Alarm 0"]
+    e84.errorCode = 0x000C
+    e84.errorMsg = "E84 alarm"
+    e84.send_event = lambda *args, **kwargs: None
+
+    assert NonRfE84._handle_command_ack(e84, '8003', '0001') is None
+    assert e84.alarm_id == [0x80]
+    assert e84.alarm_text == ["Alarm 0"]
+    assert e84.errorCode == 0x000C
+    assert e84.errorMsg == "E84 alarm"
 
 
 def test_smart_e84_open_rf_channel_marks_ready_on_success():

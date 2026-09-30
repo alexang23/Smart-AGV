@@ -21,6 +21,7 @@ import json
 from collections import OrderedDict
 import queue
 import asyncio
+from typing import Optional
 from e84_client import E84Client, E84Protocol, E84Signal, E84StateEvent, E84AlarmEvent
 
 # 所有 E84CommandSeries 訊息對應的 MQTT topic
@@ -1434,6 +1435,20 @@ class E84(threading.Thread):
             self.logger.error(str(err))
             return f"0x{data}"
 
+    def _handle_command_ack(self, cmd: str, data: str) -> Optional[str]:
+        if cmd != '8002':
+            return None
+
+        for port_index in range(self.dual + 1):
+            self.alarm_id[port_index] = 0
+            self.alarm_text[port_index] = ''
+
+        self.errorCode = 0
+        self.errorMsg = ''
+        self.send_event(True, int(cmd, 16), int(data, 16), 'Alarm Reset')
+
+        return cmd + ':' + data + ' Alarm Reset'
+
     def run(self):
 
         try:
@@ -2026,8 +2041,10 @@ class E84(threading.Thread):
                     self.logger.info(f"{self.port_id[m]} : cmd={cmd}, data={data}")
 
                 elif cmd[0] == 0 or cmd[0] == '8':
-                    msg = self.cmd_msg(cmd[1:])
-                    msg = cmd + ':' + data + ' ' + msg
+                    msg = self._handle_command_ack(cmd, data)
+                    if msg is None:
+                        msg = self.cmd_msg(cmd[1:])
+                        msg = cmd + ':' + data + ' ' + msg
                     # if cmd == '8002' or cmd == '0002':
                     #     self.send_event(True, int(cmd, 16), int(data, 16), 'Alarm Reset')
                     #     msg = cmd + ':' + data + ' Alarm Reset'
