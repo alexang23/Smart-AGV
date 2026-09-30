@@ -510,6 +510,7 @@ class E84(threading.Thread):
             data['sub_id'] = subcode
             data['msg_text'] = msg_text
             data['occurred_at'] = time.time()
+            data['version'] = f"{self.fw_version}"
             data['sw_version'] = settings.SW_VERSION
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
             self._notify_active_e84(data)
@@ -558,6 +559,7 @@ class E84(threading.Thread):
             data['msg_text'] = msg_text
             data['status'] = json.dumps(status)
             data['occurred_at'] = time.time()
+            data['version'] = f"{self.fw_version}"
             data['sw_version'] = settings.SW_VERSION
             data['topic'] = MQTT_TOPIC_ACTIVE_E84
             self._notify_active_e84(data)
