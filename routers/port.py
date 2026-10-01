@@ -528,6 +528,70 @@ async def api_port_arm_back(condition: schemas.Port, request: Request, db: Sessi
             'ErrorCode': 0 if result == 'OK' else 500,
             'Message': "" if result == 'OK' else msg}
 
+@router.get('/initial')
+async def api_port_initial(request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
+    glogger = request.app.state.glogger
+
+    login_user = db.query(User).filter(User.id == login_id).first()
+
+    if login_user.acc_type == 'ALL' :
+        glogger.warning('api_port_initial : You do not have permission.',
+                        {'user': '{},{}'.format(login_user.userid, login_user.name)})
+        return {'Success': False,
+                'State': 'NG',
+                'ErrorCode': 403,
+                'Message': 'You do not have permission.'}
+
+    result = 'OK'
+    loadports = []
+    try:
+        tsc = request.app.state.tsc
+        for portno in tsc.loadport:
+            port = OrderedDict()
+            enable = tsc.loadport[portno]['enable']
+            type = tsc.loadport[portno]['com'].upper()
+            dual = tsc.loadport[portno]['dual']
+            ver = tsc.loadport[portno]['ver']
+            port_id = ''
+            if type == 'E84':
+                id = tsc.loadport[portno]['id']
+                port_id = getattr(settings, f"LOAD_PORT_{portno}_ID", False)
+                if tsc.e84.get(id) is None:
+                    glogger.warning('api_port_initial : E84 controller {} is None.'.format(id),
+                                    {'user': '{},{}'.format(login_user.userid, login_user.name)})
+                    return {'Success': False,
+                            'State': 'NG',
+                            'ErrorCode': 99,
+                            'Message': 'E84 is None.'}
+                tsc.e84[id].run_cmd('version')
+                tsc.e84[id].run_cmd('status')
+
+            port['port_no'] = portno
+            port['port_id'] = port_id
+            port['enable'] = enable
+            port['type'] = type # "E84", "RFID"
+            port['dual'] = dual
+            port['ver'] = ver # 0:Andrews, 1:Gyro-E84, 2:Smart-E84
+            loadports.append(port)
+
+        glogger.info(f'api_port_initial : result={result}, loadports={json.dumps(loadports)}.',
+                    {'user': '{},{}'.format(login_user.userid, login_user.name)})
+
+    except Exception as err:
+        glogger.warning(f'api_port_initial : error={str(err)}',
+                {'user': '{},{}'.format(login_user.userid, login_user.name)})
+        return {'Success': False,
+                'State': 'NG',
+                'ErrorCode': 500,
+                'Message': str(err)}
+
+    return {'Success': True,
+            'State': result,
+            'ErrorCode': 0,
+            'Message': "",
+            'Length': len(loadports),
+            'Loadports': loadports}
+
 @router.post('/cmd')
 async def api_port_cmd(condition: schemas.PortCmd, request: Request, db: Session = Depends(get_db), login_id: str = Depends(oauth2.require_user)):
     glogger = request.app.state.glogger
