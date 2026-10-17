@@ -1044,7 +1044,7 @@ class E84(threading.Thread):
         
     def send_status(self):
         for m in range(self.dual+1):
-            self.send_event2(server=True, stream=6, function=11, code=0, subcode=0, msg_text=self.port_status_msg, cs=m)
+            self.send_event2(server=True, stream=6, function=11, code=0, subcode=0, msg_text=self.port_status_msg[0], cs=m)
 
     def api_request(self, cmd, data, props):
         
@@ -1684,8 +1684,14 @@ class E84(threading.Thread):
                 #     self.logger.info(f"{self.port_id[0]} E84 : This alarm have to be manual reset by operator {cmd}:{data} {status}")
 
                 msg = ''
-                
-                if cmd == '0070':
+
+                if cmd == '0000':
+                    self.e84_dual = 2 if data[0:1] == '2' else 1
+                    self.fw_version = f"{data[0:2]}.{data[2:4]}"
+                    for m in range(self.dual+1):
+                        self.send_event(server=True, code=int(cmd, 16), subcode=int(data, 16), msg_text=f'Firmware version {data[0:2]}.{data[2:4]}', cs=m)
+                    msg = cmd + ':' + data + ':' + status + ' Firmware version'
+                elif cmd == '0070':
                     if data == '0000':
                         # self.state['go'] = True
                         msg = 'GO ON'
