@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 	# SW_VERSION:str = 'v1.25.1230.0' # support Mirra Mesa function.
 	# SW_VERSION:str = 'v1.26.0102.0' # change Home sensor from IR sensor to loadport sensor.
 	# SW_VERSION:str = 'v1.26.0103.0' # Fix do not read 12" Cassette CarrierID issue which caused by assign wrong LF RFID port_no (correct is port_no + cs).
-	SW_VERSION:str = 'v1.1.260310.0' # Disable "Tool in Process mode, ignore Home sensor signal" message.
+	SW_VERSION:str = '1.1.261001.0' # Disable "Tool in Process mode, ignore Home sensor signal" message.
 	                                # release for UMC-8S installation.
 
 	LEDBOARD_ENABLE:bool = False
@@ -172,8 +172,8 @@ class Settings(BaseSettings):
 	MQTT_CLIENT_ID:str = 'ABCD01'
 	# MQTT_TOPIC:str = 'MQTT-Ubuntu/IPC'
 	# MQTT_TOPIC_SERVER:str = 'MQTT-Ubuntu/Server'
-	MQTT_TOPIC:str = 'IPC'
-	MQTT_TOPIC_SERVER:str = 'Server'
+	MQTT_TOPIC:str = 'Active-E84'
+	MQTT_TOPIC_SERVER:str = 'Active-E84-Server'
 	MQTT_HEARTBEAT_ENABLE:bool = True
 	MQTT_HEARTBEAT_TIME:int = 5
 
